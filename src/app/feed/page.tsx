@@ -4,6 +4,34 @@ import { motion } from 'framer-motion';
 import { Rss, Instagram, Layers, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
+// 1. Array aggiornato con immagini reali e link diretti ai post
+const instagramPosts = [
+  { 
+    id: 'ig1', 
+    img: '/instagram/post1.jpg', // Metti le foto in public/instagram/
+    url: 'https://www.instagram.com/p/C4-XXXXX/', // Link al post specifico
+    ratio: 'square' 
+  },
+  { 
+    id: 'ig2', 
+    img: '/instagram/post2.jpg', 
+    url: 'https://www.instagram.com/p/C4-YYYYY/', 
+    ratio: 'square' 
+  },
+  { 
+    id: 'ig3', 
+    img: '/instagram/post3.jpg', 
+    url: 'https://www.instagram.com/p/C4-ZZZZZ/', 
+    ratio: 'portrait' 
+  },
+  { 
+    id: 'ig4', 
+    img: '/instagram/post4.jpg', 
+    url: 'https://www.instagram.com/p/C4-WWWWW/', 
+    ratio: 'square' 
+  },
+];
+
 const internalPosts = [
   {
     id: 1,
@@ -15,23 +43,14 @@ const internalPosts = [
   },
 ];
 
-const instagramPlaceholders = [
-  { id: 'ig1', ratio: 'square' },
-  { id: 'ig2', ratio: 'square' },
-  { id: 'ig3', ratio: 'portrait' },
-  { id: 'ig4', ratio: 'square' },
-];
-
 export default function FeedPage() {
-  const igLink = "https://www.instagram.com/under_the_tower_factory?igsh=MW4zNzUwdGplOG5iYw==";
+  const igProfile = "https://www.instagram.com/under_the_tower_factory?igsh=MW4zNzUwdGplOG5iYw==";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
       
-      {/* HEADER FIXATO: Layout Verticale Identico a Labs */}
+      {/* HEADER (Identico a quello che ti piace) */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8 relative">
-        
-        {/* Riga Superiore: BACK a sinistra, /02 a destra */}
         <div className="w-full flex justify-between items-center z-10">
           <Link href="/" className="nav-tag flex items-center gap-2">
             <ArrowLeft size={14} /> BACK
@@ -39,7 +58,6 @@ export default function FeedPage() {
           <span className="text-zinc-900 font-mono text-lg tracking-widest">/02</span>
         </div>
 
-        {/* Blocco Centrale: Icona e Titolo centrati */}
         <div className="text-center flex flex-col items-center w-full mt-4">
           <div className="p-3 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-6 neon-blink">
             <Rss size={24} />
@@ -85,10 +103,10 @@ export default function FeedPage() {
           ))}
         </section>
 
-        {/* SEZIONE INSTAGRAM LINKATA */}
+        {/* SEZIONE INSTAGRAM CON IMMAGINI VERE */}
         <section>
           <div className="flex flex-col items-center mb-12">
-            <a href={igLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
+            <a href={igProfile} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
               <Instagram className="text-zinc-700 group-hover:text-orange-600 transition-colors" size={20} />
               <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
                 Social_<span className="text-zinc-700 group-hover:text-orange-600 transition-colors">Sync</span>
@@ -97,17 +115,25 @@ export default function FeedPage() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {instagramPlaceholders.map((ig) => (
+            {instagramPosts.map((ig) => (
               <a 
                 key={ig.id} 
-                href={igLink} 
+                href={ig.url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className={`glass-panel p-1 border-white/5 hover:border-orange-600/30 transition-all ${ig.ratio === 'portrait' ? 'aspect-[4/5]' : 'aspect-square'}`}
+                className={`glass-panel p-1 border-white/5 hover:border-orange-600/30 transition-all overflow-hidden group/item ${ig.ratio === 'portrait' ? 'aspect-[4/5]' : 'aspect-square'}`}
               >
-                <div className="w-full h-full bg-zinc-950/50 rounded-2xl flex flex-col items-center justify-center gap-2">
-                  <Instagram size={16} className="text-zinc-800" />
-                  <span className="text-[7px] font-mono text-zinc-800 tracking-widest">VIEW_IG</span>
+                <div className="w-full h-full relative rounded-2xl overflow-hidden bg-zinc-900">
+                  {/* Immagine del Post */}
+                  <img 
+                    src={ig.img} 
+                    alt="Instagram Post" 
+                    className="w-full h-full object-cover opacity-60 group-hover/item:opacity-100 group-hover/item:scale-110 transition-all duration-500"
+                  />
+                  {/* Overlay con icona che appare al hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity bg-black/20">
+                    <Instagram size={20} className="text-white" />
+                  </div>
                 </div>
               </a>
             ))}
