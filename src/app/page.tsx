@@ -11,7 +11,7 @@ export default function HomePage() {
       {/* HEADER CENTRALE */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-10">
         <img src="/icons/favicon.svg" alt="UTTF" className="w-20 h-20 md:w-24 md:h-24" />
-        <span className="nav-tag uppercase tracking-[0.3em]">Factory_Online</span>
+        <span className="nav-tag uppercase tracking-[0.3em]">W.I.P.</span>
       </header>
 
       {/* HERO SECTION */}
