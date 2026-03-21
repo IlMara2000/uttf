@@ -37,7 +37,7 @@ export default function HomePage() {
           {/* FOCUS BOXES - LAYOUT OTTIMIZZATO */}
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
             <div className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5">
-              <span className="text-[12px] tracking-[0.8em] text-orange-600 mb-4 font-mono uppercase">Associazione Creativa</span>
+              <span className="text-[12px] tracking-[0.8em] text-orange-600 mb-4 font-mono uppercase">CREATIVE_COLLECTIVE</span>
               <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
                 Under The Tower
               </h3>
