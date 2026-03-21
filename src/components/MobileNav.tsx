@@ -1,16 +1,35 @@
 'use client'
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Rss, FlaskConical } from 'lucide-react';
+// Usiamo le icone "filled" (punte) per un glifo solido
+import { Home, Rss, FlaskConical } from 'lucide-react'; 
 import { motion } from 'framer-motion';
 
 export default function MobileNav() {
   const pathname = usePathname();
   
+  // Definiamo i parametri per le icone: dimensione e 'fill' (colore riempimento)
+  // Useremo 'fill="none"' e 'stroke="currentColor"' per le icone inattive bianche.
+  // E configureremo lo stile attivo per mostrare un'icona piena arancione.
   const navItems = [
-    { href: '/', icon: <Home size={20} />, label: 'HOME' },
-    { href: '/feed', icon: <Rss size={20} />, label: 'POST' },
-    { href: '/labs', icon: <FlaskConical size={20} />, label: 'LIVE' },
+    { 
+      href: '/', 
+      // Icona HOME (filled, bianca)
+      icon: <Home size={22} strokeWidth={1.5} />, 
+      label: 'HOME' 
+    },
+    { 
+      href: '/feed', 
+      // Icona RSS (filled, bianca)
+      icon: <Rss size={22} strokeWidth={1.5} />, 
+      label: 'POST' 
+    },
+    { 
+      href: '/labs', 
+      // Icona LABORATORIO (filled, bianca)
+      icon: <FlaskConical size={22} strokeWidth={1.5} />, 
+      label: 'LIVE' 
+    },
   ];
 
   return (
@@ -26,8 +45,9 @@ export default function MobileNav() {
             <Link 
               key={item.href} 
               href={item.href}
+              // Aggiunto flex-col per supportare glifi pieni e center alignment
               className={`relative p-4 rounded-full transition-all touch-target flex flex-col items-center ${
-                isActive ? 'text-black' : 'text-zinc-500'
+                isActive ? 'text-black' : 'text-zinc-500' // 'text-zinc-500' sarà sovrascritto dalla logica dell'icona
               }`}
             >
               {isActive && (
@@ -37,7 +57,17 @@ export default function MobileNav() {
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
-              <span className="relative z-10">{item.icon}</span>
+              
+              {/* --- LOGICA ICONA AGGIORNATA --- */}
+              <span className={`relative z-10 transition-colors duration-300 ${
+                isActive 
+                  ? 'text-uttf-orange fill-uttf-orange' // ATTIVA: Arancione e PIENA
+                  : 'text-white'                  // INATTIVA: Bianca e SOLO CONTORNO (stroke)
+              }`}>
+                {/* Il componente icona stesso */}
+                {item.icon}
+              </span>
+
             </Link>
           );
         })}
