@@ -1,17 +1,16 @@
 'use client'
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, HardDrive, Users, Home } from 'lucide-react';
+import { Home, Rss, FlaskConical } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function MobileNav() {
   const pathname = usePathname();
   
   const navItems = [
-    { href: '/', icon: <Home size={20} />, label: 'Home' },
-    { href: '/planner', icon: <LayoutDashboard size={20} />, label: 'Tasks' },
-    { href: '/storage', icon: <HardDrive size={20} />, label: 'Vault' },
-    { href: '/team', icon: <Users size={20} />, label: 'Team' },
+    { href: '/', icon: <Home size={20} />, label: 'HOME' },
+    { href: '/feed', icon: <Rss size={20} />, label: 'POST' },
+    { href: '/labs', icon: <FlaskConical size={20} />, label: 'LIVE' },
   ];
 
   return (
@@ -19,7 +18,7 @@ export default function MobileNav() {
       <motion.nav 
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="glass-card flex items-center gap-1 p-2 rounded-full border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl bg-black/50"
+        className="glass-panel flex items-center gap-1 p-2 rounded-full border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl bg-black/50"
       >
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -27,14 +26,14 @@ export default function MobileNav() {
             <Link 
               key={item.href} 
               href={item.href}
-              className={`relative p-4 rounded-full transition-all touch-target ${
+              className={`relative p-4 rounded-full transition-all touch-target flex flex-col items-center ${
                 isActive ? 'text-black' : 'text-zinc-500'
               }`}
             >
               {isActive && (
                 <motion.div 
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-uttf-orange rounded-full"
+                  className="absolute inset-0 bg-orange-600 rounded-full"
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
