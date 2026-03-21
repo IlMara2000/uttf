@@ -22,7 +22,7 @@ const geist = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'UTTF_FACTORY | Creative Core',
+  title: 'UTTF | Urban Creative Core',
   description: 'Under The Tower Factory - Urban Art & Culture',
   icons: {
     icon: [
