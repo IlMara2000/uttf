@@ -28,16 +28,20 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
       
-      {/* HEADER FIXATO: Layout Verticale */}
-      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8">
-        <div className="w-full flex justify-start">
+      {/* HEADER FIXATO: Layout Verticale Identico a Labs */}
+      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8 relative">
+        
+        {/* Riga Superiore: BACK a sinistra, /02 a destra */}
+        <div className="w-full flex justify-between items-center z-10">
           <Link href="/" className="nav-tag flex items-center gap-2">
             <ArrowLeft size={14} /> BACK
           </Link>
+          <span className="text-zinc-900 font-mono text-lg tracking-widest">/02</span>
         </div>
 
-        <div className="text-center flex flex-col items-center w-full">
-          <div className="p-3 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-6">
+        {/* Blocco Centrale: Icona e Titolo centrati */}
+        <div className="text-center flex flex-col items-center w-full mt-4">
+          <div className="p-3 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-6 neon-blink">
             <Rss size={24} />
           </div>
           <h1 className="hero-title text-[12vw] md:text-7xl leading-none tracking-tighter">
