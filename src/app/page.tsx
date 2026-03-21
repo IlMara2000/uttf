@@ -24,7 +24,7 @@ export default function HomePage() {
       
       {/* HEADER CENTRALE */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-10">
-        <img src="/icons/homelogo.png" alt="UTTF" className="w-16 h-16 md:w-20 md:h-20" />
+        <img src="/icons/favicon.svg" alt="UTTF" className="w-35 h-35 md:w-25 md:h-25" />
         <span className="nav-tag">WORK IN PROGRESS</span>
       </header>
 
