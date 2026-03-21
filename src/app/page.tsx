@@ -50,7 +50,16 @@ export default function HomePage() {
           {/* FOCUS BOX CENTRATO E RESPIRATO */}
           <div className="mt-32 w-full max-w-3xl">
             <div className="glass-panel p-16 flex flex-col items-center text-center">
-              <span className="text-[10px] tracking-[0.8em] text-orange-600 mb-6 font-mono">LAB_UNIT</span>
+              <span className="text-[15px] tracking-[0.8em] text-orange-600 mb-6 font-mono">LIVE_UNIT</span>
+              <h3 className="text-4xl md:text-5xl font-black italic uppercase text-white mb-6 tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>Under The Tower Factory</h3>
+              <p className="text-zinc-500 text-sm md:text-base uppercase tracking-[0.3em] font-medium leading-relaxed max-w-lg">RESTA SINTONIZZATO CON NOI E SEGUI I NOSTRI EVENTI</p>
+            </div>
+          </div>
+
+          {/* FOCUS BOX CENTRATO E RESPIRATO */}
+          <div className="mt-32 w-full max-w-3xl">
+            <div className="glass-panel p-16 flex flex-col items-center text-center">
+              <span className="text-[15px] tracking-[0.8em] text-orange-600 mb-6 font-mono">LAB_UNIT</span>
               <h3 className="text-4xl md:text-5xl font-black italic uppercase text-white mb-6 tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>RAPF*CKTORY</h3>
               <p className="text-zinc-500 text-sm md:text-base uppercase tracking-[0.3em] font-medium leading-relaxed max-w-lg">Cultura Hip Hop & Urban Creative Core</p>
             </div>
@@ -58,7 +67,7 @@ export default function HomePage() {
 
           <div className="mt-24">
             <Link href="/login" className="btn-urban shadow-2xl">
-              ACCESSO STAFF <ArrowRight size={22} />
+              ACCESSO STAFF
             </Link>
           </div>
         </motion.div>

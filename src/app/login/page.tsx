@@ -26,7 +26,7 @@ export default function LoginPage() {
       .single();
 
     if (checkError || !data) {
-      setError('ACCESS_DENIED: Email non registrata nei protocolli Factory.');
+      setError('ACCESS_DENIED: Email non registrata nei protocolli UTTF.');
       setLoading(false);
       return;
     }
@@ -64,7 +64,7 @@ export default function LoginPage() {
           <div className="p-4 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-8">
             <KeyRound size={32} />
           </div>
-          <h1 className="hero-title text-4xl mb-2">C_C_Access</h1>
+          <h1 className="hero-title text-4xl mb-2">StaffAccess!</h1>
           <p className="text-zinc-600 font-mono text-[9px] uppercase tracking-[0.3em]">Authorized_Personnel_Only</p>
         </div>
 
