@@ -26,36 +26,48 @@ export default function FeedPage() {
   const igLink = "https://www.instagram.com/under_the_tower_factory?igsh=MW4zNzUwdGplOG5iYw==";
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-20 flex flex-col items-center overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
       
-      <header className="pt-12 pb-16 w-full max-w-7xl flex items-center justify-between">
-        <Link href="/" className="nav-tag flex items-center gap-2 scale-90 md:scale-100">
-          <ArrowLeft size={14} /> BACK
-        </Link>
-        <div className="text-center flex flex-col items-center">
+      {/* HEADER FIXATO: Layout Verticale */}
+      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8">
+        <div className="w-full flex justify-start">
+          <Link href="/" className="nav-tag flex items-center gap-2">
+            <ArrowLeft size={14} /> BACK
+          </Link>
+        </div>
+
+        <div className="text-center flex flex-col items-center w-full">
           <div className="p-3 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-6">
             <Rss size={24} />
           </div>
-          <h1 className="hero-title text-3xl md:text-7xl leading-none">UTTF_FEED</h1>
-          <p className="text-zinc-600 font-mono text-[8px] uppercase tracking-[0.3em] mt-2">Factory_Sync</p>
+          <h1 className="hero-title text-[12vw] md:text-7xl leading-none tracking-tighter">
+            UTTF_FEED
+          </h1>
+          <p className="text-zinc-600 font-mono text-[8px] uppercase tracking-[0.3em] mt-4">
+            Factory_Sync // Unit_02
+          </p>
         </div>
-        <span className="text-zinc-900 font-mono text-lg">/02</span>
       </header>
 
-      <main className="w-full max-w-7xl flex flex-col gap-24">
+      <main className="w-full max-w-7xl px-6 flex flex-col gap-24">
         
-        {/* SECTION: DIRECT POSTS */}
+        {/* SEZIONE POST INTERNO */}
         <section>
           <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
             Factory_<span className="text-orange-600">Direct</span>
           </h2>
           {internalPosts.map((post) => (
-            <motion.div key={post.id} className="glass-panel p-8 md:p-12 border-white/5">
+            <motion.div 
+              key={post.id} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-panel p-8 md:p-12 border-white/5"
+            >
               <div className="flex justify-between items-center mb-6 text-[10px] font-mono">
                 <span className="text-orange-600 tracking-widest">{post.tag}</span>
                 <span className="text-zinc-700">{post.date}</span>
               </div>
-              <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+              <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 leading-tight tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
                 {post.title}
               </h3>
               <p className="text-zinc-500 text-sm md:text-lg uppercase tracking-wide mb-8 font-medium">
@@ -69,21 +81,26 @@ export default function FeedPage() {
           ))}
         </section>
 
-        {/* SECTION: INSTAGRAM SYNC */}
-        <section className="pb-32">
+        {/* SEZIONE INSTAGRAM LINKATA */}
+        <section>
           <div className="flex flex-col items-center mb-12">
-            <a href={igLink} target="_blank" className="flex items-center gap-3 group">
+            <a href={igLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
               <Instagram className="text-zinc-700 group-hover:text-orange-600 transition-colors" size={20} />
               <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-                Social_<span className="text-zinc-700 group-hover:text-orange-600">Sync</span>
+                Social_<span className="text-zinc-700 group-hover:text-orange-600 transition-colors">Sync</span>
               </h2>
             </a>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {instagramPlaceholders.map((ig) => (
-              <a key={ig.id} href={igLink} target="_blank" 
-                className={`glass-panel p-1 border-white/5 hover:border-orange-600/30 transition-all ${ig.ratio === 'portrait' ? 'aspect-[4/5]' : 'aspect-square'}`}>
+              <a 
+                key={ig.id} 
+                href={igLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className={`glass-panel p-1 border-white/5 hover:border-orange-600/30 transition-all ${ig.ratio === 'portrait' ? 'aspect-[4/5]' : 'aspect-square'}`}
+              >
                 <div className="w-full h-full bg-zinc-950/50 rounded-2xl flex flex-col items-center justify-center gap-2">
                   <Instagram size={16} className="text-zinc-800" />
                   <span className="text-[7px] font-mono text-zinc-800 tracking-widest">VIEW_IG</span>
@@ -93,6 +110,10 @@ export default function FeedPage() {
           </div>
         </section>
       </main>
+
+      <footer className="py-24 text-center opacity-10">
+        <p className="text-[10px] font-mono uppercase tracking-[1em] text-zinc-800">UTTF_SYSTEM_V.2.0 // Rozzano</p>
+      </footer>
     </div>
   );
 }
