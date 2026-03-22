@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
-import { Zap, Layers, Loader2 } from 'lucide-react';
+import { Zap, Layers, Loader2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -12,7 +12,6 @@ export default function HomePage() {
 
   useEffect(() => {
     async function fetchPublications() {
-      // Recupera gli ultimi 6 post caricati dallo Staff
       const { data, error } = await supabase
         .from('publications')
         .select('*')
@@ -28,12 +27,16 @@ export default function HomePage() {
   }, []);
 
   return (
-    /* Il div principale non ha colori di sfondo per far vedere il gradiente del body */
     <div className="min-h-screen flex flex-col items-center overflow-x-hidden pb-40">
       
       {/* HEADER CENTRALE */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-10">
-        <img src="/icons/favicon.svg" alt="UTTF" className="w-25 h-25 md:w-30 md:h-30 transition-transform hover:scale-110 duration-500" />
+        <img 
+          src="/icons/favicon.svg" 
+          alt="UTTF" 
+          className="w-25 h-25 md:w-30 md:h-30 transition-transform hover:scale-110 duration-500" 
+          onError={(e) => (e.currentTarget.src = '/favicon.ico')}
+        />
         <span className="nav-tag uppercase tracking-[0.3em]">W.I.P.</span>
       </header>
 
@@ -55,21 +58,39 @@ export default function HomePage() {
             Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dal cemento.
           </p>
 
-          {/* FOCUS BOXES */}
+          {/* FOCUS BOXES - COLLEGATE */}
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
-            <div className="glass-panel p-10 md:p-16 flex flex-col items-center text-center">
-              <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
-              <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
-                Under The Tower
-              </h3>
-            </div>
+            
+            {/* BOX 01: UNDER THE TOWER -> FEED */}
+            <Link href="/feed" className="group">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5 group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
+              >
+                <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
+                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+                  Under The Tower
+                </h3>
+                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+              </motion.div>
+            </Link>
 
-            <div className="glass-panel p-10 md:p-16 flex flex-col items-center text-center">
-              <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
-              <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
-                RAPF*CKTORY
-              </h3>
-            </div>
+            {/* BOX 02: RAPF*CKTORY -> LABS */}
+            <Link href="/labs" className="group">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5 group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
+              >
+                <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
+                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+                  RAPF*CKTORY
+                </h3>
+                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+              </motion.div>
+            </Link>
+
           </div>
 
           {/* BOTTONE STAFF */}
@@ -81,7 +102,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* LIVE OUTPUT SECTION - DINAMICA */}
+      {/* LIVE OUTPUT SECTION */}
       <section className="w-full px-6 py-32 mt-20 border-t border-white/5 bg-transparent">
         <div className="max-w-7xl mx-auto flex flex-col items-center">
           <div className="flex flex-col items-center mb-20 text-center">
@@ -107,7 +128,6 @@ export default function HomePage() {
                   key={post.id} 
                   className="glass-panel group overflow-hidden flex flex-col border-white/5 hover:border-[#FF914D]/30 transition-all duration-500"
                 >
-                  {/* Immagine */}
                   <div className="relative h-64 w-full overflow-hidden">
                     <img 
                       src={post.image_url} 
@@ -119,7 +139,6 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Testo */}
                   <div className="p-8">
                     <h4 className="text-xl font-black uppercase italic mb-3 text-white tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
                       {post.title}
@@ -143,7 +162,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="py-24 text-center opacity-30">
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">
           UTTF_SYSTEM_V.2.0 // Rozzano
