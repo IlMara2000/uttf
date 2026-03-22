@@ -10,9 +10,12 @@ export default function HomePage() {
   const [publications, setPublications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // CONFIGURAZIONE SUPABASE - MODIFICA QUESTE DUE COSTANTI
+  const PROJECT_ID = 'IL_TUO_PROJECT_ID'; // Es: 'abcde-fghil-mnop'
+  const BUCKET_NAME = 'publications';      // Il nome del tuo bucket storage
+
   useEffect(() => {
     async function fetchPublications() {
-      // Recupera i post
       const { data, error } = await supabase
         .from('publications')
         .select('*')
@@ -62,7 +65,6 @@ export default function HomePage() {
           {/* FOCUS BOXES */}
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
             
-            {/* BOX 01: UNDER THE TOWER -> FEED */}
             <Link href="/feed" className="group">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
@@ -77,7 +79,6 @@ export default function HomePage() {
               </motion.div>
             </Link>
 
-            {/* BOX 02: RAPF*CKTORY -> LABS */}
             <Link href="/labs" className="group">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
@@ -94,7 +95,6 @@ export default function HomePage() {
 
           </div>
 
-          {/* BOTTONE STAFF */}
           <div className="mt-24">
             <Link href="/login" className="btn-urban shadow-[0_20px_50px_rgba(255,145,77,0.15)]">
               ACCESSO STAFF
@@ -121,46 +121,54 @@ export default function HomePage() {
                 </div>
               ))
             ) : publications.length > 0 ? (
-              publications.map((post) => (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  key={post.id} 
-                  className="glass-panel group overflow-hidden flex flex-col border-white/5 hover:border-[#FF914D]/30 transition-all duration-500"
-                >
-                  <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
-                    {post.image_url ? (
-                      <img 
-                        src={post.image_url} 
-                        alt={post.title} 
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://placehold.co/600x400/000000/FF914D?text=MEDIA_NOT_FOUND";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-800 font-mono text-[10px]">NO_IMAGE_DATA</div>
-                    )}
-                    <div className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
-                      <Zap className="text-[#FF914D]" size={14} />
-                    </div>
-                  </div>
+              publications.map((post) => {
+                // COSTRUZIONE URL DINAMICO
+                let finalImageUrl = post.image_url;
+                if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+                  finalImageUrl = `https://${oieqtrfeoyfabyjirrqa}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${post.image_url}`;
+                }
 
-                  <div className="p-8">
-                    <h4 className="text-xl font-black uppercase italic mb-3 text-white tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-                      {post.title}
-                    </h4>
-                    <p className="text-zinc-500 text-[10px] uppercase tracking-widest leading-relaxed line-clamp-2 font-mono mb-6">
-                      {post.content || "FACTORY_LOG_ENTRY_ALPHA"}
-                    </p>
-                    <div className="flex justify-between items-center pt-4 border-t border-white/5 font-mono text-[9px] text-zinc-700">
-                      <span>{new Date(post.created_at).toLocaleDateString('it-IT')}</span>
-                      <Layers size={12} />
+                return (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    key={post.id} 
+                    className="glass-panel group overflow-hidden flex flex-col border-white/5 hover:border-[#FF914D]/30 transition-all duration-500"
+                  >
+                    <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
+                      {finalImageUrl ? (
+                        <img 
+                          src={finalImageUrl} 
+                          alt={post.title} 
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://placehold.co/600x400/0a0a0a/FF914D?text=URL_ERROR";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-800 font-mono text-[10px]">NO_IMAGE_DATA</div>
+                      )}
+                      <div className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
+                        <Zap className="text-[#FF914D]" size={14} />
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))
+
+                    <div className="p-8">
+                      <h4 className="text-xl font-black uppercase italic mb-3 text-white tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
+                        {post.title}
+                      </h4>
+                      <p className="text-zinc-500 text-[10px] uppercase tracking-widest leading-relaxed line-clamp-2 font-mono mb-6">
+                        {post.content || "FACTORY_LOG_ENTRY_ALPHA"}
+                      </p>
+                      <div className="flex justify-between items-center pt-4 border-t border-white/5 font-mono text-[9px] text-zinc-700">
+                        <span>{new Date(post.created_at).toLocaleDateString('it-IT')}</span>
+                        <Layers size={12} />
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })
             ) : (
               <div className="col-span-full py-20 text-center opacity-30">
                 <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-[0.5em]">No_Output_Detected_In_System</p>
