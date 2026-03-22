@@ -99,7 +99,7 @@ export default function FeedPage() {
             
             <div className="flex items-center gap-3">
               <Instagram size={20} className="text-zinc-600" />
-              <p className="text-[15px] md:text-[15px] font-mono tracking-[0.4em] text-zinc-600 uppercase">
+              <p className="text-[12px] md:text-[12px] font-mono tracking-[0.4em] text-zinc-600 uppercase">
                 @under_the_tower_factory
               </p>
             </div>
