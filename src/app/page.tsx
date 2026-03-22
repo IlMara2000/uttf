@@ -41,7 +41,7 @@ export default function HomePage() {
           className="w-25 h-25 md:w-30 md:h-30 transition-transform hover:scale-110 duration-500" 
           onError={(e) => (e.currentTarget.src = '/favicon.ico')}
         />
-        <span className="nav-tag uppercase tracking-[0.3em]">W.I.P.</span>
+        <span className="nav-tag uppercase tracking-[0.3em]">.WORK.IN.PROGRESS.</span>
       </header>
 
       {/* HERO SECTION */}
