@@ -2,14 +2,12 @@ import './globals.css';
 import { Unbounded, Space_Grotesk, Geist_Mono } from 'next/font/google';
 import MobileNav from '@/components/MobileNav';
 
-// Font Titoli: Unbounded (Bold, Italic)
 const unbounded = Unbounded({ 
   subsets: ['latin'], 
   variable: '--font-display',
   weight: ['900'] 
 });
 
-// Font Testo: Space Grotesk (Geometrico, Tecnico)
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ['latin'], 
   variable: '--font-sans',
@@ -42,7 +40,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" className="dark">
-      <body className={`${spaceGrotesk.variable} ${unbounded.variable} ${geist.variable} font-sans bg-black text-white antialiased m-0 p-0`}>
+      {/* RIMOSSO bg-black per far vedere il gradiente di globals.css */}
+      <body className={`${spaceGrotesk.variable} ${unbounded.variable} ${geist.variable} font-sans text-white antialiased m-0 p-0`}>
         <div className="relative min-h-screen">
           {children}
         </div>
