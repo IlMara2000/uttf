@@ -36,11 +36,12 @@ export default function FeedPage() {
           </h2>
           <div className="glass-panel p-8 md:p-12 border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
-            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-              URBAN GIANTS 2026
+            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
+              CHE COS'È UNDER THE TOWER?
             </h3>
-            <p className="text-zinc-500 text-sm md:text-lg uppercase tracking-widest font-mono">
-              [SYSTEM_LOG]: A breve tornerà il fantastico evento annuale! Stay tuned.
+            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono">
+              [SYSTEM_LOG]: Under the Tower è un progetto creativo e digitale che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove gaming, intrattenimento, contenuti social e innovazione si incontrano per creare esperienze immersive e coinvolgenti.
+              L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello di intrattenimento che di opportunità, trasformando una community in un vero movimento.
             </p>
           </div>
         </section>
