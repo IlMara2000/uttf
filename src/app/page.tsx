@@ -12,6 +12,7 @@ export default function HomePage() {
 
   useEffect(() => {
     async function fetchPublications() {
+      // Recupera i post
       const { data, error } = await supabase
         .from('publications')
         .select('*')
@@ -58,7 +59,7 @@ export default function HomePage() {
             Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dal cemento.
           </p>
 
-          {/* FOCUS BOXES - COLLEGATE */}
+          {/* FOCUS BOXES */}
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
             
             {/* BOX 01: UNDER THE TOWER -> FEED */}
@@ -115,7 +116,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
             {loading ? (
               [1, 2, 3].map(i => (
-                <div key={i} className="h-80 glass-panel animate-pulse flex items-center justify-center">
+                <div key={i} className="h-80 glass-panel animate-pulse flex items-center justify-center border-white/5">
                   <Loader2 className="animate-spin text-zinc-800" size={32} />
                 </div>
               ))
@@ -128,12 +129,19 @@ export default function HomePage() {
                   key={post.id} 
                   className="glass-panel group overflow-hidden flex flex-col border-white/5 hover:border-[#FF914D]/30 transition-all duration-500"
                 >
-                  <div className="relative h-64 w-full overflow-hidden">
-                    <img 
-                      src={post.image_url} 
-                      alt={post.title} 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
-                    />
+                  <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
+                    {post.image_url ? (
+                      <img 
+                        src={post.image_url} 
+                        alt={post.title} 
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://placehold.co/600x400/000000/FF914D?text=MEDIA_NOT_FOUND";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-800 font-mono text-[10px]">NO_IMAGE_DATA</div>
+                    )}
                     <div className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
                       <Zap className="text-[#FF914D]" size={14} />
                     </div>
