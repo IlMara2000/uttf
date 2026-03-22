@@ -89,16 +89,16 @@ export default function FeedPage() {
         {/* NEWS SECTION - ABOUT */}
         <section>
           <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-            UTTFactory_<span className="text-[#FF914D]">NEWS</span>
+            COS_<span className="text-[#FF914D]">È</span>
           </h2>
           <div className="glass-panel p-8 md:p-12 border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
             <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-              CHE COS'È UNDER THE TOWER?
+              UNDER THE TOWER?
             </h3>
             <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
-              Under the Tower è un progetto creativo e digitale che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove gaming, intrattenimento, contenuti social e innovazione si incontrano per creare esperienze immersive e coinvolgenti.
-              L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello di intrattenimento che di opportunità, trasformando una community in un vero movimento.
+              Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
+              L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello UMANO che SOCIALE, trasformando una community in un vero movimento.
             </p>
           </div>
         </section>
@@ -107,14 +107,14 @@ export default function FeedPage() {
         <section>
           <div className="flex flex-col items-center mb-12">
             <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-4 text-center" style={{ fontFamily: 'var(--font-display)' }}>
-              INSTA_<span className="text-[#FF914D]">FOLLOW US</span>
+              SYNC ON<span className="text-[#FF914D]">_INSTA</span>
             </h2>
             
             {/* Handle con Icona Instagram */}
             <div className="flex items-center gap-3">
               <Instagram size={20} className="text-zinc-600" />
               <p className="text-[18px] md:text-[20px] font-mono tracking-[0.4em] text-zinc-600 uppercase">
-                @underthetowerfactory
+                @under_the_tower_factory
               </p>
             </div>
           </div>
