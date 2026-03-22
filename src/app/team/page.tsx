@@ -8,10 +8,7 @@ import {
   Scissors, 
   Settings, 
   ArrowLeft, 
-  Terminal, 
-  Mic2, 
-  Video, 
-  Cpu 
+  ExternalLink 
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -67,7 +64,7 @@ export default function TeamPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
       
-      {/* HEADER CON TASTO BACK */}
+      {/* HEADER */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-start gap-12">
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
@@ -98,6 +95,7 @@ export default function TeamPage() {
         </div>
       </header>
 
+      {/* TEAM GRID */}
       <main className="w-full max-w-7xl px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {teamMembers.map((member, index) => (
@@ -109,7 +107,6 @@ export default function TeamPage() {
               transition={{ delay: index * 0.1 }}
               className="glass-panel group border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden flex flex-col rounded-[2rem]"
             >
-              {/* Image Profile con Overlay Roles */}
               <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
                 <img 
                   src={member.image} 
@@ -132,7 +129,6 @@ export default function TeamPage() {
                 </div>
               </div>
 
-              {/* Info Bio & Skills */}
               <div className="p-8 flex-grow flex flex-col justify-between bg-zinc-950/50">
                 <div>
                   <p className="text-zinc-400 text-[11px] leading-relaxed mb-8 uppercase tracking-tight font-medium">
@@ -151,7 +147,6 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                {/* Tags di sistema */}
                 <div className="flex flex-wrap gap-2 pt-6 border-t border-white/5">
                   {member.tags.map(tag => (
                     <span key={tag} className="text-[8px] font-mono text-[#FF914D]/70 uppercase tracking-tighter">
@@ -165,19 +160,29 @@ export default function TeamPage() {
         </div>
       </main>
 
-      {/* Footer / Join */}
+      {/* FOOTER / CALL TO ACTION */}
       <footer className="mt-32 w-full max-w-3xl px-6 text-center">
-        <div className="glass-panel p-12 border-white/5 rounded-[3rem]">
+        <div className="glass-panel p-12 border-white/5 rounded-[3rem] relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FF914D]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          
           <h2 className="text-2xl font-black uppercase italic mb-6 tracking-tighter">
             Vuoi entrare nella <span className="text-[#FF914D]">SQUADRA</span>?
           </h2>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8">
             Siamo sempre alla ricerca di nuove risorse creative.
           </p>
-          <button className="nav-tag px-10 py-4 border-[#FF914D]/20 text-[#FF914D] hover:bg-[#FF914D] hover:text-black transition-all font-black uppercase tracking-widest text-xs">
+          
+          <a 
+            href="https://docs.google.com/forms/d/e/1FAIpQLSerjf1xGTrj08wmLSJhbrqwDV2Czc5Kd6OatIyvdlSwJsRNrw/viewform"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-tag inline-flex items-center gap-2 px-10 py-4 border-[#FF914D]/20 text-[#FF914D] hover:bg-[#FF914D] hover:text-black transition-all font-black uppercase tracking-widest text-xs cursor-pointer group/btn"
+          >
             COMPILA IL FORM
-          </button>
+            <ExternalLink size={14} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+          </a>
         </div>
+        
         <p className="mt-20 text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
           UTTF_STAFF_MANIFEST_2026
         </p>
