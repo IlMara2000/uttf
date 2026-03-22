@@ -5,10 +5,67 @@ import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft } from 
 import Link from 'next/link';
 
 const instagramPosts = [
-  { id: 'ig1', img: '/instagram/post2.jpeg', url: 'https://www.instagram.com/p/DSmt3LJDIXP/', ratio: 'portrait' },
-  { id: 'ig2', img: '/instagram/post1.jpeg', url: 'https://www.instagram.com/reel/DSNFiv_jWYe/', ratio: 'portrait' },
-  { id: 'ig3', img: '/instagram/post3.jpeg', url: 'https://www.instagram.com/reel/DS2iuPKjLIc/', ratio: 'portrait' },
-  { id: 'ig4', img: '/instagram/post4.jpeg', url: 'https://www.instagram.com/reel/DLnEnkMsQpe/', ratio: 'portrait' },
+  { 
+    id: 'ig1', 
+    img: '/instagram/post2.jpeg', 
+    url: 'https://www.instagram.com/p/DTJGIJLDFIq/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
+    ratio: 'portrait',
+    caption: (
+      <>
+        <span className="font-bold mr-2">uttf_factory</span>
+        RAP F*CKTORY nasce per chi il rap lo vive, anche quando non sa ancora da dove partire. 🎤<br/><br/>
+        Non è un laboratorio. È uno spazio dove incontrarsi, scrivere, provare.<br/><br/>
+        📍 Barrio’s Live – Milano<br/>
+        🗓 12/01 | ⏰ 18–20 | 💸 Gratis<br/><br/>
+        Passa, ascolta, fai due barre. 🔥<br/><br/>
+        #RapMilano #HipHopMilano #BarriosLive #RapUnderground #RapItaliano
+      </>
+    )
+  },
+  { 
+    id: 'ig2', 
+    img: '/instagram/post1.jpeg', 
+    url: 'https://www.instagram.com/reel/DSNFiv_jWYe/', 
+    ratio: 'portrait',
+    caption: (
+      <>
+        <span className="font-bold mr-2">uttf_factory</span>
+        [FIELD_REPORT] 📍 Rozzano, Piazza Foglia.<br/><br/>
+        Oggi la Factory è scesa in strada per la Festa delle Associazioni. Energia pura, connessioni urbane e la prova che la cultura nasce dal cemento della nostra città. 🏙️⚡️<br/><br/>
+        #UTTF #Rozzano #UrbanCulture #StreetUnit #Community
+      </>
+    )
+  },
+  { 
+    id: 'ig3', 
+    img: '/instagram/post3.jpeg', 
+    url: 'https://www.instagram.com/reel/DS2iuPKjLIc/', 
+    ratio: 'portrait',
+    caption: (
+      <>
+        <span className="font-bold mr-2">uttf_factory</span>
+        🎄 WAAAASSUUUP PEOPLE 🎄<br/><br/>
+        Ecco un breve recap della @rapfcktory Jam organizzata da noi al @barrioslive! Grazie a tutti i partecipanti per aver portato sul palco la loro musica.🎶<br/><br/>
+        Menzione speciale per @bleach_wears e @dant.hor: due realtà fighissime!🎨🖌️<br/><br/>
+        Ricordiamo che il 12 GENNAIO ricominceranno i laboratori! Training Rap su misura. DM per info. ✍🏻🎼
+      </>
+    )
+  },
+  { 
+    id: 'ig4', 
+    img: '/instagram/post4.jpeg', 
+    url: 'https://www.instagram.com/reel/DLnEnkMsQpe/', 
+    ratio: 'portrait',
+    caption: (
+      <>
+        <span className="font-bold mr-2">uttf_factory</span>
+        Official Video 🔥 NO LIMIT JAM 2025 🔥<br/><br/>
+        Un evento organizzato da @comunebuccinasco in collaborazione con @werunthestreetsmilano e molti altri. 💪<br/><br/>
+        Check full video on YouTube: https://youtu.be/pnL4b4Xhaxg 📺<br/><br/>
+        #nolimitjam #buccinasco #werunthestreets #graffiti #musica #trap #milano
+      </>
+    )
+  },
 ];
 
 export default function FeedPage() {
@@ -24,12 +81,12 @@ export default function FeedPage() {
           <div className="p-3 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-[#FF914D] mb-6">
             <Rss size={24} />
           </div>
-          <h1 className="hero-title text-[12vw] md:text-7xl leading-none">UTTF_DAY</h1>
+          <h1 className="hero-title text-[12vw] md:text-7xl leading-none italic uppercase">UTTF_DAY</h1>
         </div>
       </header>
 
       <main className="w-full max-w-7xl px-6 flex flex-col gap-24">
-        {/* NEWS SECTION */}
+        {/* NEWS SECTION - ABOUT */}
         <section>
           <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
             UTTFactory_<span className="text-[#FF914D]">NEWS</span>
@@ -39,8 +96,8 @@ export default function FeedPage() {
             <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
               CHE COS'È UNDER THE TOWER?
             </h3>
-            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono">
-              [SYSTEM_LOG]: Under the Tower è un progetto creativo e digitale che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove gaming, intrattenimento, contenuti social e innovazione si incontrano per creare esperienze immersive e coinvolgenti.
+            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
+              Under the Tower è un progetto creativo e digitale che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove gaming, intrattenimento, contenuti social e innovazione si incontrano per creare esperienze immersive e coinvolgenti.
               L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello di intrattenimento che di opportunità, trasformando una community in un vero movimento.
             </p>
           </div>
@@ -49,10 +106,17 @@ export default function FeedPage() {
         {/* INSTAGRAM SECTION */}
         <section>
           <div className="flex flex-col items-center mb-12">
-            <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-2 text-center" style={{ fontFamily: 'var(--font-display)' }}>
-              INSTA_<span className="text-[#FF914D]">FEED</span>
+            <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-4 text-center" style={{ fontFamily: 'var(--font-display)' }}>
+              INSTA_<span className="text-[#FF914D]">FOLLOW US</span>
             </h2>
-            <p className="text-[10px] font-mono tracking-[0.4em] text-zinc-600 uppercase">@underthetowerfactory</p>
+            
+            {/* Handle con Icona Instagram */}
+            <div className="flex items-center gap-3">
+              <Instagram size={20} className="text-zinc-600" />
+              <p className="text-[18px] md:text-[20px] font-mono tracking-[0.4em] text-zinc-600 uppercase">
+                @underthetowerfactory
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -67,10 +131,10 @@ export default function FeedPage() {
                   href={ig.url} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="glass-panel block border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden group"
+                  className="glass-panel block border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden group h-full"
                 >
                   {/* Instagram Header */}
-                  <div className="p-4 flex items-center justify-between">
+                  <div className="p-4 flex items-center justify-between border-b border-white/5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-[1.5px]">
                         <div className="w-full h-full rounded-full bg-black flex items-center justify-center p-0.5">
@@ -90,31 +154,29 @@ export default function FeedPage() {
                       className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" 
                     />
                     
-                    {/* Overlay al passaggio del mouse */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6">
-                        <div className="flex items-center gap-2 text-white font-bold">
-                           <Heart size={20} fill="white" /> <span>Like</span>
-                        </div>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Heart size={24} className="text-white fill-white" />
                     </div>
                   </div>
 
-                  {/* Instagram Actions */}
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-4">
+                  {/* Instagram Actions & Caption */}
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4 text-zinc-400">
                         <Heart size={20} className="hover:text-red-500 cursor-pointer transition-colors" />
-                        <MessageCircle size={20} className="hover:text-blue-400 cursor-pointer transition-colors" />
-                        <Send size={20} className="hover:text-green-400 cursor-pointer transition-colors" />
+                        <MessageCircle size={20} className="hover:text-white cursor-pointer transition-colors" />
+                        <Send size={20} className="hover:text-white cursor-pointer transition-colors" />
                       </div>
-                      <Bookmark size={20} className="hover:text-yellow-400 cursor-pointer transition-colors" />
+                      <Bookmark size={20} className="text-zinc-400 hover:text-yellow-400 cursor-pointer transition-colors" />
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-[11px] text-zinc-300">
-                        <span className="font-bold mr-2">uttf_factory</span>
-                        Visuals from the latest factory session. ⚡️
-                      </p>
-                      <p className="text-[9px] uppercase font-mono text-zinc-600 mt-2">View all comments</p>
+                    
+                    <div className="text-[11px] leading-relaxed text-zinc-300 font-sans">
+                      {ig.caption}
                     </div>
+                    
+                    <p className="text-[9px] uppercase font-mono text-zinc-600 mt-4 tracking-wider">
+                      View all comments
+                    </p>
                   </div>
                 </a>
               </motion.div>
@@ -122,6 +184,10 @@ export default function FeedPage() {
           </div>
         </section>
       </main>
+
+      <footer className="py-24 text-center opacity-30">
+        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
+      </footer>
     </div>
   );
 }
