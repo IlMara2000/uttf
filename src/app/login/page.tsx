@@ -79,7 +79,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black">
       <header className="absolute top-10 left-10">
         <Link href="/" className="nav-tag flex items-center gap-2 group">
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> BACK_HOME
+          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> HOME
         </Link>
       </header>
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
           <div className="p-5 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-6 shadow-[0_0_20px_rgba(234,88,12,0.1)]">
             <KeyRound size={32} />
           </div>
-          <h1 className="hero-title text-5xl mb-3 italic">Staff<br />Login</h1>
+          <h1 className="hero-title text-5xl mb-3 italic">Staff <br />Login </h1>
           <p className="text-zinc-600 font-mono text-[9px] uppercase tracking-[0.3em]">Authorized_Personnel_Only</p>
         </div>
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
         <form onSubmit={handleMagicLink} className="space-y-4">
           <input 
             type="email"
-            placeholder="ENTER_IDENTITY_EMAIL"
+            placeholder="ENTER_EMAIL"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
