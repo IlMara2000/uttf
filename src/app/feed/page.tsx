@@ -35,11 +35,11 @@ const instagramPosts = [
 const internalPosts = [
   {
     id: 1,
-    tag: 'UTTFACTORY_REPORT',
-    title: 'RAPF*CKTORY // UNIT_01_LIVE',
+    tag: 'UTTF_REPORT',
+    title: 'UNDER THE TOWER FACTORY // URBAN GIANTS 2026',
     date: '21 MAR 2026',
     description: 'A BREVE TORNERÀ IL FANTASTICO EVENTO ANNUALE A CUI SIAMO FIERI DI PARTECIPARE, SIETE PRONTI!? URBAN GIANTS!!?',
-    author: 'SYSTEM_CORE',
+    author: 'DEN',
   },
 ];
 
@@ -63,10 +63,10 @@ export default function FeedPage() {
             <Rss size={24} />
           </div>
           <h1 className="hero-title text-[12vw] md:text-7xl leading-none tracking-tighter">
-            UTTF_FEED
+            UTTF_DAY
           </h1>
-          <p className="text-zinc-600 font-mono text-[8px] uppercase tracking-[0.3em] mt-4">
-            Factory_Sync // Unit_02
+          <p className="text-zinc-600 font-mono text-[12px] uppercase tracking-[0.3em] mt-4">
+            STAY TUNED // QUA VEDRAI LE NOSTRE ULTIME ATTIVITÀ
           </p>
         </div>
       </header>
@@ -76,7 +76,7 @@ export default function FeedPage() {
         {/* SEZIONE POST INTERNO */}
         <section>
           <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-            Factory_<span className="text-orange-600">Direct</span>
+            UTTFactory_<span className="text-orange-600">NEWS</span>
           </h2>
           {internalPosts.map((post) => (
             <motion.div 
@@ -109,7 +109,7 @@ export default function FeedPage() {
             <a href={igProfile} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
               <Instagram className="text-zinc-700 group-hover:text-orange-600 transition-colors" size={20} />
               <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-                Social_<span className="text-zinc-700 group-hover:text-orange-600 transition-colors">Sync</span>
+                INSTA_<span className="text-zinc-700 group-hover:text-orange-600 transition-colors">SEGUITECI!</span>
               </h2>
             </a>
           </div>
@@ -142,7 +142,7 @@ export default function FeedPage() {
       </main>
 
       <footer className="py-24 text-center opacity-10">
-        <p className="text-[10px] font-mono uppercase tracking-[1em] text-zinc-800">UTTF_SYSTEM_V.2.0 // Rozzano</p>
+        <p className="text-[10px] font-mono uppercase tracking-[1em] text-zinc-800">UTTF_SYSTEM_V.3.0 // Rozzano</p>
       </footer>
     </div>
   );
