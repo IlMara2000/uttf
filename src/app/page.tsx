@@ -144,7 +144,7 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-24 text-center opacity-20">
+      <footer className="py-24 text-center opacity-30">
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">
           UTTF_SYSTEM_V.2.0 // Rozzano
         </p>
