@@ -8,26 +8,26 @@ import Link from 'next/link';
 const instagramPosts = [
   { 
     id: 'ig1', 
-    img: '/instagram/post1.jpg', // Metti le foto in public/instagram/
-    url: 'https://www.instagram.com/p/C4-XXXXX/', // Link al post specifico
+    img: '@/public/instagram/post1.jpg', // Metti le foto in public/instagram/
+    url: 'https://www.instagram.com/p/DSmt3LJDIXP/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', // Link al post specifico
     ratio: 'square' 
   },
   { 
     id: 'ig2', 
-    img: '/instagram/post2.jpg', 
-    url: 'https://www.instagram.com/p/C4-YYYYY/', 
+    img: '@/public/instagram/post2.jpg', 
+    url: 'https://www.instagram.com/reel/DSNFiv_jWYe/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
     ratio: 'square' 
   },
   { 
     id: 'ig3', 
-    img: '/instagram/post3.jpg', 
-    url: 'https://www.instagram.com/p/C4-ZZZZZ/', 
+    img: '@/public/instagram/post3.jpg', 
+    url: 'https://www.instagram.com/reel/DS2iuPKjLIc/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
     ratio: 'portrait' 
   },
   { 
     id: 'ig4', 
-    img: '/instagram/post4.jpg', 
-    url: 'https://www.instagram.com/p/C4-WWWWW/', 
+    img: '@/public/instagram/post4.jpg', 
+    url: 'https://www.instagram.com/reel/DLnEnkMsQpe/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
     ratio: 'square' 
   },
 ];
@@ -35,16 +35,16 @@ const instagramPosts = [
 const internalPosts = [
   {
     id: 1,
-    tag: 'FACTORY_REPORT',
+    tag: 'UTTFACTORY_REPORT',
     title: 'RAPF*CKTORY // UNIT_01_LIVE',
     date: '21 MAR 2026',
-    description: 'Il primo nucleo creativo è attivo. I sistemi di produzione ritmica sono online. Accesso limitato alle unità autorizzate.',
+    description: 'A BREVE TORNERÀ IL FANTASTICO EVENTO ANNUALE A CUI SIAMO FIERI DI PARTECIPARE, SIETE PRONTI!? URBAN GIANTS!!?',
     author: 'SYSTEM_CORE',
   },
 ];
 
 export default function FeedPage() {
-  const igProfile = "https://www.instagram.com/under_the_tower_factory?igsh=MW4zNzUwdGplOG5iYw==";
+  const igProfile = "https://www.instagram.com/under_the_tower_factory";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
