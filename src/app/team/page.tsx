@@ -75,7 +75,7 @@ export default function TeamPage() {
         >
           <Link href="/" className="nav-tag flex items-center gap-2 group border-white/10 hover:border-[#FF914D]/50 transition-all">
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> 
-            <span className="font-mono tracking-widest text-[10px]">BACK_TO_HOME</span>
+            <span className="font-mono tracking-widest text-[10px]">BACK</span>
           </Link>
         </motion.div>
 
@@ -85,7 +85,7 @@ export default function TeamPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none"
           >
-            THE <span className="text-[#FF914D]">CORE</span> TEAM
+            IL <span className="text-[#FF914D]">TEAM</span> OPERATIVO
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -93,8 +93,7 @@ export default function TeamPage() {
             transition={{ delay: 0.2 }}
             className="text-zinc-500 text-sm md:text-lg max-w-xl uppercase font-mono tracking-tight leading-tight"
           >
-            Task force creativa specializzata in cultura urbana e asset digitali. 
-            Human_Capital // Operating_Unit_2026
+            Task force creativa specializzata in cultura urbana e hip-hop.
           </motion.p>
         </div>
       </header>
@@ -170,13 +169,13 @@ export default function TeamPage() {
       <footer className="mt-32 w-full max-w-3xl px-6 text-center">
         <div className="glass-panel p-12 border-white/5 rounded-[3rem]">
           <h2 className="text-2xl font-black uppercase italic mb-6 tracking-tighter">
-            Vuoi entrare nella <span className="text-[#FF914D]">Factory</span>?
+            Vuoi entrare nella <span className="text-[#FF914D]">SQUADRA</span>?
           </h2>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8">
             Siamo sempre alla ricerca di nuove risorse creative.
           </p>
           <button className="nav-tag px-10 py-4 border-[#FF914D]/20 text-[#FF914D] hover:bg-[#FF914D] hover:text-black transition-all font-black uppercase tracking-widest text-xs">
-            Sottometti Candidatura
+            COMPILA IL FORM
           </button>
         </div>
         <p className="mt-20 text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
