@@ -181,7 +181,7 @@ export default function FeedPage() {
         </section>
 
         {/* CTA LABS SECTION */}
-        <Link href="/labs" className="team">
+        <Link href="/team" className="group">
           <motion.div 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
