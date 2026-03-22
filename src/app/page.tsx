@@ -28,11 +28,12 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center overflow-x-hidden pb-40 bg-black">
+    /* Il div principale non ha colori di sfondo per far vedere il gradiente del body */
+    <div className="min-h-screen flex flex-col items-center overflow-x-hidden pb-40">
       
       {/* HEADER CENTRALE */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-10">
-        <img src="/icons/favicon.svg" alt="UTTF" className="w-20 h-20 md:w-24 md:h-24" />
+        <img src="/icons/favicon.svg" alt="UTTF" className="w-25 h-25 md:w-30 md:h-30 transition-transform hover:scale-110 duration-500" />
         <span className="nav-tag uppercase tracking-[0.3em]">W.I.P.</span>
       </header>
 
@@ -47,24 +48,24 @@ export default function HomePage() {
           <h1 className="hero-title text-[14vw] md:text-[8vw] leading-[0.9] text-center mb-16">
             Under The<br />
             Tower<br />
-            <span className="text-orange-600" style={{ WebkitTextFillColor: 'var(--uttf-orange)' }}>Factory</span>
+            <span style={{ color: '#FF914D' }}>Factory</span>
           </h1>
 
-          <p className="text-zinc-500 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10">
+          <p className="text-zinc-400 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10 opacity-80">
             Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dal cemento.
           </p>
 
           {/* FOCUS BOXES */}
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
-            <div className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5">
-              <span className="text-[9px] tracking-[0.8em] text-orange-600 mb-4 font-mono uppercase">CREATIVE_COLLECTIVE</span>
+            <div className="glass-panel p-10 md:p-16 flex flex-col items-center text-center">
+              <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
               <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
                 Under The Tower
               </h3>
             </div>
 
-            <div className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5">
-              <span className="text-[12px] tracking-[0.8em] text-orange-600 mb-4 font-mono uppercase">Lab_Unit</span>
+            <div className="glass-panel p-10 md:p-16 flex flex-col items-center text-center">
+              <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
               <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
                 RAPF*CKTORY
               </h3>
@@ -73,7 +74,7 @@ export default function HomePage() {
 
           {/* BOTTONE STAFF */}
           <div className="mt-24">
-            <Link href="/login" className="btn-urban shadow-[0_20px_50px_rgba(234,88,12,0.2)]">
+            <Link href="/login" className="btn-urban shadow-[0_20px_50px_rgba(255,145,77,0.15)]">
               ACCESSO STAFF
             </Link>
           </div>
@@ -81,19 +82,19 @@ export default function HomePage() {
       </section>
 
       {/* LIVE OUTPUT SECTION - DINAMICA */}
-      <section className="w-full px-6 py-32 mt-20 border-t border-white/5 bg-zinc-950/20">
+      <section className="w-full px-6 py-32 mt-20 border-t border-white/5 bg-transparent">
         <div className="max-w-7xl mx-auto flex flex-col items-center">
           <div className="flex flex-col items-center mb-20 text-center">
-             <span className="text-orange-600 font-mono text-[10px] tracking-[0.6em] uppercase mb-4">Real_Time_Stream</span>
+             <span className="text-[#FF914D] font-mono text-[10px] tracking-[0.6em] uppercase mb-4">Real_Time_Stream</span>
              <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-               Live_<span className="text-orange-600">Output</span>
+               Live_<span className="text-[#FF914D]">Output</span>
              </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
             {loading ? (
               [1, 2, 3].map(i => (
-                <div key={i} className="h-80 glass-panel animate-pulse flex items-center justify-center border-white/5">
+                <div key={i} className="h-80 glass-panel animate-pulse flex items-center justify-center">
                   <Loader2 className="animate-spin text-zinc-800" size={32} />
                 </div>
               ))
@@ -102,10 +103,11 @@ export default function HomePage() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
                   key={post.id} 
-                  className="glass-panel group overflow-hidden flex flex-col border-white/5 hover:border-orange-600/30 transition-all duration-500"
+                  className="glass-panel group overflow-hidden flex flex-col border-white/5 hover:border-[#FF914D]/30 transition-all duration-500"
                 >
-                  {/* Immagine con Aspect Ratio fisso */}
+                  {/* Immagine */}
                   <div className="relative h-64 w-full overflow-hidden">
                     <img 
                       src={post.image_url} 
@@ -113,7 +115,7 @@ export default function HomePage() {
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
                     />
                     <div className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
-                      <Zap className="text-orange-600" size={14} />
+                      <Zap className="text-[#FF914D]" size={14} />
                     </div>
                   </div>
 
@@ -144,7 +146,7 @@ export default function HomePage() {
       {/* FOOTER */}
       <footer className="py-24 text-center opacity-20">
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">
-          UTTF_SYSTEM_V.2.0 // Rozzano // Milan
+          UTTF_SYSTEM_V.2.0 // Rozzano
         </p>
       </footer>
     </div>
