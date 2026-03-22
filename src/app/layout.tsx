@@ -11,13 +11,13 @@ export const metadata = {
   description: 'Under The Tower Factory - Urban Art & Culture',
   icons: {
     icon: [
-      { url: '/icons/favicon.ico' },
-      { url: '/icons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-      { url: '/icons/favicon.svg', type: 'image/svg+xml' },
+      { url: '@/icons/favicon.ico' },
+      { url: '@/icons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '@/icons/favicon.svg', type: 'image/svg+xml' },
     ],
-    apple: [{ url: '/icons/apple-touch-icon.png' }],
+    apple: [{ url: '@/icons/apple-touch-icon.png' }],
   },
-  manifest: '/icons/site.webmanifest',
+  manifest: '@/icons/site.webmanifest',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
