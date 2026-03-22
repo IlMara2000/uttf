@@ -5,8 +5,8 @@ import { Rss, Instagram, Layers, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 const instagramPosts = [
-  { id: 'ig1', img: '/instagram/post2.jpeg', url: 'https://www.instagram.com/reel/DSNFiv_jWYe/', ratio: 'portrait' },
-  { id: 'ig2', img: '/instagram/post1.jpeg', url: 'https://www.instagram.com/p/DSmt3LJDIXP/', ratio: 'portrait' },
+  { id: 'ig1', img: '/instagram/post2.jpeg', url: 'https://www.instagram.com/p/DSmt3LJDIXP/', ratio: 'portrait' },
+  { id: 'ig2', img: '/instagram/post1.jpeg', url: 'https://www.instagram.com/reel/DSNFiv_jWYe/', ratio: 'portrait' },
   { id: 'ig3', img: '/instagram/post3.jpeg', url: 'https://www.instagram.com/reel/DS2iuPKjLIc/', ratio: 'portrait' },
   { id: 'ig4', img: '/instagram/post4.jpeg', url: 'https://www.instagram.com/reel/DLnEnkMsQpe/', ratio: 'portrait' },
 ];
