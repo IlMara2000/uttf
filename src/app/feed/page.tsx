@@ -8,25 +8,25 @@ import Link from 'next/link';
 const instagramPosts = [
   { 
     id: 'ig1', 
-    img: '@/public/instagram/post1.jpg', // Metti le foto in public/instagram/
+    img: '@/instagram/post1.jpg', // Metti le foto in public/instagram/
     url: 'https://www.instagram.com/p/DSmt3LJDIXP/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', // Link al post specifico
     ratio: 'square' 
   },
   { 
     id: 'ig2', 
-    img: '@/public/instagram/post2.jpg', 
+    img: '@/instagram/post2.jpg', 
     url: 'https://www.instagram.com/reel/DSNFiv_jWYe/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
     ratio: 'square' 
   },
   { 
     id: 'ig3', 
-    img: '@/public/instagram/post3.jpg', 
+    img: '@/instagram/post3.jpg', 
     url: 'https://www.instagram.com/reel/DS2iuPKjLIc/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
-    ratio: 'portrait' 
+    ratio: 'square' 
   },
   { 
     id: 'ig4', 
-    img: '@/public/instagram/post4.jpg', 
+    img: '@/instagram/post4.jpg', 
     url: 'https://www.instagram.com/reel/DLnEnkMsQpe/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
     ratio: 'square' 
   },
