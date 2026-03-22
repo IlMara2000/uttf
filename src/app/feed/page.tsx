@@ -85,24 +85,6 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <main className="w-full max-w-7xl px-6 flex flex-col gap-24">
-        {/* NEWS SECTION - ABOUT */}
-        <section>
-          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-            COS_<span className="text-[#FF914D]">È</span>
-          </h2>
-          <div className="glass-panel p-8 md:p-12 border-white/5 relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
-            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
-              UNDER THE TOWER?
-            </h3>
-            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
-              Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
-              L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello UMANO che SOCIALE, trasformando una community in un vero movimento.
-            </p>
-          </div>
-        </section>
-
         {/* INSTAGRAM SECTION */}
         <section>
           <div className="flex flex-col items-center mb-12">
@@ -181,6 +163,24 @@ export default function FeedPage() {
                 </a>
               </motion.div>
             ))}
+          </div>
+        </section>
+        </main>
+        <main className="w-full max-w-7xl px-6 flex flex-col gap-24">
+        {/* NEWS SECTION - ABOUT */}
+        <section>
+          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
+            COS_<span className="text-[#FF914D]">È</span>
+          </h2>
+          <div className="glass-panel p-8 md:p-12 border-white/5 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
+            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
+              UNDER THE TOWER?
+            </h3>
+            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
+              Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
+              L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello UMANO che SOCIALE, trasformando una community in un vero movimento.
+            </p>
           </div>
         </section>
       </main>
