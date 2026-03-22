@@ -19,41 +19,59 @@ export default function LoginPage() {
     setLoading(true);
 
     const cleanEmail = email.toLowerCase().trim();
+    console.log("--- START_AUTH_PROTOCOL ---");
+    console.log("Target:", cleanEmail);
+
+    // Timeout di sicurezza: se dopo 10 secondi gira ancora, sblocca tutto
+    const authTimeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        setError("NETWORK_TIMEOUT: Il server non risponde. Controlla la connessione o lo Shield di Brave.");
+      }
+    }, 10000);
 
     try {
       // 1. Controllo Whitelist
+      console.log("Checking authorized_users table...");
       const { data: whitelist, error: checkError } = await supabase
         .from('authorized_users')
         .select('email')
         .eq('email', cleanEmail)
         .single();
 
-      if (checkError || !whitelist) {
-        setError('ACCESS_DENIED: Email non registrata nei protocolli UTTF.');
+      if (checkError) {
+        console.error("Whitelist Error:", checkError);
+        setError('ACCESS_DENIED: Identità non autorizzata o errore database.');
         setLoading(false);
+        clearTimeout(authTimeout);
         return;
       }
 
+      console.log("Whitelist OK. Sending Magic Link...");
+
       // 2. Invio Magic Link
-      // Usiamo window.location.origin per essere sicuri che punti al tuo dominio attuale
       const { error: authError } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: 'https://uttf.vercel.app/dashboard',
         },
       });
 
       if (authError) {
+        console.error("Supabase Auth Error:", authError);
         setError(`AUTH_ERROR: ${authError.message}`);
       } else {
-        setMessage('CHECK_INBOX: Link di accesso inviato. Controlla la mail.');
-        // Opzionale: pulisci l'input dopo il successo
+        console.log("Success! Link sent.");
+        setMessage('CHECK_INBOX: Link inviato. Controlla la tua email.');
         setEmail('');
       }
     } catch (err: any) {
-      setError('SYSTEM_FAULT: Errore di connessione al database.');
+      console.error("Crash Fatale:", err);
+      setError('SYSTEM_FAULT: Errore critico nel modulo di login.');
     } finally {
       setLoading(false);
+      clearTimeout(authTimeout);
+      console.log("--- END_AUTH_PROTOCOL ---");
     }
   }
 
@@ -66,9 +84,9 @@ export default function LoginPage() {
       </header>
 
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass-panel p-10 md:p-16 w-full max-w-md border-white/5 text-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-panel p-10 md:p-16 w-full max-w-md border-white/5 text-center"
       >
         <div className="flex flex-col items-center mb-10">
           <div className="p-5 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-6 shadow-[0_0_20px_rgba(234,88,12,0.1)]">
@@ -79,15 +97,15 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 flex items-center gap-3 justify-center">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 flex items-center gap-3 justify-center">
             <ShieldAlert size={16} /> {error}
-          </motion.div>
+          </div>
         )}
 
         {message && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-orange-600/10 border border-orange-600/20 text-orange-500 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 flex items-center gap-3 justify-center">
+          <div className="bg-orange-600/10 border border-orange-600/20 text-orange-500 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 flex items-center gap-3 justify-center">
             <Mail size={16} /> {message}
-          </motion.div>
+          </div>
         )}
 
         <form onSubmit={handleMagicLink} className="space-y-4">
