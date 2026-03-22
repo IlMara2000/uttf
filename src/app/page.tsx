@@ -10,9 +10,9 @@ export default function HomePage() {
   const [publications, setPublications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // CONFIGURAZIONE SUPABASE - MODIFICA QUESTE DUE COSTANTI
-  const PROJECT_ID = 'IL_TUO_PROJECT_ID'; // Es: 'abcde-fghil-mnop'
-  const BUCKET_NAME = 'publications';      // Il nome del tuo bucket storage
+  // CONFIGURAZIONE SUPABASE
+  const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
+  const BUCKET_NAME = 'publications'; 
 
   useEffect(() => {
     async function fetchPublications() {
@@ -33,7 +33,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col items-center overflow-x-hidden pb-40">
       
-      {/* HEADER CENTRALE */}
+      {/* HEADER */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-10">
         <img 
           src="/icons/favicon.svg" 
@@ -62,9 +62,7 @@ export default function HomePage() {
             Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dal cemento.
           </p>
 
-          {/* FOCUS BOXES */}
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
-            
             <Link href="/feed" className="group">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
@@ -92,7 +90,6 @@ export default function HomePage() {
                 <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
               </motion.div>
             </Link>
-
           </div>
 
           <div className="mt-24">
@@ -122,10 +119,10 @@ export default function HomePage() {
               ))
             ) : publications.length > 0 ? (
               publications.map((post) => {
-                // COSTRUZIONE URL DINAMICO
-                let finalImageUrl = post.image_url;
-                if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-                  finalImageUrl = `https://${oieqtrfeoyfabyjirrqa}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${post.image_url}`;
+                // FIX: Uso corretto della variabile PROJECT_ID nella stringa
+                let imageUrl = post.image_url;
+                if (imageUrl && !imageUrl.startsWith('http')) {
+                  imageUrl = `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${imageUrl}`;
                 }
 
                 return (
@@ -137,28 +134,25 @@ export default function HomePage() {
                     className="glass-panel group overflow-hidden flex flex-col border-white/5 hover:border-[#FF914D]/30 transition-all duration-500"
                   >
                     <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
-                      {finalImageUrl ? (
+                      {imageUrl ? (
                         <img 
-                          src={finalImageUrl} 
+                          src={imageUrl} 
                           alt={post.title} 
                           className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
                           onError={(e) => {
-                            e.currentTarget.src = "https://placehold.co/600x400/0a0a0a/FF914D?text=URL_ERROR";
+                            e.currentTarget.src = "https://placehold.co/600x400/0a0a0a/FF914D?text=FILE_NOT_FOUND";
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-800 font-mono text-[10px]">NO_IMAGE_DATA</div>
+                        <div className="w-full h-full flex items-center justify-center text-zinc-800 font-mono text-[10px]">NO_IMAGE</div>
                       )}
-                      <div className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
-                        <Zap className="text-[#FF914D]" size={14} />
-                      </div>
                     </div>
 
                     <div className="p-8">
                       <h4 className="text-xl font-black uppercase italic mb-3 text-white tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
                         {post.title}
                       </h4>
-                      <p className="text-zinc-500 text-[10px] uppercase tracking-widest leading-relaxed line-clamp-2 font-mono mb-6">
+                      <p className="text-zinc-500 text-[10px] uppercase tracking-widest leading-relaxed font-mono mb-6 line-clamp-2">
                         {post.content || "FACTORY_LOG_ENTRY_ALPHA"}
                       </p>
                       <div className="flex justify-between items-center pt-4 border-t border-white/5 font-mono text-[9px] text-zinc-700">
@@ -171,7 +165,7 @@ export default function HomePage() {
               })
             ) : (
               <div className="col-span-full py-20 text-center opacity-30">
-                <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-[0.5em]">No_Output_Detected_In_System</p>
+                <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-[0.5em]">No_Output_Detected</p>
               </div>
             )}
           </div>
@@ -179,9 +173,7 @@ export default function HomePage() {
       </section>
 
       <footer className="py-24 text-center opacity-30">
-        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">
-          UTTF_SYSTEM_V.2.0 // Rozzano
-        </p>
+        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.2.0</p>
       </footer>
     </div>
   );
