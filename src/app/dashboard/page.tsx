@@ -60,7 +60,6 @@ export default function Dashboard() {
   }
 
   // --- LOGICA STAFF & GRUPPI ---
-
   const addGroup = () => {
     if(!newGroupName) return;
     setGroups([...groups, { name: newGroupName.toUpperCase(), members: [] }]);
@@ -88,7 +87,6 @@ export default function Dashboard() {
   }
 
   // --- LOGICA POST (FACTORY OUTPUT) ---
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) { setFile(selectedFile); setPreviewUrl(URL.createObjectURL(selectedFile)); }
@@ -99,17 +97,39 @@ export default function Dashboard() {
     if (!file || !title) return alert("Dati mancanti.");
     setUploading(true);
     try {
+      // 1. GENERAZIONE CAPTION CON AI (GROQ)
+      const aiResponse = await fetch('/api/generate-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      });
+      const aiData = await aiResponse.json();
+      const finalContent = aiData.post || description;
+
+      // 2. CARICAMENTO FILE
       const fileName = `${Date.now()}.${file.name.split('.').pop()}`;
       const filePath = `publications/${fileName}`;
-      await supabase.storage.from('factory-assets').upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from('factory-assets').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
       const { data: { publicUrl } } = supabase.storage.from('factory-assets').getPublicUrl(filePath);
+
+      // 3. SALVATAGGIO SU DATABASE
       await supabase.from('publications').insert([{ 
-        title: title.toUpperCase(), content: description, image_url: publicUrl, created_at: new Date() 
+        title: title.toUpperCase(), 
+        content: finalContent, 
+        image_url: publicUrl, 
+        created_at: new Date() 
       }]);
-      alert("UNIT_PUBLISHED");
-      setTitle(''); setFile(null); setPreviewUrl(null);
+
+      alert("UNIT_PUBLISHED_WITH_AI");
+      setTitle(''); setDescription(''); setFile(null); setPreviewUrl(null);
       fetchMyPosts();
-    } catch (err: any) { alert(err.message); } finally { setUploading(false); }
+    } catch (err: any) { 
+        alert("Errore Processo: " + err.message); 
+    } finally { 
+        setUploading(false); 
+    }
   }
 
   async function handleDeletePost(id: string, imageUrl: string) {
@@ -144,10 +164,6 @@ export default function Dashboard() {
                   <label className="text-[8px] font-mono text-zinc-500 uppercase mb-2 block">Email_Address</label>
                   <input type="email" value={editingAccount.email} onChange={(e) => setEditingAccount({...editingAccount, email: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl font-mono text-xs outline-none focus:border-[#FF914D]" />
                 </div>
-                <div>
-                  <label className="text-[8px] font-mono text-zinc-500 uppercase mb-2 block">New_Access_Key (Password)</label>
-                  <input type="password" placeholder="••••••••" className="w-full bg-white/5 border border-white/10 p-4 rounded-xl font-mono text-xs outline-none focus:border-[#FF914D]" />
-                </div>
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setEditingAccount(null)} className="flex-1 py-4 border border-white/10 rounded-xl font-black uppercase text-[10px]">Annulla</button>
                   <button type="submit" className="flex-1 py-4 bg-[#FF914D] text-black rounded-xl font-black uppercase text-[10px] flex items-center justify-center gap-2">
@@ -170,9 +186,7 @@ export default function Dashboard() {
         <button onClick={() => { supabase.auth.signOut(); router.push('/'); }} className="nav-tag border-red-500/30 text-red-500 uppercase font-bold italic hover:bg-red-500 hover:text-white transition-all">Logout_Session</button>
       </header>
 
-      {/* GRIGLIA PRINCIPALE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        
         {/* STAFF MANAGEMENT */}
         <div className="space-y-8">
           {userEmail === MASTER_ADMIN ? (
@@ -180,29 +194,23 @@ export default function Dashboard() {
               <div className="flex items-center gap-4 mb-6 text-[#FF914D] font-black italic uppercase">
                 <Users size={20} /> <h2>Staff_Directory</h2>
               </div>
-              
               <form onSubmit={inviteUser} className="flex gap-2 mb-8">
                 <input type="email" required placeholder="EMAIL_ADDRESS" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="flex-1 bg-white/5 border border-white/10 p-3 rounded-xl font-mono text-[10px] outline-none focus:border-[#FF914D]" />
                 <button type="submit" className="bg-[#FF914D] text-black px-5 rounded-xl font-black uppercase italic text-[10px]">Add</button>
               </form>
-
               <div className="flex gap-2 mb-8 pb-8 border-b border-white/5">
                 <input type="text" placeholder="NEW_GROUP_NAME" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="flex-1 bg-white/5 border border-white/5 p-3 rounded-xl font-mono text-[10px] outline-none" />
                 <button onClick={addGroup} className="p-3 border border-white/10 rounded-xl text-zinc-500 hover:text-[#FF914D]"><Plus size={16}/></button>
               </div>
-
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {groups.map((group, idx) => (
                   <div key={idx} className="border border-white/5 rounded-2xl overflow-hidden">
                     <div className="p-4 bg-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-[10px] font-black italic text-zinc-400 uppercase">
-                        <Users size={12}/> {group.name}
-                      </div>
+                      <div className="flex items-center gap-3 text-[10px] font-black italic text-zinc-400 uppercase"><Users size={12}/> {group.name}</div>
                       <span className="text-[8px] font-mono text-zinc-600 uppercase">G_UNIT</span>
                     </div>
                   </div>
                 ))}
-
                 {staffList.map((staff) => (
                   <div key={staff.id} className="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-[#FF914D]/40 transition-all">
                     <div className="flex items-center gap-3">
@@ -264,7 +272,7 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* TO DO LIST - Esteso a 2 colonne */}
+        {/* TO DO LIST */}
         <div className="lg:col-span-2 glass-panel p-8 min-h-[400px]">
           <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
             <ClipboardList size={18} className="text-[#FF914D]" /> <h2>TO DO LIST:</h2>
@@ -272,14 +280,13 @@ export default function Dashboard() {
           <Planner isAdmin={userEmail === MASTER_ADMIN} />
         </div>
 
-        {/* CALENDAR/DEADLINES - Esteso a 2 colonne */}
+        {/* DEADLINE (Ex CalendarWidget) */}
         <div className="lg:col-span-2 glass-panel p-8 min-h-[400px]">
           <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
-            <CalendarIcon size={18} className="text-[#FF914D]" /> <h2>Calendar</h2>
+            <CalendarIcon size={18} className="text-[#FF914D]" /> <h2>Deadlines</h2>
           </div>
           <CalendarWidget isAdmin={userEmail === MASTER_ADMIN} />
         </div>
-
       </div>
     </div>
   );
