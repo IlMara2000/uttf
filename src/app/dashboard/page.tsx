@@ -68,7 +68,7 @@ export default function Dashboard() {
   };
 
   const deleteStaff = async (id: string) => {
-    if(!confirm("REVOCARE ACCESSO A QUESTO OPERATORE?")) return;
+    if(!confirm("REVOCARE L'ACCESSO A QUESTO OPERATORE?")) return;
     await supabase.from('authorized_users').delete().eq('id', id);
     fetchStaff();
   };
@@ -164,7 +164,7 @@ export default function Dashboard() {
         <div>
           <h1 className="hero-title text-4xl md:text-5xl uppercase italic font-black tracking-tighter">Command_Center</h1>
           <p className="text-zinc-600 font-mono text-[9px] tracking-[0.4em] uppercase mt-2">
-            Operator: <span className="text-orange-600">{userEmail}</span> // Role: <span className="text-white">{userEmail === MASTER_ADMIN ? 'MASTER_ROOT' : 'FIELD_STAFF'}</span>
+            Operator: <span className="text-orange-600">{userEmail}</span> // Role: <span className="text-white">{userEmail === MASTER_ADMIN ? 'MASTER' : 'STAFF'}</span>
           </p>
         </div>
         <button onClick={() => { supabase.auth.signOut(); router.push('/'); }} className="nav-tag border-red-500/30 text-red-500 uppercase font-bold italic hover:bg-red-500 hover:text-white transition-all">Logout_Session</button>
@@ -225,7 +225,7 @@ export default function Dashboard() {
           {/* NEW OUTPUT UNIT */}
           <div className="glass-panel p-8">
             <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
-              <Send size={18} className="text-[#FF914D]" /> <h2>New_Output_Unit</h2>
+              <Send size={18} className="text-[#FF914D]" /> <h2>Pubblica Ora sul sito</h2>
             </div>
             <form onSubmit={handleCreatePost} className="space-y-4">
               <input type="text" required placeholder="UNIT_TITLE" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl font-mono text-xs uppercase outline-none focus:border-[#FF914D]" />
@@ -245,7 +245,7 @@ export default function Dashboard() {
         <div className="glass-panel p-8 h-full max-h-[600px] overflow-y-auto custom-scrollbar">
           <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
             <div className="flex items-center gap-4 text-white font-black italic uppercase leading-none">
-              <Layers size={18} className="text-[#FF914D]" /> <h2>Factory_Output_Logs</h2>
+              <Layers size={18} className="text-[#FF914D]" /> <h2>Pubblicazioni Attive:</h2>
             </div>
             <span className="font-mono text-[8px] text-zinc-500 uppercase">Archive_Count: {myPosts.length}</span>
           </div>
@@ -262,21 +262,21 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+        
+        {/* PLANNER - AGGIUNTO lg:col-span-2 PER ESTENDERLO */}
+        <div className="glass-panel p-8 min-h-[400px] lg:col-span-2">
+          <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
+            <ClipboardList size={18} className="text-[#FF914D]" /> <h2>TO DO LIST:</h2>
+          </div>
+          <Planner isAdmin={userEmail === MASTER_ADMIN} />
+        </div>
 
         {/* CALENDAR - AGGIUNTO lg:col-span-2 PER ESTENDERLO */}
         <div className="glass-panel p-8 min-h-[400px] lg:col-span-2">
           <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
-            <CalendarIcon size={18} className="text-[#FF914D]" /> <h2>Factory_Calendar</h2>
+            <CalendarIcon size={18} className="text-[#FF914D]" /> <h2>Calendar</h2>
           </div>
           <CalendarWidget isAdmin={userEmail === MASTER_ADMIN} />
-        </div>
-
-        {/* PLANNER - AGGIUNTO lg:col-span-2 PER ESTENDERLO */}
-        <div className="glass-panel p-8 min-h-[400px] lg:col-span-2">
-          <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
-            <ClipboardList size={18} className="text-[#FF914D]" /> <h2>Task_Manager</h2>
-          </div>
-          <Planner isAdmin={userEmail === MASTER_ADMIN} />
         </div>
 
       </div>
