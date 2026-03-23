@@ -170,9 +170,10 @@ export default function Dashboard() {
         <button onClick={() => { supabase.auth.signOut(); router.push('/'); }} className="nav-tag border-red-500/30 text-red-500 uppercase font-bold italic hover:bg-red-500 hover:text-white transition-all">Logout_Session</button>
       </header>
 
+      {/* GRIGLIA PRINCIPALE */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         
-        {/* COLONNA STAFF MANAGEMENT */}
+        {/* STAFF MANAGEMENT */}
         <div className="space-y-8">
           {userEmail === MASTER_ADMIN ? (
             <div className="glass-panel p-8 border-[#FF914D]/20">
@@ -190,7 +191,7 @@ export default function Dashboard() {
                 <button onClick={addGroup} className="p-3 border border-white/10 rounded-xl text-zinc-500 hover:text-[#FF914D]"><Plus size={16}/></button>
               </div>
 
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {groups.map((group, idx) => (
                   <div key={idx} className="border border-white/5 rounded-2xl overflow-hidden">
                     <div className="p-4 bg-white/5 flex items-center justify-between">
@@ -242,7 +243,7 @@ export default function Dashboard() {
         </div>
 
         {/* FACTORY OUTPUT LOGS */}
-        <div className="glass-panel p-8 h-full max-h-[600px] overflow-y-auto custom-scrollbar">
+        <div className="glass-panel p-8 h-full max-h-[700px] overflow-y-auto custom-scrollbar">
           <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
             <div className="flex items-center gap-4 text-white font-black italic uppercase leading-none">
               <Layers size={18} className="text-[#FF914D]" /> <h2>Pubblicazioni Attive:</h2>
@@ -263,16 +264,16 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* PLANNER - AGGIUNTO lg:col-span-2 PER ESTENDERLO */}
-        <div className="glass-panel p-8 min-h-[400px] lg:col-span-2">
+        {/* TO DO LIST - Esteso a 2 colonne */}
+        <div className="lg:col-span-2 glass-panel p-8 min-h-[400px]">
           <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
             <ClipboardList size={18} className="text-[#FF914D]" /> <h2>TO DO LIST:</h2>
           </div>
           <Planner isAdmin={userEmail === MASTER_ADMIN} />
         </div>
 
-        {/* CALENDAR - AGGIUNTO lg:col-span-2 PER ESTENDERLO */}
-        <div className="glass-panel p-8 min-h-[400px] lg:col-span-2">
+        {/* CALENDAR/DEADLINES - Esteso a 2 colonne */}
+        <div className="lg:col-span-2 glass-panel p-8 min-h-[400px]">
           <div className="flex items-center gap-4 mb-8 text-white font-black italic uppercase leading-none">
             <CalendarIcon size={18} className="text-[#FF914D]" /> <h2>Calendar</h2>
           </div>
