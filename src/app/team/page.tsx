@@ -18,7 +18,7 @@ const teamMembers = [
     role: "Presidente & Founder",
     icon: <User size={20} />,
     image: "/team/elle-pio.jpg",
-    description: "Uomo pelato simpatico e scherzoso, artista rap con grande esperienza e fondatore di Under The Tower. Educatore di professione, mette la sua visione al servizio della community.",
+    description: "Pelato per comodità… così il cervello prende meglio il segnale creativo. Fa rap da una vita e ha visto passare più mode lui che TikTok. Di giorno educa, di notte… educa comunque, ma a suon di rime",
     skills: ["Leadership", "Creative Direction", "Education"],
     tags: ["FOUNDER", "RAP ARTIST", "LVL_ADMIN"]
   },
@@ -27,7 +27,7 @@ const teamMembers = [
     role: "Video Maker",
     icon: <Camera size={20} />,
     image: "/team/drew.jpg",
-    description: "Ragazzo simpatico e molto tranquillo. Artista rap e professionista video maker specializzato in videoclip musicali, cura l'estetica visiva della Factory.",
+    description: "Così tranquillo che se lo perdi, probabilmente è ancora lì fermo dov’era. Poi però prende una camera e BOOM: videoclip che sembrano costare più della sua calma.",
     skills: ["Video Editing", "Directing", "Color Grading"],
     tags: ["FILMMAKER", "VISUALS", "RAP ARTIST"]
   },
@@ -36,7 +36,7 @@ const teamMembers = [
     role: "Educatore / Vocalist",
     icon: <Music size={20} />,
     image: "/team/sarso.jpg",
-    description: "Ragazzo simpatico e vivace, artista rap. Con un passato da cuoco di professione, ha canalizzato la sua energia nel sociale come educatore professionale.",
+    description: "Ex cuoco: ha lasciato la cucina perché le barre gli venivano meglio dei piatti. Ora serve freestyle di vita bollente nel sociale e non lascia mai niente al caso.",
     skills: ["Vocal Coaching", "Social Work", "Stage Presence"],
     tags: ["VOCALIST", "EDUCATOR", "ENERGY"]
   },
@@ -45,7 +45,7 @@ const teamMembers = [
     role: "Produttore / DJ",
     icon: <Scissors size={20} />,
     image: "/team/gioitz.jpg",
-    description: "Ragazzo mite e scherzosamente tranquillo. Artista pop-rap & rock, parrucchiere di professione, è diplomato come produttore e studia musica da tutta la vita.",
+    description: "Sembra sempre in modalità “risparmio energetico”… finché non parte la musica. Parrucchiere di giorno, artista di notte: taglia capelli e beat con la stessa precisione.",
     skills: ["Music Production", "DJing", "Sound Design"],
     tags: ["PRODUCER", "MUSICIAN", "STYLE"]
   },
@@ -54,7 +54,7 @@ const teamMembers = [
     role: "Fonico / SMM",
     icon: <Settings size={20} />,
     image: "/team/den.jpg",
-    description: "Ragazzo multi-risorsa e problem solver di natura. Diplomato grafico e fotografo, è certificato come Social Media Manager e Tecnico Audio/Fonico.",
+    description: "Multi-ruolo per necessità o perché non sa dire di no. Grafico, fonico, social manager… insomma quello che nel gruppo fa tutto lui e poi si danna pure (giustamente).",
     skills: ["Audio Engineering", "Social Media", "Graphic Design"],
     tags: ["AUDIO TECH", "SMM", "PROBLEM SOLVER"]
   }
