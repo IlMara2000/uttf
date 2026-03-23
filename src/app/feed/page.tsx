@@ -89,7 +89,22 @@ export default function FeedPage() {
 
       {/* UNICO CONTENITORE MAIN */}
       <main className="w-full max-w-7xl px-6 flex flex-col gap-32">
-        
+          
+          {/* STREAM LINK BUTTON */}
+<section className="flex justify-center mb-16">
+  <Link href="/stream" className="group relative">
+    <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D] to-orange-900 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+    <button className="relative px-8 py-4 bg-black border border-white/10 rounded-full flex items-center gap-4 hover:border-[#FF914D]/50 transition-all">
+      <span className="relative flex h-3 w-3">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF914D] opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF914D]"></span>
+      </span>
+      <span className="font-mono text-xs tracking-[0.3em] uppercase">Enter_Live_Stream</span>
+      <ArrowLeft size={16} className="rotate-180 text-zinc-500 group-hover:text-[#FF914D] transition-colors" />
+    </button>
+  </Link>
+</section>
+
         {/* INSTAGRAM SECTION */}
         <section>
           <div className="flex flex-col items-center mb-12">

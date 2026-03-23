@@ -1,14 +1,49 @@
 'use client'
 
 import { motion } from 'framer-motion';
-import { FlaskConical, Radio, Activity, ArrowLeft, Cpu, Terminal } from 'lucide-react';
+import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+
+// AGGIORNATO: Ora punta alla cartella /public/labs/
+const labImages = [
+  "/labs/foto1.jpeg",
+  "/labs/foto2.jpeg",
+  "/labs/foto3.jpeg",
+  "/labs/foto4.jpeg",
+];
+
+const labCategories = [
+  {
+    title: "RAP_FCKTORY",
+    icon: <Mic2 size={24} />,
+    description: "Sessioni di scrittura creativa e tecnica del flow. Un laboratorio dove il rap diventa strumento di espressione e narrazione del quotidiano.",
+    tags: ["WRITING", "FLOW", "LIVE"]
+  },
+  {
+    title: "BEAT_MAKING",
+    icon: <Music size={24} />,
+    description: "Dalla creazione del sample alla struttura del beat. I ragazzi imparano a produrre le proprie basi utilizzando software professionali.",
+    tags: ["PRODUCTION", "DAW", "SOUND"]
+  },
+  {
+    title: "URBAN_ARTS",
+    icon: <Palette size={24} />,
+    description: "Non solo musica. Esploriamo il mondo dei graffiti, della grafica e della fotografia per dare un'identità visiva ai progetti della Factory.",
+    tags: ["GRAFFITI", "GRAPHIC", "PHOTO"]
+  },
+  {
+    title: "COMMUNITY_HUB",
+    icon: <Users size={24} />,
+    description: "Incontri aperti, dibattiti e momenti di aggregazione. Il laboratorio fisico dove le idee circolano e nascono nuove collaborazioni.",
+    tags: ["MEETING", "ROZZANO", "CO-WORKING"]
+  }
+];
 
 export default function LabsPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40 selection:bg-[#FF914D]/30">
       
-      {/* HEADER: Navigazione e Titolo */}
+      {/* HEADER */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-12">
         <div className="w-full flex justify-start">
           <Link href="/" className="nav-tag flex items-center gap-2 group border-white/10 hover:border-[#FF914D]/50 transition-all">
@@ -21,115 +56,113 @@ export default function LabsPage() {
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="p-4 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl text-[#FF914D] mb-8 shadow-[0_0_20px_rgba(255,145,77,0.1)]"
+            className="p-3 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl text-[#FF914D] mb-6"
           >
-            <FlaskConical size={32} className="animate-pulse" />
+            <FlaskConical size={28} />
           </motion.div>
           
-          <h1 className="hero-title text-[15vw] md:text-8xl leading-none tracking-tighter italic uppercase font-black">
+          <h1 className="hero-title text-[15vw] md:text-8xl leading-none italic uppercase font-black tracking-tighter">
             UTTF_<span className="text-[#FF914D]">LABS</span>
           </h1>
-          <p className="text-zinc-500 font-mono text-[10px] md:text-xs uppercase tracking-[0.5em] mt-6 bg-white/5 px-4 py-1 rounded-full border border-white/5">
-            Experimental_Zone // Unit_03
+          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">
+            Physical_Archive // Unit_03_Field
           </p>
         </div>
       </header>
 
-      <main className="w-full max-w-4xl px-6 flex flex-col gap-8">
+      <main className="w-full max-w-7xl px-6 flex flex-col gap-16">
         
-        {/* LIVE STATUS CARD - Il pezzo forte */}
-        <section className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D]/20 to-transparent rounded-[3rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-          <div className="glass-panel relative p-1 border-white/10 bg-zinc-900/20 backdrop-blur-xl rounded-[3rem] overflow-hidden">
-            <div className="bg-black/40 rounded-[2.8rem] p-10 md:p-20 flex flex-col items-center text-center border border-white/5">
-              
-              <div className="relative mb-12">
-                <div className="w-20 h-20 rounded-full border-2 border-[#FF914D]/30 flex items-center justify-center relative">
-                  <div className="absolute inset-0 rounded-full border-2 border-[#FF914D] animate-ping opacity-20"></div>
-                  <Radio className="text-[#FF914D]" size={32} />
-                </div>
-                <motion.div 
-                  animate={{ opacity: [1, 0.5, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="absolute -top-2 -right-8 bg-[#FF914D] text-black font-black text-[10px] px-3 py-1 rounded-full tracking-tighter"
-                >
-                  LIVE
-                </motion.div>
-              </div>
-              
-              <h2 className="text-[10vw] md:text-7xl font-black uppercase italic mb-6 tracking-tighter leading-[0.85] text-white">
-                SESSION_01:<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-500">OPEN_MIC_STREAM</span>
-              </h2>
-              
-              <div className="flex items-center gap-3 mb-12 text-zinc-500 font-mono text-[10px] tracking-widest">
-                <span className="w-2 h-2 rounded-full bg-[#FF914D] animate-pulse"></span>
-                TESTING_NEW_CORE_SYSTEMS // ROZZANO_UNIT
-              </div>
-
-              <button className="nav-tag px-12 py-5 border-[#FF914D]/30 text-[#FF914D] hover:bg-[#FF914D] hover:text-black transition-all font-black uppercase tracking-[0.2em] text-sm rounded-full shadow-[0_0_30px_rgba(255,145,77,0.1)]">
-                START_MONITORING
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* SYSTEM STATS - Grid di monitoraggio */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-          {/* STAT 1 */}
+        {/* AUTONOMOUS CAROUSEL - FIX TS ERROR */}
+        <section className="w-full overflow-hidden relative py-10">
+          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-black to-transparent z-10"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-black to-transparent z-10"></div>
+          
           <motion.div 
-            whileHover={{ y: -5 }}
-            className="glass-panel p-8 border-white/5 bg-zinc-900/10 rounded-[2rem]"
+            className="flex gap-4"
+            animate={{ x: [0, -1200] }} 
+            transition={{ 
+                repeat: Infinity, 
+                duration: 30, 
+                ease: "linear"
+            }}
           >
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-2 text-zinc-600">
-                <Terminal size={14} /> 
-                <span className="text-[9px] font-mono tracking-widest uppercase text-zinc-400">UNIT_01_CORE</span>
-              </div>
-              <Activity size={16} className="text-[#FF914D] animate-pulse" />
-            </div>
-            <h4 className="text-2xl font-black italic uppercase mb-6 tracking-tighter">LYRIC_ENGINE</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between font-mono text-[8px] text-zinc-500 uppercase">
-                <span>Processing_Power</span>
-                <span>88%</span>
-              </div>
-              <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
-                <motion.div 
-                  initial={{ width: 0 }} 
-                  animate={{ width: '88%' }} 
-                  transition={{ duration: 2.5, ease: "circOut" }}
-                  className="h-full bg-gradient-to-r from-[#FF914D] to-[#ffb385]" 
+            {/* Loop delle immagini */}
+            {[...labImages, ...labImages, ...labImages].map((img, idx) => (
+              <div key={idx} className="min-w-[300px] md:min-w-[500px] aspect-video rounded-[2rem] overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl">
+                <img 
+                  src={img} 
+                  alt="Lab Session" 
+                  className="w-full h-full object-cover grayscale-[40%] hover:grayscale-0 transition-all duration-700 hover:scale-105" 
+                  onError={(e) => {
+                    // Fallback se la foto non esiste ancora nella cartella labs
+                    e.currentTarget.src = "https://placehold.co/600x400/0a0a0a/FF914D?text=CARICARE_FOTO";
+                  }}
                 />
               </div>
-            </div>
-          </motion.div>
-
-          {/* STAT 2 - Stato Idle */}
-          <motion.div 
-            whileHover={{ y: -5 }}
-            className="glass-panel p-8 border-white/5 bg-zinc-900/5 opacity-60 rounded-[2rem]"
-          >
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-2 text-zinc-700">
-                <Cpu size={14} /> 
-                <span className="text-[9px] font-mono tracking-widest uppercase">UNIT_02_RENDER</span>
-              </div>
-              <span className="text-[8px] font-mono text-zinc-600 uppercase">IDLE_MODE</span>
-            </div>
-            <h4 className="text-2xl font-black italic uppercase mb-6 tracking-tighter text-zinc-600">BEAT_RENDER</h4>
-            <div className="w-full h-1.5 bg-zinc-900 rounded-full border border-white/5" />
+            ))}
           </motion.div>
         </section>
+
+        {/* LAB DESCRIPTIONS BOXES */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {labCategories.map((lab, index) => (
+            <motion.div
+              key={lab.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className="glass-panel p-8 md:p-10 border-white/5 hover:border-[#FF914D]/20 transition-all group relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity text-[#FF914D]">
+                {lab.icon}
+              </div>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-white/5 rounded-xl text-[#FF914D]">
+                  {lab.icon}
+                </div>
+                <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">
+                  {lab.title}
+                </h3>
+              </div>
+
+              <p className="text-zinc-400 text-sm md:text-base leading-relaxed mb-8 uppercase font-medium">
+                {lab.description}
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-6">
+                {lab.tags.map(tag => (
+                  <span key={tag} className="text-[9px] font-mono border border-white/10 px-3 py-1 rounded-full text-zinc-500 uppercase">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 text-[#FF914D] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
+                Learn More <ChevronRight size={14} />
+              </div>
+            </motion.div>
+          ))}
+        </section>
+
+        {/* CALL TO ACTION */}
+        <section className="glass-panel p-12 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[3rem]">
+          <h2 className="text-3xl md:text-5xl font-black italic uppercase mb-4 tracking-tighter">Vuoi partecipare?</h2>
+          <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] mb-8 max-w-md">
+            I nostri laboratori sono aperti a tutti i ragazzi del territorio. Contattaci per scoprire come unirti alla Factory.
+          </p>
+          <button className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform">
+            Invia_Candidatura
+          </button>
+        </section>
+
       </main>
 
-      {/* FOOTER DI SISTEMA */}
-      <footer className="py-24 text-center">
-        <div className="inline-block px-6 py-2 border border-white/5 rounded-full bg-white/5">
-          <p className="text-[9px] font-mono uppercase tracking-[0.8em] text-zinc-700 italic">
-            UTTF_SYSTEM_V.2.0 // LAB_MODE_ACTIVE
-          </p>
-        </div>
+      <footer className="py-24 text-center opacity-20">
+        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
+          UTTF_LAB_ARCHIVE_2026 // ROZZANO
+        </p>
       </footer>
     </div>
   );
