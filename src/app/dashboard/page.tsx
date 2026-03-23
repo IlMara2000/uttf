@@ -178,7 +178,7 @@ export default function Dashboard() {
 
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16">
         <div>
-          <h1 className="hero-title text-4xl md:text-5xl uppercase italic font-black tracking-tighter">Command_Center</h1>
+          <h1 className="hero-title text-4xl md:text-5xl uppercase italic font-black tracking-tighter">STAFF_HUB</h1>
           <p className="text-zinc-600 font-mono text-[9px] tracking-[0.4em] uppercase mt-2">
             Operator: <span className="text-orange-600">{userEmail}</span> // Role: <span className="text-white">{userEmail === MASTER_ADMIN ? 'MASTER' : 'STAFF'}</span>
           </p>
