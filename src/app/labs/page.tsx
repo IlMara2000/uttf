@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion';
-import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronRight } from 'lucide-react';
+import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronRight, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 
 // AGGIORNATO: Ora punta alla cartella /public/labs/
@@ -14,7 +14,7 @@ const labImages = [
 
 const labCategories = [
   {
-    title: "RAP_FCKTORY",
+    title: "RAP_F*CKTORY",
     icon: <Mic2 size={24} />,
     description: "Sessioni di scrittura creativa e tecnica del flow. Un laboratorio dove il rap diventa strumento di espressione e narrazione del quotidiano.",
     tags: ["WRITING", "FLOW", "LIVE"]
@@ -65,7 +65,7 @@ export default function LabsPage() {
             UTTF_<span className="text-[#FF914D]">LABS</span>
           </h1>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">
-            Physical_Archive // Unit_03_Field
+            Attività per il Sociale // Lab_Unit
           </p>
         </div>
       </header>
@@ -140,17 +140,17 @@ export default function LabsPage() {
               </div>
 
               <div className="flex items-center gap-2 text-[#FF914D] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
-                Learn More <ChevronRight size={14} />
+                Inviaci la Tua Candidatura! <ChevronDown size={14} />
               </div>
             </motion.div>
           ))}
         </section>
 
         {/* CALL TO ACTION */}
-        <section className="glass-panel p-12 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[3rem]">
+        <section className="glass-panel p-8 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[3rem]">
           <h2 className="text-3xl md:text-5xl font-black italic uppercase mb-4 tracking-tighter">Vuoi partecipare?</h2>
           <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] mb-8 max-w-md">
-            I nostri laboratori sono aperti a tutti i ragazzi del territorio. Contattaci per scoprire come unirti alla Factory.
+            I nostri laboratori sono aperti a tutti i ragazzi del territorio. Contattaci per scoprire come unirti alla UTTFactory.
           </p>
           <button className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform">
             Invia_Candidatura
