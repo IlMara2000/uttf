@@ -145,16 +145,25 @@ export default function LabsPage() {
             </motion.div>
           ))}
         </section>
-
-        {/* CALL TO ACTION */}
-        <section className="glass-panel p-8 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[3rem]">
-          <h2 className="text-3xl md:text-5xl font-black italic uppercase mb-4 tracking-tighter">Vuoi partecipare?</h2>
-          <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.2em] mb-8 max-w-md">
+          
+          {/* CALL TO ACTION - COMPACT VERSION */}
+        <section className="flex justify-center">
+          <div className="glass-panel p-8 md:p-12 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[2.5rem] max-w-2xl">
+            <h2 className="text-2xl md:text-4xl font-black italic uppercase mb-3 tracking-tighter">
+              Vuoi partecipare anche tu?
+            </h2>
+            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] mb-8">
             I nostri laboratori sono aperti a tutti i ragazzi del territorio. Contattaci per scoprire come unirti alla UTTFactory.
-          </p>
-          <button className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform">
-            Invia_Candidatura
-          </button>
+            </p>
+            <a 
+              href="https://forms.gle/gbkbEvaavFaHFkkG9" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform inline-block"
+            >
+              ISCRIVITI
+            </a>
+          </div>
         </section>
 
       </main>
