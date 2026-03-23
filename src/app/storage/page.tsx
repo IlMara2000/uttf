@@ -18,7 +18,7 @@ export default function StoragePage() {
       const { data, error } = await supabase
         .from('media_storage')
         .select('*')
-        .order('created_at', { descending: false });
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       setFiles(data || []);
