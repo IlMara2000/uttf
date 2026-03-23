@@ -21,7 +21,6 @@ export default function Dashboard() {
   const [staffList, setStaffList] = useState<any[]>([]);
   const [groups, setGroups] = useState<{name: string, members: string[]}[]>([]);
   const [newGroupName, setNewGroupName] = useState('');
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [editingAccount, setEditingAccount] = useState<any | null>(null);
 
   const [newEmail, setNewEmail] = useState('');
@@ -60,7 +59,8 @@ export default function Dashboard() {
     setMyPosts(data || []);
   }
 
-  // LOGICA GRUPPI (EFFETTO GRAFICO)
+  // --- LOGICA STAFF & GRUPPI ---
+
   const addGroup = () => {
     if(!newGroupName) return;
     setGroups([...groups, { name: newGroupName.toUpperCase(), members: [] }]);
@@ -87,6 +87,8 @@ export default function Dashboard() {
     else { alert('STAFF_AUTHORIZED'); setNewEmail(''); fetchStaff(); }
   }
 
+  // --- LOGICA POST (FACTORY OUTPUT) ---
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) { setFile(selectedFile); setPreviewUrl(URL.createObjectURL(selectedFile)); }
@@ -108,6 +110,19 @@ export default function Dashboard() {
       setTitle(''); setFile(null); setPreviewUrl(null);
       fetchMyPosts();
     } catch (err: any) { alert(err.message); } finally { setUploading(false); }
+  }
+
+  async function handleDeletePost(id: string, imageUrl: string) {
+    if (!confirm("ELIMINARE DEFINITIVAMENTE QUESTO OUTPUT?")) return;
+    try {
+      const fileName = imageUrl.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('factory-assets').remove([`publications/${fileName}`]);
+      }
+      await supabase.from('publications').delete().eq('id', id);
+      alert("UNIT_DELETED");
+      fetchMyPosts();
+    } catch (err: any) { alert("Errore: " + err.message); }
   }
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center font-mono text-orange-600 animate-pulse text-xs uppercase text-center">Connecting_To_Command_Center...</div>;
@@ -165,27 +180,24 @@ export default function Dashboard() {
                 <Users size={20} /> <h2>Staff_Directory</h2>
               </div>
               
-              {/* Form Nuovo Staff */}
               <form onSubmit={inviteUser} className="flex gap-2 mb-8">
                 <input type="email" required placeholder="EMAIL_ADDRESS" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="flex-1 bg-white/5 border border-white/10 p-3 rounded-xl font-mono text-[10px] outline-none focus:border-[#FF914D]" />
                 <button type="submit" className="bg-[#FF914D] text-black px-5 rounded-xl font-black uppercase italic text-[10px]">Add</button>
               </form>
 
-              {/* Form Gruppo (Grafico) */}
               <div className="flex gap-2 mb-8 pb-8 border-b border-white/5">
                 <input type="text" placeholder="NEW_GROUP_NAME" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="flex-1 bg-white/5 border border-white/5 p-3 rounded-xl font-mono text-[10px] outline-none" />
                 <button onClick={addGroup} className="p-3 border border-white/10 rounded-xl text-zinc-500 hover:text-[#FF914D]"><Plus size={16}/></button>
               </div>
 
-              {/* Lista Account & Gruppi */}
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                 {groups.map((group, idx) => (
                   <div key={idx} className="border border-white/5 rounded-2xl overflow-hidden">
                     <div className="p-4 bg-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-[10px] font-black italic text-zinc-400">
+                      <div className="flex items-center gap-3 text-[10px] font-black italic text-zinc-400 uppercase">
                         <Users size={12}/> {group.name}
                       </div>
-                      <span className="text-[8px] font-mono text-zinc-600">0_MEMBERS</span>
+                      <span className="text-[8px] font-mono text-zinc-600 uppercase">G_UNIT</span>
                     </div>
                   </div>
                 ))}
@@ -193,7 +205,7 @@ export default function Dashboard() {
                 {staffList.map((staff) => (
                   <div key={staff.id} className="group flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-[#FF914D]/40 transition-all">
                     <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e]"></div>
                       <span className="font-mono text-[10px] uppercase">{staff.email}</span>
                     </div>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
