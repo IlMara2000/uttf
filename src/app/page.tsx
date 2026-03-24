@@ -31,17 +31,22 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center overflow-x-hidden pb-40 bg-black text-white">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
       
       {/* HEADER */}
-      <header className="pt-24 pb-12 flex flex-col items-center gap-10">
+      <header className="pt-24 pb-12 flex flex-col items-center gap-6">
         <img 
           src="/icons/favicon.svg" 
           alt="UTTF" 
           className="w-25 h-25 md:w-30 md:h-30 transition-transform hover:scale-110 duration-500" 
           onError={(e) => (e.currentTarget.src = '/favicon.ico')}
         />
-        <span className="nav-tag uppercase tracking-[0.3em] border border-white/10 px-4 py-1 rounded-full text-[10px] text-zinc-500">.UTTF.SYSTEM.</span>
+
+        {/* BOTTONE ACCESSO STAFF - POSIZIONATO IN ALTO */}
+        <Link href="/login" className="btn-urban opacity-80 hover:opacity-100 transition-opacity animate-pulse flex items-center gap-3 border border-[#FF914D]/20 px-6 py-3 rounded-full font-mono text-[10px] tracking-[0.3em] uppercase italic font-bold">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#FF914D]"></div>
+          ACCESSO STAFF
+        </Link>
       </header>
 
       {/* HERO SECTION */}
@@ -89,14 +94,6 @@ export default function HomePage() {
                 </h3>
                 <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
               </motion.div>
-            </Link>
-          </div>
-
-          {/* BOTTONE AGGIORNATO */}
-          <div className="mt-24">
-            <Link href="/login" className="btn-urban opacity-80 hover:opacity-100 transition-opacity animate-pulse flex items-center gap-3 border border-[#FF914D]/20 px-8 py-4 rounded-full font-mono text-[11px] tracking-[0.3em] uppercase italic font-bold">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FF914D]"></div>
-              .WORK.IN.PROGRESS.
             </Link>
           </div>
         </motion.div>
