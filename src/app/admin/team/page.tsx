@@ -1,141 +1,107 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Profile } from '@/types/database'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useRouter } from 'next/navigation'
+import { UserPlus, ShieldAlert, Trash2, Zap, Fingerprint, Mail } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function AdminTeamPage() {
-  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [profiles, setProfiles] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('') // AGGIUNTO EMAIL
   const [role, setRole] = useState('')
   const [skills, setSkills] = useState('')
-  const router = useRouter()
 
   const fetchTeam = async () => {
     const { data } = await supabase.from('profiles').select('*').order('full_name')
     if (data) setProfiles(data)
   }
 
-  useEffect(() => {
-    fetchTeam()
-  }, [])
+  useEffect(() => { fetchTeam() }, [])
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    
+    const skillsArray = skills.split(',').map(s => s.trim().toUpperCase()).filter(s => s !== '')
 
-    const skillsArray = skills.split(',').map(s => s.trim()).filter(s => s !== '')
-
-    const { error } = await supabase
+    // 1. Inseriamo nel database dei profili
+    const { error: profileError } = await supabase
       .from('profiles')
-      .insert([{ full_name: fullName, role, skills: skillsArray }])
+      .insert([{ 
+        full_name: fullName.toUpperCase(), 
+        email: email.toLowerCase().trim(), // Salviamo l'email per il check
+        role: role.toUpperCase(), 
+        skills: skillsArray,
+        updated_at: new Date()
+      }])
 
-    if (!error) {
-      setFullName(''); setRole(''); setSkills('');
+    // 2. Inseriamo nella tabella di autorizzazione (quella che controlla il login)
+    const { error: authError } = await supabase
+      .from('authorized_users')
+      .insert([{ email: email.toLowerCase().trim() }])
+
+    if (!profileError && !authError) {
+      setFullName(''); setEmail(''); setRole(''); setSkills('');
       fetchTeam()
-      router.refresh()
+      alert("UNIT_AUTHORIZED: L'utente ora può registrarsi/accedere.");
     } else {
-      alert('ERROR: ' + error.message)
+      alert('DATABASE_ERROR: Controlla che le tabelle authorized_users e profiles esistano.');
     }
     setLoading(false)
   }
 
-  const deleteMember = async (id: number) => {
-    if (!confirm('CONFIRM_DELETION?')) return
-    const { error } = await supabase.from('profiles').delete().eq('id', id)
-    if (!error) fetchTeam()
+  const deleteMember = async (id: string, userEmail: string) => {
+    if (!confirm('TERMINATE_CONTRACT?')) return
+    await supabase.from('profiles').delete().eq('id', id)
+    await supabase.from('authorized_users').delete().eq('email', userEmail)
+    fetchTeam()
   }
 
   return (
-    <div className="p-8 bg-black min-h-screen text-white font-sans">
-      <header className="mb-12 border-b-2 border-orange-500 pb-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-4xl font-black uppercase italic tracking-tighter">
-            ADMIN <span className="text-orange-500 text-2xl font-mono">_SQUAD_CONTROL</span>
-          </h1>
-          <p className="text-[10px] text-zinc-600 font-mono mt-2 tracking-[0.4em]">HUMAN_RESOURCES_MANAGEMENT // v1.0</p>
+    <div className="p-6 md:p-12 bg-[#050505] min-h-screen text-white font-sans selection:bg-orange-500">
+      <header className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-orange-500 mb-4">
+            <Fingerprint size={18} />
+            <span className="font-mono text-[9px] uppercase tracking-[0.5em]">Auth_Management_System</span>
+          </div>
+          <h1 className="text-6xl font-black uppercase italic tracking-tighter">SQUAD <span className="text-orange-500">CONTROL</span></h1>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Form di aggiunta */}
-        <div className="lg:col-span-1">
-          <form onSubmit={handleAddMember} className="space-y-4 p-6 border-2 border-zinc-900 bg-zinc-950 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)]">
-            <h2 className="text-lg font-black uppercase italic text-orange-500 mb-4 tracking-widest">_RECRUIT_NEW_MEMBER</h2>
-            
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-zinc-600 uppercase font-mono tracking-widest">Full_Name</label>
-              <Input 
-                required
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                className="bg-black border-zinc-800 rounded-none focus:border-orange-500 uppercase font-bold"
-                placeholder="NOME COGNOME"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-zinc-600 uppercase font-mono tracking-widest">Unit_Role</label>
-              <Input 
-                required
-                value={role}
-                onChange={e => setRole(e.target.value)}
-                className="bg-black border-zinc-800 rounded-none focus:border-orange-500 uppercase font-bold"
-                placeholder="ES: PRODUCER / EDITOR"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-zinc-600 uppercase font-mono tracking-widest">Skills (separate da virgola)</label>
-              <Input 
-                value={skills}
-                onChange={e => setSkills(e.target.value)}
-                className="bg-black border-zinc-800 rounded-none focus:border-orange-500 uppercase font-bold text-xs"
-                placeholder="VIDEO, AUDIO, GRAFICA..."
-              />
-            </div>
-
-            <Button disabled={loading} className="w-full bg-orange-500 hover:bg-white text-black font-black uppercase rounded-none py-6 transition-all">
-              {loading ? 'SYNCING_DATABASE...' : 'REGISTRA_SOCIO'}
-            </Button>
-          </form>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-4">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-panel p-8 bg-zinc-900/20 border-white/5 sticky top-24">
+            <h2 className="text-xs font-black uppercase italic text-orange-500 mb-8 tracking-[0.3em] flex items-center gap-2">
+              <UserPlus size={14} /> _AUTHORIZE_NEW_ACCESS
+            </h2>
+            <form onSubmit={handleAddMember} className="space-y-5">
+              <input required placeholder="FULL NAME" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
+              <input required type="email" placeholder="EMAIL (FOR LOGIN)" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs font-mono" />
+              <input required placeholder="UNIT ROLE" value={role} onChange={e => setRole(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
+              <input placeholder="SKILLS (COMMAS)" value={skills} onChange={e => setSkills(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-[10px] font-mono" />
+              <button disabled={loading} className="w-full bg-white text-black font-black uppercase italic text-[10px] py-4 hover:bg-orange-500 transition-all">
+                {loading ? 'SYNCING...' : 'AUTHORIZE_UNIT'}
+              </button>
+            </form>
+          </motion.div>
         </div>
 
-        {/* Lista soci esistenti */}
-        <div className="lg:col-span-2">
-          <div className="grid gap-4">
+        <div className="lg:col-span-8">
+          <div className="space-y-4">
             {profiles.map((member) => (
-              <div key={member.id} className="flex justify-between items-center p-4 border border-zinc-900 bg-zinc-950/50 hover:border-zinc-700 transition-all group">
+              <div key={member.id} className="flex items-center justify-between p-6 glass-panel border-white/5 bg-zinc-950/40 group">
                 <div>
-                  <h3 className="text-xl font-black uppercase italic leading-none">{member.full_name}</h3>
-                  <p className="text-[10px] text-orange-500 font-mono uppercase tracking-widest mt-1">{member.role}</p>
+                  <h3 className="text-2xl font-black uppercase italic leading-none mb-1">{member.full_name}</h3>
+                  <p className="text-[9px] font-mono text-zinc-500 mb-2">{member.email}</p>
+                  <span className="text-[9px] text-orange-500 font-black uppercase tracking-widest bg-orange-500/10 px-2 py-0.5">{member.role}</span>
                 </div>
-                
-                <div className="flex gap-4 items-center">
-                  <div className="hidden md:flex gap-1">
-                    {member.skills?.slice(0, 3).map(s => (
-                      <span key={s} className="text-[8px] bg-zinc-900 text-zinc-500 px-2 py-0.5 uppercase">{s}</span>
-                    ))}
-                  </div>
-                  <button 
-                    onClick={() => deleteMember(member.id)}
-                    className="text-zinc-800 hover:text-red-500 transition-colors uppercase text-[10px] font-black"
-                  >
-                    [TERMINATE]
-                  </button>
-                </div>
+                <button onClick={() => deleteMember(member.id, member.email)} className="p-3 text-zinc-800 hover:text-red-500 transition-all">
+                  <Trash2 size={16} />
+                </button>
               </div>
             ))}
-
-            {profiles.length === 0 && (
-              <p className="text-zinc-800 font-black uppercase tracking-widest text-center py-20 border-2 border-dashed border-zinc-900">
-                NO_UNITS_LOGGED_IN_SYSTEM
-              </p>
-            )}
           </div>
         </div>
       </div>

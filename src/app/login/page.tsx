@@ -1,116 +1,90 @@
 'use client'
-
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { motion } from 'framer-motion';
-import { ShieldAlert, KeyRound, ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import { ShieldCheck, Lock, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); // Nuovo stato per la password
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const handleAuth = async (type: 'login' | 'signup') => {
+    setLoading(true)
+    
+    // 1. PRIMA DI TUTTO: Check se l'email è autorizzata dall'admin
+    const { data: authorized } = await supabase
+      .from('authorized_users')
+      .select('email')
+      .eq('email', email.toLowerCase().trim())
+      .single()
 
-    const cleanEmail = email.toLowerCase().trim();
-
-    try {
-      // 1. Controllo Whitelist (Sicurezza Extra)
-      const { data: whitelist, error: checkError } = await supabase
-        .from('authorized_users')
-        .select('email')
-        .eq('email', cleanEmail)
-        .single();
-
-      if (checkError || !whitelist) {
-        setError('ACCESS_DENIED: Email non registrata nei protocolli UTTF.');
-        setLoading(false);
-        return;
-      }
-
-      // 2. Login Diretto con Password
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password: password,
-      });
-
-      if (authError) {
-        setError('CREDENTIALS_INVALID: Password errata.');
-      } else {
-        // Successo: Accesso immediato alla dashboard
-        window.location.href = '/dashboard';
-      }
-    } catch (err: any) {
-      setError('SYSTEM_FAULT: Errore di connessione al database.');
-    } finally {
-      setLoading(false);
+    if (!authorized) {
+      alert("ACCESSO NEGATO: Questa email non è stata autorizzata dall'amministratore.");
+      setLoading(false)
+      return
     }
+
+    // 2. Procediamo con il login o la registrazione
+    const { error } = type === 'login' 
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password })
+
+    if (error) {
+      alert("ERRORE: " + error.message)
+    } else {
+      router.push('/dashboard')
+    }
+    setLoading(false)
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black">
-      <header className="absolute top-10 left-10">
-        <Link href="/" className="nav-tag flex items-center gap-2 group">
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> BACK_HOME
-        </Link>
-      </header>
-
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass-panel p-10 md:p-16 w-full max-w-md border-white/5 text-center shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-      >
-        <div className="flex flex-col items-center mb-10">
-          <div className="p-5 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-orange-600 mb-6 shadow-[0_0_20px_rgba(234,88,12,0.1)]">
-            <KeyRound size={32} />
-          </div>
-          <h1 className="hero-title text-5xl mb-3 italic">Staff<br />Login</h1>
-          <p className="text-zinc-600 font-mono text-[9px] uppercase tracking-[0.3em]">Authorized_Personnel_Only</p>
+    <div className="min-h-screen bg-black flex items-center justify-center p-6">
+      <div className="w-full max-w-md glass-panel p-10 border-white/5 bg-zinc-900/20">
+        <div className="text-center mb-10">
+          <ShieldCheck className="mx-auto text-orange-500 mb-4" size={40} />
+          <h1 className="text-3xl font-black uppercase italic tracking-tighter text-white">SYSTEM_<span className="text-orange-500">ACCESS</span></h1>
+          <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.3em] mt-2">Identify_Required_To_Proceed</p>
         </div>
 
-        {error && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest mb-6 flex items-center gap-3 justify-center">
-            <ShieldAlert size={16} /> {error}
-          </motion.div>
-        )}
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <label className="text-[8px] font-mono text-zinc-500 uppercase ml-1">Terminal_Email</label>
+            <input 
+              type="email" value={email} onChange={e => setEmail(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 p-4 rounded text-sm text-white outline-none focus:border-orange-500 transition-all font-mono"
+              placeholder="name@uttf.com"
+            />
+          </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input 
-            type="email"
-            placeholder="ENTER_IDENTITY_EMAIL"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-sm font-mono text-white placeholder:text-zinc-800 focus:outline-none focus:border-orange-600/50 transition-all text-center uppercase tracking-widest"
-          />
+          <div className="space-y-1">
+            <label className="text-[8px] font-mono text-zinc-500 uppercase ml-1">Access_Key</label>
+            <input 
+              type="password" value={password} onChange={e => setPassword(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 p-4 rounded text-sm text-white outline-none focus:border-orange-500 transition-all font-mono"
+              placeholder="••••••••"
+            />
+          </div>
 
-          <input 
-            type="password"
-            placeholder="ENTER_SECURITY_KEY"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-sm font-mono text-white placeholder:text-zinc-800 focus:outline-none focus:border-orange-600/50 transition-all text-center uppercase tracking-widest"
-          />
-
-          <button 
-            type="submit"
-            disabled={loading}
-            className="btn-urban w-full justify-center py-5 shadow-xl shadow-orange-600/5 disabled:opacity-30 mt-4"
-          >
-            {loading ? <Loader2 className="animate-spin text-orange-600" size={20} /> : 'Access_Dashboard'}
-          </button>
-        </form>
-
-        <p className="mt-12 text-[8px] text-zinc-800 font-mono uppercase tracking-[0.5em] opacity-50">
-          UTTF_CORE_V3 // SECURE_HANDSHAKE
-        </p>
-      </motion.div>
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <button 
+              onClick={() => handleAuth('login')} 
+              disabled={loading}
+              className="bg-white text-black py-4 font-black uppercase italic text-xs hover:bg-orange-500 transition-all flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 className="animate-spin" size={14} /> : 'LOGIN'}
+            </button>
+            <button 
+              onClick={() => handleAuth('signup')} 
+              disabled={loading}
+              className="border border-white/10 text-white py-4 font-black uppercase italic text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+            >
+              SIGN_UP
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
