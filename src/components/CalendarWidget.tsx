@@ -11,12 +11,10 @@ import {
   endOfWeek, 
   isSameMonth, 
   isSameDay, 
-  addDays, 
   eachDayOfInterval 
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, AlertCircle } from 'lucide-react';
 
 export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -30,138 +28,140 @@ export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
 
   async function fetchEvents() {
     setLoading(true);
+    // Recuperiamo sia dalle 'activities' che dai 'tasks' per avere tutto sott'occhio
     const start = startOfMonth(currentMonth).toISOString();
     const end = endOfMonth(currentMonth).toISOString();
 
-    const { data } = await supabase
+    const { data: activities } = await supabase
       .from('activities')
       .select('*')
       .gte('deadline', start)
       .lte('deadline', end);
 
-    setEvents(data || []);
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('*')
+      .gte('deadline', start)
+      .lte('deadline', end);
+
+    // Uniamo i dati per una visione globale
+    const combined = [
+        ...(activities || []).map(a => ({ ...a, type: 'activity' })),
+        ...(tasks || []).map(t => ({ ...t, type: 'task' }))
+    ];
+
+    setEvents(combined);
     setLoading(false);
   }
 
-  // --- LOGICA GRIGLIA ---
-  const renderHeader = () => (
-    <div className="flex items-center justify-between mb-8 border-b-2 border-[#FF914D] pb-6">
-      <div className="flex flex-col">
-        <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white">
-          UTTF_<span className="text-[#FF914D]">CALENDAR</span>
-        </h2>
-        <span className="font-mono text-[9px] text-zinc-500 uppercase tracking-[0.3em]">
-          {format(currentMonth, 'MMMM yyyy', { locale: it })} // Operational_View
-        </span>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-          <ChevronLeft size={20} className="text-[#FF914D]" />
-        </button>
-        <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-          <ChevronRight size={20} className="text-[#FF914D]" />
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderDays = () => {
-    const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
-    return (
-      <div className="grid grid-cols-7 mb-4">
-        {days.map((day, i) => (
-          <div key={i} className="text-center text-[10px] font-black uppercase text-zinc-600 font-mono italic">
-            {day}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderCells = () => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart);
-    const endDate = endOfWeek(monthEnd);
-
-    const rows = [];
-    const days = eachDayOfInterval({ start: startDate, end: endDate });
-
-    return (
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((day, i) => {
-          const formattedDate = format(day, 'd');
-          const isCurrentMonth = isSameMonth(day, monthStart);
-          const isSelected = isSameDay(day, selectedDate);
-          const dayEvents = events.filter(e => isSameDay(new Date(e.deadline), day));
-
-          return (
-            <div
-              key={i}
-              onClick={() => setSelectedDate(day)}
-              className={`
-                min-h-[100px] p-2 border border-white/5 transition-all cursor-pointer relative
-                ${!isCurrentMonth ? 'opacity-20 grayscale' : 'hover:bg-white/5'}
-                ${isSelected ? 'bg-[#FF914D]/10 border-[#FF914D]/40' : 'bg-zinc-950/40'}
-              `}
-            >
-              <span className={`text-[10px] font-mono ${isSelected ? 'text-[#FF914D] font-black' : 'text-zinc-500'}`}>
-                {formattedDate}
-              </span>
-              
-              <div className="mt-2 space-y-1">
-                {dayEvents.slice(0, 3).map((event, idx) => (
-                  <div key={idx} className="bg-[#FF914D] text-black text-[7px] font-black uppercase px-1 py-0.5 rounded-sm truncate italic">
-                    {event.title}
-                  </div>
-                ))}
-                {dayEvents.length > 3 && (
-                  <div className="text-[7px] text-zinc-600 font-mono">+{dayEvents.length - 3} MORE</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+  const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(monthStart);
+  const startDate = startOfWeek(monthStart);
+  const endDate = endOfWeek(monthEnd);
+  const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
 
   return (
-    <div className="glass-panel p-6 md:p-8 h-full bg-black/40 border-white/5">
-      {renderHeader()}
-      {renderDays()}
-      {renderCells()}
+    <div className="glass-panel border-white/5 bg-zinc-950/40 overflow-hidden rounded-xl">
+      {/* HEADER CALENDARIO */}
+      <div className="p-4 border-b border-white/5 flex justify-between items-center bg-zinc-900/40">
+        <div className="flex items-center gap-3">
+          <CalendarIcon className="text-[#FF914D]" size={18} />
+          <h2 className="text-sm font-black uppercase italic tracking-widest text-white">
+            {format(currentMonth, 'MMMM yyyy', { locale: it })}
+          </h2>
+        </div>
+        <div className="flex gap-1">
+          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1.5 hover:bg-white/5 rounded border border-white/10 transition-all">
+            <ChevronLeft size={16} />
+          </button>
+          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-1.5 hover:bg-white/5 rounded border border-white/10 transition-all">
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
 
-      {/* DETTAGLIO GIORNO SELEZIONATO */}
-      <div className="mt-8 pt-8 border-t border-white/5">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-8 bg-[#FF914D]"></div>
-            <div>
-              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Selected_Date</p>
-              <h3 className="text-xl font-black uppercase italic text-white">
-                {format(selectedDate, 'eeee d MMMM', { locale: it })}
-              </h3>
-            </div>
+      <div className="flex flex-col lg:flex-row">
+        {/* GRIGLIA GIORNI */}
+        <div className="flex-1 p-4 border-r border-white/5">
+          <div className="grid grid-cols-7 mb-2">
+            {days.map((day) => (
+              <div key={day} className="text-center text-[8px] font-mono text-zinc-600 uppercase py-2">
+                {day}
+              </div>
+            ))}
           </div>
-          {isAdmin && (
-             <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-[#FF914D] transition-colors">
-               <Plus size={14} /> Add_Event
-             </button>
-          )}
+          <div className="grid grid-cols-7 gap-px bg-white/5 border border-white/5 rounded-lg overflow-hidden">
+            {calendarDays.map((day, i) => {
+              const isSelected = isSameDay(day, selectedDate);
+              const isCurrentMonth = isSameMonth(day, monthStart);
+              const dayEvents = events.filter(e => isSameDay(new Date(e.deadline), day));
+
+              return (
+                <div
+                  key={i}
+                  onClick={() => setSelectedDate(day)}
+                  className={`min-h-[80px] p-1.5 transition-all cursor-pointer relative bg-black
+                    ${!isCurrentMonth ? 'opacity-20' : 'hover:bg-zinc-900'}
+                    ${isSelected ? 'ring-1 ring-inset ring-[#FF914D]' : ''}
+                  `}
+                >
+                  <span className={`text-[9px] font-mono ${isSelected ? 'text-[#FF914D] font-bold' : 'text-zinc-500'}`}>
+                    {format(day, 'd')}
+                  </span>
+                  
+                  <div className="mt-1 space-y-0.5">
+                    {dayEvents.slice(0, 2).map((event, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`text-[7px] px-1 py-0.5 rounded-sm truncate uppercase font-black italic
+                          ${event.type === 'task' ? 'bg-[#FF914D] text-black' : 'bg-white/10 text-white'}
+                        `}
+                      >
+                        {event.title}
+                      </div>
+                    ))}
+                    {dayEvents.length > 2 && (
+                      <div className="text-[6px] text-zinc-600 font-mono pl-1">+{dayEvents.length - 2} MORE</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {events.filter(e => isSameDay(new Date(e.deadline), selectedDate)).length > 0 ? (
-            events.filter(e => isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => (
-              <div key={idx} className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between group">
-                <span className="text-[11px] font-black uppercase italic tracking-tight">{e.title}</span>
-                <span className="text-[8px] font-mono text-zinc-600 uppercase">Task_Active</span>
+        {/* SIDEBAR DETTAGLIO GIORNO SELEZIONATO */}
+        <div className="w-full lg:w-72 p-6 bg-zinc-900/20">
+          <div className="mb-6">
+            <p className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest mb-1">Schedule_Focus</p>
+            <h3 className="text-lg font-black uppercase italic text-white leading-none">
+              {format(selectedDate, 'dd MMMM', { locale: it })}
+            </h3>
+          </div>
+
+          <div className="space-y-3">
+            {events.filter(e => isSameDay(new Date(e.deadline), selectedDate)).length > 0 ? (
+              events.filter(e => isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => (
+                <div key={idx} className="bg-white/5 border border-white/5 p-3 rounded-lg group hover:border-[#FF914D]/30 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-1.5 h-1.5 rounded-full ${e.type === 'task' ? 'bg-[#FF914D]' : 'bg-zinc-500'}`} />
+                    <span className="text-[10px] font-black uppercase italic text-zinc-200">{e.title}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                     <span className="text-[8px] font-mono text-zinc-600 uppercase flex items-center gap-1">
+                        <Clock size={10} /> {e.type.toUpperCase()}
+                     </span>
+                     {e.priority === 'high' && <AlertCircle size={10} className="text-red-500 animate-pulse" />}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-10 text-center border border-dashed border-white/5 rounded-xl">
+                <p className="text-[9px] font-mono text-zinc-800 uppercase italic">No_Operations_Found</p>
               </div>
-            ))
-          ) : (
-            <p className="text-zinc-800 font-black uppercase text-xs italic tracking-widest">No_Events_Scheduled_For_This_Date</p>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
