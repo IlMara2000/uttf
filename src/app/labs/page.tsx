@@ -1,10 +1,10 @@
 'use client'
 
+import { useRef } from 'react'; // Importiamo useRef
 import { motion } from 'framer-motion';
-import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronRight, ChevronDown } from 'lucide-react';
+import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 
-// AGGIORNATO: Ora punta alla cartella /public/labs/
 const labImages = [
   "/labs/foto1.jpeg",
   "/labs/foto2.jpeg",
@@ -40,6 +40,14 @@ const labCategories = [
 ];
 
 export default function LabsPage() {
+  // 1. Creiamo il riferimento per la sezione Iscriviti
+  const subscribeRef = useRef<HTMLDivElement>(null);
+
+  // 2. Funzione per scrollare fino in fondo
+  const scrollToSubscribe = () => {
+    subscribeRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40 selection:bg-[#FF914D]/30">
       
@@ -72,7 +80,7 @@ export default function LabsPage() {
 
       <main className="w-full max-w-7xl px-6 flex flex-col gap-16">
         
-        {/* AUTONOMOUS CAROUSEL - FIX TS ERROR */}
+        {/* CAROUSEL */}
         <section className="w-full overflow-hidden relative py-10">
           <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-black to-transparent z-10"></div>
           <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-black to-transparent z-10"></div>
@@ -80,46 +88,41 @@ export default function LabsPage() {
           <motion.div 
             className="flex gap-4"
             animate={{ x: [0, -1200] }} 
-            transition={{ 
-                repeat: Infinity, 
-                duration: 30, 
-                ease: "linear"
-            }}
+            transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
           >
-            {/* Loop delle immagini */}
             {[...labImages, ...labImages, ...labImages].map((img, idx) => (
               <div key={idx} className="min-w-[300px] md:min-w-[500px] aspect-video rounded-[2rem] overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl">
                 <img 
                   src={img} 
                   alt="Lab Session" 
                   className="w-full h-full object-cover grayscale-[40%] hover:grayscale-0 transition-all duration-700 hover:scale-105" 
-                  onError={(e) => {
-                    // Fallback se la foto non esiste ancora nella cartella labs
-                    e.currentTarget.src = "https://placehold.co/600x400/0a0a0a/FF914D?text=CARICARE_FOTO";
-                  }}
+                  onError={(e) => { e.currentTarget.src = "https://placehold.co/600x400/0a0a0a/FF914D?text=CARICARE_FOTO"; }}
                 />
               </div>
             ))}
           </motion.div>
         </section>
 
-        {/* LAB DESCRIPTIONS BOXES */}
+        {/* LAB DESCRIPTIONS BOXES (Ora sono bottoni) */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {labCategories.map((lab, index) => (
             <motion.div
               key={lab.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 0.98 }} // Feedback visivo al passaggio
+              whileTap={{ scale: 0.95 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="glass-panel p-8 md:p-10 border-white/5 hover:border-[#FF914D]/20 transition-all group relative overflow-hidden"
+              onClick={scrollToSubscribe} // Trigger dello scroll
+              className="glass-panel p-8 md:p-10 border-white/5 hover:border-[#FF914D]/40 transition-all group relative overflow-hidden cursor-pointer bg-zinc-900/20"
             >
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity text-[#FF914D]">
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity text-[#FF914D]">
                 {lab.icon}
               </div>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-white/5 rounded-xl text-[#FF914D]">
+                <div className="p-3 bg-white/5 rounded-xl text-[#FF914D] group-hover:bg-[#FF914D] group-hover:text-black transition-colors">
                   {lab.icon}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">
@@ -139,27 +142,27 @@ export default function LabsPage() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 text-[#FF914D] text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
-                Inviaci la Tua Candidatura! <ChevronDown size={14} />
+              <div className="flex items-center gap-2 text-[#FF914D] text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-all">
+                Voglio iscrivermi! <ChevronDown size={14} className="group-hover:translate-y-1 transition-transform" />
               </div>
             </motion.div>
           ))}
         </section>
           
-          {/* CALL TO ACTION - COMPACT VERSION */}
-        <section className="flex justify-center">
-          <div className="glass-panel p-8 md:p-12 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[2.5rem] max-w-2xl">
-            <h2 className="text-2xl md:text-4xl font-black italic uppercase mb-3 tracking-tighter">
+        {/* CALL TO ACTION (Riferimento aggiunto qui) */}
+        <section ref={subscribeRef} className="flex justify-center scroll-mt-20">
+          <div className="glass-panel p-8 md:p-12 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[2.5rem] max-w-2xl w-full">
+            <h2 className="text-2xl md:text-4xl font-black italic uppercase mb-3 tracking-tighter text-white">
               Vuoi partecipare anche tu?
             </h2>
             <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] mb-8">
-            I nostri laboratori sono aperti a tutti i ragazzi del territorio. Contattaci per scoprire come unirti alla UTTFactory.
+              I nostri laboratori sono aperti a tutti i ragazzi del territorio. Contattaci per scoprire come unirti alla UTTFactory.
             </p>
             <a 
               href="https://forms.gle/gbkbEvaavFaHFkkG9" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform inline-block"
+              className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-110 hover:shadow-[0_0_20px_rgba(255,145,77,0.4)] transition-all inline-block"
             >
               ISCRIVITI
             </a>
