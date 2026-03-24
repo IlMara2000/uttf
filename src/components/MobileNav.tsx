@@ -7,11 +7,21 @@ import { motion } from 'framer-motion';
 export default function MobileNav() {
   const pathname = usePathname();
   
-  const navItems = [
+  // Verifichiamo se l'utente si trova in una rotta della dashboard
+  const isDashboard = pathname?.startsWith('/dashboard');
+
+  // Definiamo i pulsanti standard
+  const allNavItems = [
     { href: '/', icon: <Home size={22} strokeWidth={2} />, label: 'HOME' },
     { href: '/feed', icon: <Rss size={22} strokeWidth={2} />, label: 'POST' },
     { href: '/labs', icon: <FlaskConical size={22} strokeWidth={2} />, label: 'LIVE' },
   ];
+
+  // Se siamo in dashboard, filtriamo e mostriamo SOLO la Home.
+  // Altrimenti mostriamo tutto il set.
+  const navItems = isDashboard 
+    ? allNavItems.filter(item => item.href === '/') 
+    : allNavItems;
 
   return (
     <div className="fixed bottom-8 left-0 right-0 z-[100] flex justify-center px-6 md:hidden pointer-events-none">
@@ -28,7 +38,7 @@ export default function MobileNav() {
               href={item.href}
               className="relative p-4 rounded-full transition-all flex flex-col items-center justify-center min-w-[64px]"
             >
-              {/* IL PALLINO ARANCIONE */}
+              {/* IL PALLINO ARANCIONE (Appare solo se la rotta è attiva) */}
               {isActive && (
                 <motion.div 
                   layoutId="activeTab"
@@ -37,15 +47,14 @@ export default function MobileNav() {
                 />
               )}
               
-              {/* L'ICONA BIANCA (Sia attiva che inattiva) */}
+              {/* L'ICONA */}
               <span className={`relative z-10 transition-all duration-300 ${
                 isActive 
-                  ? 'text-white scale-110' // Bianca e leggermente più grande nel pallino
-                  : 'text-zinc-500 hover:text-white' // Grigia quando fuori, bianca al passaggio
+                  ? 'text-white scale-110' 
+                  : 'text-zinc-500 hover:text-white'
               }`}>
                 {item.icon}
               </span>
-
             </Link>
           );
         })}

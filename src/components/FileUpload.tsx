@@ -16,21 +16,21 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
       const file = e.target.files[0]
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${fileName}`
+      const filePath = `uploads/${fileName}` // Organizzato in una cartella specifica
 
-      // 1. Upload su Storage Bucket "factory_media"
+      // 1. Usa lo stesso bucket della Dashboard per uniformità
       const { error: uploadError } = await supabase.storage
-        .from('factory_media')
+        .from('factory-assets')
         .upload(filePath, file)
 
       if (uploadError) throw uploadError
 
       // 2. Ottieni URL pubblico
       const { data: urlData } = supabase.storage
-        .from('factory_media')
+        .from('factory-assets')
         .getPublicUrl(filePath)
 
-      // 3. Salva riferimento nel Database con collegamento all'attività
+      // 3. Salva nel DB
       const { error: dbError } = await supabase
         .from('media_storage')
         .insert([
@@ -45,6 +45,7 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
 
       if (dbError) throw dbError
 
+      alert("SYNC_COMPLETED");
       router.refresh()
     } catch (error: any) {
       console.error('Upload Error:', error.message)
@@ -55,7 +56,7 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
   }
 
   return (
-    <div className="relative overflow-hidden group/upload">
+    <div className="relative overflow-hidden group/upload rounded-lg">
       <input
         type="file"
         onChange={handleUpload}
@@ -63,20 +64,19 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 disabled:cursor-not-allowed"
       />
       <div className={`
-        border border-zinc-800 py-2 px-4 flex items-center justify-between transition-all
+        border border-zinc-800 py-3 px-4 flex items-center justify-between transition-all
         ${uploading ? 'bg-zinc-900 border-orange-500' : 'bg-black hover:border-zinc-500'}
       `}>
-        <span className={`text-[9px] font-black uppercase tracking-widest ${uploading ? 'text-orange-500 animate-pulse' : 'text-zinc-500'}`}>
+        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${uploading ? 'text-orange-500 animate-pulse' : 'text-zinc-500'}`}>
           {uploading ? '>> SYNCING_FILE...' : '++ ATTACH_MEDIA'}
         </span>
         {!uploading && (
-          <span className="text-[10px] text-zinc-700 group-hover/upload:text-white transition-colors">UPLOAD</span>
+          <span className="text-[8px] bg-zinc-900 px-2 py-1 rounded text-zinc-600 group-hover/upload:text-white transition-colors font-mono">UPLOAD</span>
         )}
       </div>
       
-      {/* Barra di progresso fake sotto al tasto se sta caricando */}
       {uploading && (
-        <div className="absolute bottom-0 left-0 h-[1px] bg-orange-500 animate-[loading_2s_ease-in-out_infinite]" style={{ width: '100%' }}></div>
+        <div className="absolute bottom-0 left-0 h-[2px] bg-orange-500 shadow-[0_0_10px_#ea580c] animate-pulse w-full"></div>
       )}
     </div>
   )
