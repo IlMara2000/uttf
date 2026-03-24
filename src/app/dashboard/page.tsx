@@ -76,7 +76,7 @@ export default function Dashboard() {
       {/* HEADER PROFESSIONAL */}
       <header className="h-16 border-b border-white/5 bg-zinc-950 flex items-center justify-between px-6 sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-black italic tracking-tighter uppercase">UTTF_<span className="text-[#FF914D]">CORE</span></h1>
+          <h1 className="text-xl font-black italic tracking-tighter uppercase">UTTF_<span className="text-[#FF914D]">HUB</span></h1>
           <div className="h-4 w-[1px] bg-white/10 mx-2" />
           <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">{userEmail}</span>
         </div>
