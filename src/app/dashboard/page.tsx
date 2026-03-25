@@ -8,14 +8,13 @@ import {
 import { useRouter } from 'next/navigation';
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
-import NotesManager from '@/components/NotesManager'; // Assicurati che il file si chiami così
+import NotesManager from '@/components/NotesManager'; 
 
 export default function Dashboard() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Stati per il form di upload
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -23,7 +22,6 @@ export default function Dashboard() {
   const [uploading, setUploading] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
-  // Stato per mostrare/nascondere il programma Note
   const [showNotes, setShowNotes] = useState(false);
 
   useEffect(() => {
@@ -104,7 +102,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
-      {/* HEADER */}
       <header className="h-20 border-b border-white/5 bg-black flex items-center justify-between px-6 sticky top-0 z-50">
         <div className="flex flex-col">
           <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">UTTF_<span className="text-[#FF914D]">HUB</span></h1>
@@ -118,14 +115,67 @@ export default function Dashboard() {
         </button>
       </header>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 custom-scrollbar">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="max-w-5xl mx-auto flex flex-col gap-8">
           
-          {/* COLONNA SINISTRA: INPUT & NOTE */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            {/* BOX CARICAMENTO NUOVI OUTPUT */}
+          {/* 1. SEZIONE PLANNER & CALENDARIO (In alto) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-7">
+              <Planner isAdmin={true} />
+            </div>
+            <div className="lg:col-span-5">
+              <CalendarWidget isAdmin={true} />
+            </div>
+          </div>
+
+          <hr className="border-white/5" />
+
+          {/* 2. SEZIONE TESTI & APPUNTI (Al centro) */}
+          <div className="max-w-3xl mx-auto w-full space-y-4">
+            <button 
+              onClick={() => setShowNotes(!showNotes)}
+              className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                  <FileText size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-[10px] font-black uppercase italic tracking-widest text-white">Testi_&_Appunti</h3>
+                  <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Gestisci rime, note e allegati</p>
+                </div>
+              </div>
+              <div className={`transition-transform duration-300 ${showNotes ? 'rotate-90' : ''}`}>
+                <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D]" />
+              </div>
+            </button>
+
+            {showNotes && (
+              <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                <NotesManager />
+              </div>
+            )}
+          </div>
+
+          <hr className="border-white/5" />
+
+          {/* 3. SEZIONE OUTPUT & PUBBLICAZIONE (In basso) */}
+          <div className="max-w-3xl mx-auto w-full space-y-6">
+            {/* Pulsante Published Outputs */}
+            <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
+                  <Layers size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-[10px] font-black uppercase italic tracking-widest">Published_Outputs</h3>
+                  <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Manage_and_Delete_Assets</p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+            </button>
+
+            {/* Box New Output Unit */}
             <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
               <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
                 <Send size={14} /> New_Output_Unit
@@ -147,54 +197,8 @@ export default function Dashboard() {
                 </button>
               </form>
             </div>
-
-            {/* PULSANTE GESTIONE OUTPUT PUBBLICATI */}
-            <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
-                  <Layers size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-[10px] font-black uppercase italic tracking-widest">Published_Outputs</h3>
-                  <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Manage_and_Delete_Assets</p>
-                </div>
-              </div>
-              <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-            </button>
-
-            {/* --- NUOVO PROGRAMMA NOTE: POSIZIONATO QUI --- */}
-            <div className="space-y-4">
-              <button 
-                onClick={() => setShowNotes(!showNotes)}
-                className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                    <FileText size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-[10px] font-black uppercase italic tracking-widest text-white">Testi_&_Appunti</h3>
-                    <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Gestisci rime, note e allegati</p>
-                  </div>
-                </div>
-                <div className={`transition-transform duration-300 ${showNotes ? 'rotate-90' : ''}`}>
-                  <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D]" />
-                </div>
-              </button>
-
-              {showNotes && (
-                <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-                  <NotesManager />
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* COLONNA DESTRA: WORKSPACE & CALENDARIO */}
-          <div className="lg:col-span-5 space-y-6">
-             <Planner isAdmin={true} />
-             <CalendarWidget isAdmin={true} />
-          </div>
         </div>
       </main>
     </div>
