@@ -75,40 +75,50 @@ export default function FeedPage() {
       {/* HEADER */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8">
         <div className="w-full flex justify-start">
-          <Link href="/" className="nav-tag flex items-center gap-2">
-            <ArrowLeft size={14} /> BACK
+          {/* TASTO BACK CON TESTO ARANCIONE */}
+          <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
+            <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
           </Link>
         </div>
+        
         <div className="text-center flex flex-col items-center">
-          <div className="p-3 bg-orange-600/10 border border-orange-600/20 rounded-2xl text-[#FF914D] mb-6">
-            <Rss size={24} />
+          {/* PALLINO ARANCIONE SOPRA LA SCRITTA */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-[#FF914D] blur-xl opacity-20 rounded-full animate-pulse"></div>
+            <div className="relative p-4 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-full text-[#FF914D]">
+              <Rss size={32} strokeWidth={2.5} />
+            </div>
           </div>
-          <h1 className="hero-title text-[12vw] md:text-7xl leading-none italic uppercase">UTTF_DAY</h1>
+
+          {/* TITOLO RIMICCIOLITO */}
+          <h1 className="hero-title text-5xl md:text-6xl leading-none italic uppercase tracking-tighter">
+            UTTF_DAY
+          </h1>
         </div>
       </header>
 
       {/* UNICO CONTENITORE MAIN */}
       <main className="w-full max-w-7xl px-6 flex flex-col gap-32">
           
-          {/* STREAM LINK BUTTON */}
-<section className="flex justify-center mb-16">
-  <Link href="/stream" className="group relative">
-    <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D] to-orange-900 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-    <button className="relative px-8 py-4 bg-black border border-white/10 rounded-full flex items-center gap-4 hover:border-[#FF914D]/50 transition-all">
-      <span className="relative flex h-3 w-3">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF914D] opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF914D]"></span>
-      </span>
-      <span className="font-mono text-xs tracking-[0.3em] uppercase">Enter_Live_Stream</span>
-      <ArrowLeft size={16} className="rotate-180 text-zinc-500 group-hover:text-[#FF914D] transition-colors" />
-    </button>
-  </Link>
-</section>
+        {/* STREAM LINK BUTTON */}
+        <section className="flex justify-center mb-16">
+          <Link href="/stream" className="group relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D] to-orange-900 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+            <button className="relative px-8 py-4 bg-black border border-white/10 rounded-full flex items-center gap-4 hover:border-[#FF914D]/50 transition-all">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF914D] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF914D]"></span>
+              </span>
+              <span className="font-mono text-xs tracking-[0.3em] uppercase">Enter_Live_Stream</span>
+              <ArrowLeft size={16} className="rotate-180 text-zinc-500 group-hover:text-[#FF914D] transition-colors" />
+            </button>
+          </Link>
+        </section>
 
         {/* INSTAGRAM SECTION */}
         <section>
           <div className="flex flex-col items-center mb-12">
-            <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-4 text-center" style={{ fontFamily: 'var(--font-display)' }}>
+            <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-4 text-center">
               SYNC ON<span className="text-[#FF914D]">_INSTA</span>
             </h2>
             
@@ -180,12 +190,12 @@ export default function FeedPage() {
 
         {/* NEWS SECTION - ABOUT */}
         <section>
-          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter">
             COS_<span className="text-[#FF914D]">È</span>
           </h2>
           <div className="glass-panel p-8 md:p-12 border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
-            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter" style={{ fontFamily: 'var(--font-display)' }}>
+            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter">
               UNDER THE TOWER?
             </h3>
             <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed max-w-4xl mx-auto">
@@ -203,7 +213,7 @@ export default function FeedPage() {
             className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5 group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
           >
             <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">CHI SIAMO?</span>
-            <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display)' }}>
+            <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
               CONOSCI IL NOSTRO TEAM!
             </h3>
             <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
