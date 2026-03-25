@@ -72,6 +72,21 @@ export default function HomePage() {
           </p>
 
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
+
+          <Link href="/feed" className="group">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
+              >
+                <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">MAPPA INTERATTIVA DI:</span>
+                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
+                  ROZZANO_by: UTTF
+                </h3>
+                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+              </motion.div>
+            </Link>
+
             <Link href="/feed" className="group">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
