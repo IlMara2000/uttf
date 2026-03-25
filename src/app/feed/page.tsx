@@ -92,7 +92,7 @@ export default function FeedPage() {
 
           {/* TITOLO RIMICCIOLITO */}
           <h1 className="hero-title text-[10vw] md:text-6xl leading-none italic uppercase font-black tracking-tighter">
-            UTTF_<span className="text-[#FF914D]">DAY<br />
+            UTTF_<span className="text-[#FF914D]">DAY<br /></span>
           </h1>
         </div>
       </header>
