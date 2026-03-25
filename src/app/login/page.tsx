@@ -51,7 +51,7 @@ export default function LoginPage() {
             type="submit" disabled={loading}
             className="w-full py-4 bg-[#FF914D] text-black font-black uppercase italic text-xs hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="animate-spin" size={16} /> : <><Shield size={16} /> INITIALIZE_SESSION</>}
+            {loading ? <Loader2 className="animate-spin" size={16} /> : <><Shield size={16} />ACCEDI</>}
           </button>
         </form>
       </div>
