@@ -1,231 +1,237 @@
 'use client'
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Layers, Loader2, ArrowRight, X, Play, Maximize2 } from 'lucide-react';
-import Link from 'next/link';
+import { 
+  Send, LogOut, Image as ImageIcon, 
+  Layers, Loader2, Users, ShieldCheck, ChevronRight,
+  Sparkles 
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Planner from '@/components/Planner';
+import CalendarWidget from '@/components/CalendarWidget';
 
-export default function HomePage() {
-  const [publications, setPublications] = useState<any[]>([]);
+export default function Dashboard() {
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const [staffList, setStaffList] = useState<any[]>([]);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberName, setNewMemberName] = useState('');
+  
+  // States Post
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
 
-  // CONFIGURAZIONE SUPABASE
-  const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
-  const BUCKET_NAME = 'publications'; 
+  const MASTER_ADMIN = 'ass.uttf@gmail.com';
 
-  useEffect(() => {
-    async function fetchPublications() {
-      const { data, error } = await supabase
-        .from('publications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (!error && data) {
-        setPublications(data);
-      }
-      setLoading(false);
-    }
-    fetchPublications();
+  const fetchStaff = useCallback(async () => {
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (data) setStaffList(data);
   }, []);
 
-  // Helper per distinguere Video da Immagini
-  const isVideo = (url: string) => {
-    return url?.match(/\.(mp4|webm|ogg|mov)$/i);
-  };
+  useEffect(() => {
+    // 1. Controllo immediato sessione
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace('/login');
+      } else {
+        setUserEmail(session.user.email ?? null);
+        if (session.user.email === MASTER_ADMIN) fetchStaff();
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+
+    // 2. Listener per cambi di stato (Login/Logout in tempo reale)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.replace('/login');
+      } else {
+        setUserEmail(session.user.email ?? null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router, fetchStaff]);
+
+  async function handleAiEnhance() {
+    if (!description) return;
+    setIsAiProcessing(true);
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-70b-versatile",
+          messages: [
+            {
+              role: "system",
+              content: "Sei un assistente tecnico per UTTF. Trasforma i testi dell'utente in descrizioni professionali, sintetiche e dal tono cyber-industrial. Usa un linguaggio tecnico ed evita emoji inutili."
+            },
+            { role: "user", content: `Ottimizza questa descrizione: ${description}` }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      setDescription(data.choices[0].message.content);
+    } catch (err) {
+      alert("AI_OFFLINE");
+    } finally {
+      setIsAiProcessing(false);
+    }
+  }
+
+  async function handleCreatePost(e: React.FormEvent) {
+    e.preventDefault();
+    if (!file || !title) return alert("Missing Title or Media");
+    setUploading(true);
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage.from('factory-assets').upload(`publications/${fileName}`, file);
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('factory-assets').getPublicUrl(`publications/${fileName}`);
+      
+      const { error: dbErr } = await supabase.from('publications').insert([{ 
+        title: title.toUpperCase(), 
+        description: description,
+        image_url: publicUrl 
+      }]);
+      
+      if (dbErr) throw dbErr;
+      
+      setTitle(''); setDescription(''); setFile(null); setPreviewUrl(null);
+      alert("PUSH_SUCCESSFUL");
+    } catch (err: any) {
+      alert("ERROR: " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  if (loading) return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono text-[#FF914D] gap-4">
+      <Loader2 className="animate-spin" size={40} />
+      <span className="tracking-[0.3em] animate-pulse">CORE_SYNCING...</span>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
       
-      {/* HEADER - MANTENUTO INTEGRALE */}
-      <header className="pt-24 pb-12 flex flex-col items-center gap-6">
-        <img 
-          src="/icons/favicon.svg" 
-          alt="UTTF" 
-          className="w-25 h-25 md:w-30 md:h-30 transition-transform hover:scale-110 duration-500" 
-          onError={(e) => (e.currentTarget.src = '/favicon.ico')}
-        />
-        <Link href="/login" className="btn-urban opacity-80 hover:opacity-100 transition-opacity animate-pulse flex items-center gap-3 border border-[#FF914D]/20 px-6 py-3 rounded-full font-mono text-[10px] tracking-[0.3em] uppercase italic font-bold">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#FF914D]"></div>
-          ACCESSO STAFF
-        </Link>
-      </header>
-
-      {/* HERO SECTION - MANTENUTA INTEGRALE */}
-      <section className="px-6 py-12 w-full max-w-7xl flex flex-col items-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full flex flex-col items-center"
-        >
-          <h1 className="hero-title text-[14vw] md:text-[8vw] leading-[0.9] text-center mb-16 font-black uppercase italic tracking-tighter">
-            Under The<br />
-            Tower<br />
-            <span style={{ color: '#FF914D' }}>Factory</span>
-          </h1>
-
-          <p className="text-zinc-400 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10 opacity-80">
-            Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dal cemento.
-          </p>
-
-          <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
-            <Link href="/feed" className="group">
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
-              >
-                <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
-                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
-                  Under The Tower
-                </h3>
-                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-              </motion.div>
-            </Link>
-
-            <Link href="/labs" className="group">
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
-              >
-                <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
-                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
-                  RAPF*CKTORY
-                </h3>
-                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-              </motion.div>
-            </Link>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* LIVE OUTPUT SECTION - AGGIORNATA STILE INSTAGRAM */}
-      <section className="w-full px-6 py-32 mt-20 border-t border-white/5 bg-transparent">
-        <div className="max-w-7xl mx-auto flex flex-col items-center">
-          <div className="flex flex-col items-center mb-20 text-center">
-             <span className="text-[#FF914D] font-mono text-[10px] tracking-[0.6em] uppercase mb-4">QUA SOTTO GLI ULTIMI AGGIORNAMENTI</span>
-             <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">
-               UTTF_<span className="text-[#FF914D]">NEWS</span>
-             </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-            {loading ? (
-              [1, 2, 3].map(i => (
-                <div key={i} className="h-80 glass-panel animate-pulse flex items-center justify-center border border-white/5 bg-white/5 rounded-3xl">
-                  <Loader2 className="animate-spin text-zinc-800" size={32} />
-                </div>
-              ))
-            ) : publications.length > 0 ? (
-              publications.map((post) => {
-                let imageUrl = post.image_url;
-                if (imageUrl && !imageUrl.startsWith('http')) {
-                  imageUrl = `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${imageUrl}`;
-                }
-
-                return (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    key={post.id} 
-                    onClick={() => setSelectedPost({...post, image_url: imageUrl})}
-                    className="glass-panel group overflow-hidden flex flex-col border border-white/5 bg-[#0a0a0a] rounded-[2rem] hover:border-[#FF914D]/30 transition-all duration-500 cursor-pointer"
-                  >
-                    {/* Header simile IG */}
-                    <div className="p-5 flex items-center gap-3 border-b border-white/5">
-                      <div className="w-6 h-6 rounded-full bg-[#FF914D] flex items-center justify-center text-black text-[8px] font-black italic">UT</div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest italic">{post.title}</span>
-                    </div>
-
-                    {/* Media Container */}
-                    <div className="relative aspect-square w-full overflow-hidden bg-zinc-900">
-                      {isVideo(imageUrl) ? (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <video src={imageUrl} className="w-full h-full object-cover opacity-60" muted />
-                          <Play className="absolute text-white/50 group-hover:text-[#FF914D] transition-colors" size={40} fill="currentColor" />
-                        </div>
-                      ) : (
-                        <img 
-                          src={imageUrl} 
-                          alt={post.title} 
-                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
-                        />
-                      )}
-                    </div>
-
-                    <div className="p-6">
-                      <p className="text-zinc-500 text-[11px] uppercase tracking-wide leading-relaxed font-mono line-clamp-2">
-                        {post.description || "FACTORY_LOG_ENTRY_ALPHA"}
-                      </p>
-                      <div className="flex justify-between items-center pt-4 mt-4 border-t border-white/5 font-mono text-[8px] text-zinc-700">
-                        <span>{new Date(post.created_at).toLocaleDateString('it-IT')}</span>
-                        <Maximize2 size={12} className="group-hover:text-[#FF914D] transition-colors" />
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })
-            ) : (
-              <div className="col-span-full py-20 text-center opacity-30">
-                <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-[0.5em]">No_Output_Detected</p>
-              </div>
-            )}
+      <header className="h-20 border-b border-white/5 bg-black flex items-center justify-between px-6 sticky top-0 z-50">
+        <div className="flex flex-col">
+          <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">UTTF_<span className="text-[#FF914D]">HUB</span></h1>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest truncate max-w-[150px]">{userEmail}</span>
           </div>
         </div>
-      </section>
+        <button onClick={() => supabase.auth.signOut()} className="p-2 text-white hover:text-[#FF914D] transition-colors">
+          <LogOut size={20} />
+        </button>
+      </header>
 
-      {/* MODAL / POP-UP - AGGIUNTO */}
-      <AnimatePresence>
-        {selectedPost && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 backdrop-blur-md bg-black/80"
-            onClick={() => setSelectedPost(null)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-              className="relative max-w-4xl w-full bg-zinc-950 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row max-h-[90vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button onClick={() => setSelectedPost(null)} className="absolute top-5 right-5 z-10 p-2 bg-black/50 text-white rounded-full hover:text-[#FF914D] transition-all">
-                <X size={24} />
-              </button>
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 custom-scrollbar">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 space-y-6">
+            
+            <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
+              <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
+                <Send size={14} /> New_Output_Unit
+              </h2>
+              <form onSubmit={handleCreatePost} className="space-y-4">
+                <input 
+                  type="text" 
+                  placeholder="UNIT_TITLE" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)} 
+                  className="w-full bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-[10px] uppercase outline-none focus:border-[#FF914D]/40 text-white" 
+                />
+                
+                <div className="relative group">
+                  <textarea 
+                    placeholder="DESCRIPTION_DRAFT..." 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full bg-black/40 border border-white/5 p-4 pr-12 rounded-xl font-mono text-[10px] min-h-[100px] outline-none focus:border-[#FF914D]/40 text-white resize-none"
+                  />
+                  <button 
+                    type="button"
+                    onClick={handleAiEnhance}
+                    disabled={isAiProcessing || !description}
+                    className="absolute right-3 bottom-3 p-2 bg-zinc-800 hover:bg-[#FF914D] text-white rounded-lg transition-all disabled:opacity-30 group-hover:shadow-[0_0_15px_rgba(255,145,77,0.3)]"
+                  >
+                    {isAiProcessing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                  </button>
+                </div>
 
-              <div className="w-full md:w-3/5 bg-black flex items-center justify-center">
-                {isVideo(selectedPost.image_url) ? (
-                  <video src={selectedPost.image_url} controls autoPlay className="w-full max-h-[80vh]" />
-                ) : (
-                  <img src={selectedPost.image_url} className="w-full h-full object-contain" alt="" />
-                )}
+                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-white/5 rounded-2xl cursor-pointer hover:bg-white/[0.02] relative overflow-hidden group transition-all">
+                  {previewUrl ? <img src={previewUrl} className="h-full w-full object-cover opacity-60" /> : <ImageIcon size={28} className="text-zinc-700" />}
+                  <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if(f){ setFile(f); setPreviewUrl(URL.createObjectURL(f)); }}} />
+                </label>
+
+                <button type="submit" disabled={uploading} className="w-full py-4 bg-white text-black text-[10px] font-black uppercase italic hover:bg-[#FF914D] transition-all disabled:opacity-50">
+                  {uploading ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'PUSH_TO_FACTORY'}
+                </button>
+              </form>
+            </div>
+
+            <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
+                  <Layers size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-[10px] font-black uppercase italic tracking-widest">Published_Outputs</h3>
+                  <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Manage_and_Delete_Assets</p>
+                </div>
               </div>
+              <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+            </button>
+          </div>
 
-              <div className="w-full md:w-2/5 p-8 flex flex-col bg-zinc-950">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-full bg-[#FF914D] flex items-center justify-center text-black font-black italic text-xs">UT</div>
-                  <h3 className="text-lg font-black italic uppercase tracking-tighter">{selectedPost.title}</h3>
-                </div>
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  <p className="text-zinc-400 text-sm leading-relaxed font-mono uppercase tracking-tight">
-                    {selectedPost.description || "Nessuna specifica tecnica registrata."}
-                  </p>
-                </div>
-                <div className="pt-6 mt-6 border-t border-white/5 text-[9px] font-mono text-zinc-600 uppercase">
-                  Log_Date: {new Date(selectedPost.created_at).toLocaleString('it-IT')}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <footer className="py-24 text-center opacity-30">
-        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.2.0</p>
-      </footer>
+          <div className="lg:col-span-5 space-y-6">
+             {userEmail === MASTER_ADMIN && (
+               <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
+                  <h2 className="text-[10px] font-black uppercase italic mb-4 text-white flex items-center gap-2"><Users size={14} className="text-[#FF914D]" /> Team_Access</h2>
+                  <div className="space-y-3 mb-6">
+                    {staffList.map((m) => (
+                      <div key={m.id} className="flex justify-between items-center p-3 bg-black/40 border border-white/5 rounded-xl">
+                        <div className="flex flex-col"><span className="text-[9px] font-black uppercase">{m.full_name}</span><span className="text-[7px] font-mono text-zinc-600">{m.email}</span></div>
+                        <ShieldCheck size={12} className="text-zinc-800" />
+                      </div>
+                    ))}
+                  </div>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if(!newMemberEmail || !newMemberName) return;
+                    const email = newMemberEmail.toLowerCase().trim();
+                    supabase.from('authorized_users').insert([{ email }])
+                      .then(() => supabase.from('profiles').insert([{ full_name: newMemberName.toUpperCase(), email, role: 'UNIT' }]))
+                      .then(() => { setNewMemberEmail(''); setNewMemberName(''); fetchStaff(); });
+                  }} className="space-y-2">
+                    <input placeholder="NEW_NAME" value={newMemberName} onChange={e => setNewMemberName(e.target.value)} className="w-full bg-black/60 border border-white/5 p-3 rounded-lg text-[9px] uppercase outline-none text-white" />
+                    <input placeholder="NEW_EMAIL" value={newMemberEmail} onChange={e => setNewMemberEmail(e.target.value)} className="w-full bg-black/60 border border-white/5 p-3 rounded-lg text-[9px] outline-none text-white" />
+                    <button className="w-full py-2 bg-zinc-800 hover:bg-white hover:text-black text-[9px] font-black transition-all rounded-lg uppercase">Authorize_Unit</button>
+                  </form>
+               </div>
+             )}
+             <Planner isAdmin={userEmail === MASTER_ADMIN} />
+             <CalendarWidget isAdmin={userEmail === MASTER_ADMIN} />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
