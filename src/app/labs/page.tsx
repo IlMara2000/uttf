@@ -73,7 +73,7 @@ export default function LabsPage() {
             UTTF_<span className="text-[#FF914D]">LABS</span>
           </h1>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">
-            Attività per il Sociale // Lab_Unit
+            Attività per il Sociale
           </p>
         </div>
       </header>
