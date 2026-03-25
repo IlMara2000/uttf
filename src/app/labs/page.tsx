@@ -52,15 +52,8 @@ export default function LabsPage() {
       {/* HEADER */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-12">
         <div className="w-full flex justify-start">
-          <Link href="/" className="nav-tag flex items-center gap-2 group border-[#FF914D]/20 hover:border-[#FF914D]/50 transition-all">
-            <ArrowLeft size={14} className="text-[#FF914D] group-hover:-translate-x-1 transition-transform" /> 
-            <span className="font-mono tracking-widest text-[10px] text-[#FF914D]">BACK</span>
-          </Link>
-        </div>
-
-        <div className="text-center flex flex-col items-center w-full">
           
-          {/* TASTO BACK CON TESTO ARANCIONE */}
+        {/* TASTO BACK CON TESTO ARANCIONE */}
           <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
             <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
           </Link>
