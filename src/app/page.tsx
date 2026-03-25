@@ -81,7 +81,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-zinc-400 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10 opacity-80">
-            Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dal cemento.
+            Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dalla strada per la comunità.
           </p>
 
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
