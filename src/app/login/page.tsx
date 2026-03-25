@@ -33,7 +33,7 @@ export default function LoginPage() {
           <h1 className="text-4xl font-black italic tracking-tighter text-white uppercase">
             UTTF_<span className="text-[#FF914D]">AUTH</span>
           </h1>
-          <p className="text-zinc-500 font-mono text-[10px] mt-2 tracking-widest uppercase">Restricted_Access_Only</p>
+          <p className="text-zinc-500 font-mono text-[10px] mt-2 tracking-widest uppercase">ACCESSO_RISERVATO_STAFF</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
