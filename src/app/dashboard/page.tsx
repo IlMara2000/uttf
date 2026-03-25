@@ -1,10 +1,10 @@
 'use client'
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   Send, LogOut, Image as ImageIcon, 
-  Layers, Loader2, Users, Plus, ShieldCheck, ChevronRight,
-  Sparkles
+  Layers, Loader2, Users, ShieldCheck, ChevronRight,
+  Sparkles 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Planner from '@/components/Planner';
@@ -18,7 +18,6 @@ export default function Dashboard() {
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberName, setNewMemberName] = useState('');
   
-  // States Post
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -28,35 +27,37 @@ export default function Dashboard() {
 
   const MASTER_ADMIN = 'ass.uttf@gmail.com';
 
+  // Memorizziamo fetchStaff per evitare loop
+  const fetchStaff = useCallback(async () => {
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (data) setStaffList(data);
+  }, []);
+
   useEffect(() => {
     async function init() {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error || !user) {
+          console.log("AUTH_CHECK_FAILED: Redirecting...");
           router.replace('/login');
           return;
         }
 
         setUserEmail(user.email ?? null);
-
-        // Carica lo staff solo se è l'admin
+        
         if (user.email === MASTER_ADMIN) {
           await fetchStaff();
         }
       } catch (err) {
-        console.error("INIT_ERROR:", err);
+        console.error("DASHBOARD_INIT_CRITICAL_ERROR:", err);
       } finally {
-        setLoading(false); // Questo DEVE essere eseguito sempre
+        // Garantisce che il loader sparisca in ogni caso
+        setLoading(false);
       }
     }
     init();
-  }, [router]);
-
-  async function fetchStaff() {
-    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-    if (data) setStaffList(data);
-  }
+  }, [router, fetchStaff]);
 
   async function handleAiEnhance() {
     if (!description) return;
@@ -81,8 +82,11 @@ export default function Dashboard() {
       });
 
       const data = await response.json();
-      setDescription(data.choices[0].message.content);
+      if (data.choices?.[0]?.message?.content) {
+        setDescription(data.choices[0].message.content);
+      }
     } catch (err) {
+      console.error("GROQ_ERROR:", err);
       alert("AI_OFFLINE");
     } finally {
       setIsAiProcessing(false);
@@ -91,13 +95,13 @@ export default function Dashboard() {
 
   async function handleCreatePost(e: React.FormEvent) {
     e.preventDefault();
-    if (!file || !title) return alert("Missing Title or Media");
+    if (!file || !title) return alert("MISSING_DATA");
     setUploading(true);
     try {
       const fileName = `${Date.now()}_${file.name}`;
       const { error: upErr } = await supabase.storage.from('factory-assets').upload(`publications/${fileName}`, file);
       if (upErr) throw upErr;
-      
+
       const { data: { publicUrl } } = supabase.storage.from('factory-assets').getPublicUrl(`publications/${fileName}`);
       
       const { error: dbErr } = await supabase.from('publications').insert([{ 
@@ -117,14 +121,14 @@ export default function Dashboard() {
     }
   }
 
-  if (loading) return (
-    <div className="min-h-screen bg-black flex items-center justify-center font-mono text-[#FF914D]">
-      <div className="flex flex-col items-center gap-4">
-        <Loader2 className="animate-spin" size={32} />
-        <span className="animate-pulse tracking-[0.5em]">CORE_SYNCING...</span>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono">
+        <Loader2 className="animate-spin text-[#FF914D] mb-4" size={32} />
+        <span className="text-[#FF914D] animate-pulse uppercase tracking-[0.4em] text-[10px]">Core_Syncing...</span>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
@@ -148,6 +152,7 @@ export default function Dashboard() {
           
           <div className="lg:col-span-7 space-y-6">
             
+            {/* BOX CARICAMENTO CON AI */}
             <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
               <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
                 <Send size={14} /> New_Output_Unit
