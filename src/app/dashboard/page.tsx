@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { 
   Send, LogOut, Image as ImageIcon, 
   Layers, Loader2, Users, Plus, ShieldCheck, ChevronRight,
-  Sparkles, Wand2 
+  Sparkles
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Planner from '@/components/Planner';
@@ -20,7 +20,7 @@ export default function Dashboard() {
   
   // States Post
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState(''); // Nuova descrizione
+  const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -30,16 +30,34 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push('/login'); return; }
-      setUserEmail(user.email ?? null);
-      if (user.email === MASTER_ADMIN) fetchStaff();
-      setLoading(false);
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+          router.replace('/login');
+          return;
+        }
+
+        setUserEmail(user.email ?? null);
+
+        // Carica lo staff solo se è l'admin
+        if (user.email === MASTER_ADMIN) {
+          await fetchStaff();
+        }
+      } catch (err) {
+        console.error("INIT_ERROR:", err);
+      } finally {
+        setLoading(false); // Questo DEVE essere eseguito sempre
+      }
     }
     init();
   }, [router]);
 
-  // Funzione per generare testo con Groq
+  async function fetchStaff() {
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (data) setStaffList(data);
+  }
+
   async function handleAiEnhance() {
     if (!description) return;
     setIsAiProcessing(true);
@@ -57,28 +75,18 @@ export default function Dashboard() {
               role: "system",
               content: "Sei un assistente tecnico per UTTF. Trasforma i testi dell'utente in descrizioni professionali, sintetiche e dal tono cyber-industrial. Usa un linguaggio tecnico ed evita emoji inutili."
             },
-            {
-              role: "user",
-              content: `Ottimizza questa descrizione: ${description}`
-            }
+            { role: "user", content: `Ottimizza questa descrizione: ${description}` }
           ]
         })
       });
 
       const data = await response.json();
-      const enhancedText = data.choices[0].message.content;
-      setDescription(enhancedText);
+      setDescription(data.choices[0].message.content);
     } catch (err) {
-      console.error("AI_ERROR:", err);
       alert("AI_OFFLINE");
     } finally {
       setIsAiProcessing(false);
     }
-  }
-
-  async function fetchStaff() {
-    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-    if (data) setStaffList(data);
   }
 
   async function handleCreatePost(e: React.FormEvent) {
@@ -89,11 +97,12 @@ export default function Dashboard() {
       const fileName = `${Date.now()}_${file.name}`;
       const { error: upErr } = await supabase.storage.from('factory-assets').upload(`publications/${fileName}`, file);
       if (upErr) throw upErr;
+      
       const { data: { publicUrl } } = supabase.storage.from('factory-assets').getPublicUrl(`publications/${fileName}`);
       
       const { error: dbErr } = await supabase.from('publications').insert([{ 
         title: title.toUpperCase(), 
-        description: description, // Salviamo anche la descrizione
+        description: description,
         image_url: publicUrl 
       }]);
       
@@ -108,7 +117,14 @@ export default function Dashboard() {
     }
   }
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center font-mono text-[#FF914D]">CORE_SYNCING...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center font-mono text-[#FF914D]">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="animate-spin" size={32} />
+        <span className="animate-pulse tracking-[0.5em]">CORE_SYNCING...</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
@@ -132,7 +148,6 @@ export default function Dashboard() {
           
           <div className="lg:col-span-7 space-y-6">
             
-            {/* BOX CARICAMENTO CON AI */}
             <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
               <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
                 <Send size={14} /> New_Output_Unit
@@ -146,7 +161,6 @@ export default function Dashboard() {
                   className="w-full bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-[10px] uppercase outline-none focus:border-[#FF914D]/40 text-white" 
                 />
                 
-                {/* AREA DESCRIZIONE + AI BUTTON */}
                 <div className="relative group">
                   <textarea 
                     placeholder="DESCRIPTION_DRAFT..." 
@@ -190,7 +204,6 @@ export default function Dashboard() {
               </div>
               <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
             </button>
-
           </div>
 
           <div className="lg:col-span-5 space-y-6">
