@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'; // Importiamo useRef
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
@@ -40,10 +40,8 @@ const labCategories = [
 ];
 
 export default function LabsPage() {
-  // 1. Creiamo il riferimento per la sezione Iscriviti
   const subscribeRef = useRef<HTMLDivElement>(null);
 
-  // 2. Funzione per scrollare fino in fondo
   const scrollToSubscribe = () => {
     subscribeRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -54,22 +52,24 @@ export default function LabsPage() {
       {/* HEADER */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-12">
         <div className="w-full flex justify-start">
-          <Link href="/" className="nav-tag flex items-center gap-2 group border-white/10 hover:border-[#FF914D]/50 transition-all">
-            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> 
-            <span className="font-mono tracking-widest text-[10px]">BACK</span>
+          <Link href="/" className="nav-tag flex items-center gap-2 group border-[#FF914D]/20 hover:border-[#FF914D]/50 transition-all">
+            <ArrowLeft size={14} className="text-[#FF914D] group-hover:-translate-x-1 transition-transform" /> 
+            <span className="font-mono tracking-widest text-[10px] text-[#FF914D]">BACK</span>
           </Link>
         </div>
 
         <div className="text-center flex flex-col items-center w-full">
+          {/* ICONA STILE DASHBOARD */}
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="p-3 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl text-[#FF914D] mb-6"
+            className="w-16 h-16 bg-[#FF914D] rounded-full flex items-center justify-center text-black mb-6 shadow-[0_0_20px_rgba(255,145,77,0.3)]"
           >
             <FlaskConical size={28} />
           </motion.div>
           
-          <h1 className="hero-title text-[15vw] md:text-8xl leading-none italic uppercase font-black tracking-tighter">
+          {/* TITOLO RIMPICCIOLITO */}
+          <h1 className="hero-title text-[10vw] md:text-6xl leading-none italic uppercase font-black tracking-tighter">
             UTTF_<span className="text-[#FF914D]">LABS</span>
           </h1>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">
@@ -103,18 +103,18 @@ export default function LabsPage() {
           </motion.div>
         </section>
 
-        {/* LAB DESCRIPTIONS BOXES (Ora sono bottoni) */}
+        {/* LAB DESCRIPTIONS BOXES */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {labCategories.map((lab, index) => (
             <motion.div
               key={lab.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 0.98 }} // Feedback visivo al passaggio
+              whileHover={{ scale: 0.98 }}
               whileTap={{ scale: 0.95 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              onClick={scrollToSubscribe} // Trigger dello scroll
+              onClick={scrollToSubscribe}
               className="glass-panel p-8 md:p-10 border-white/5 hover:border-[#FF914D]/40 transition-all group relative overflow-hidden cursor-pointer bg-zinc-900/20"
             >
               <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity text-[#FF914D]">
@@ -149,7 +149,7 @@ export default function LabsPage() {
           ))}
         </section>
           
-        {/* CALL TO ACTION (Riferimento aggiunto qui) */}
+        {/* CALL TO ACTION */}
         <section ref={subscribeRef} className="flex justify-center scroll-mt-20">
           <div className="glass-panel p-8 md:p-12 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[2.5rem] max-w-2xl w-full">
             <h2 className="text-2xl md:text-4xl font-black italic uppercase mb-3 tracking-tighter text-white">
