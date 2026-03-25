@@ -70,7 +70,7 @@ export default function LabsPage() {
           
           {/* TITOLO RIMPICCIOLITO */}
           <h1 className="hero-title text-[10vw] md:text-6xl leading-none italic uppercase font-black tracking-tighter">
-            UTTF_<span className="text-[#FF914D]">LABS</span>
+            UTTF_<span className="text-[#FF914D]">LABS<br /></span>
           </h1>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">
             Attività per il Sociale
