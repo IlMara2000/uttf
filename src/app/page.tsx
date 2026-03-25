@@ -95,7 +95,7 @@ export default function HomePage() {
               >
                 <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">MAPPA INTERATTIVA DI:</span>
                 <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
-                  ROZZANO_by: UTTF
+                  ROZZANO
                 </h3>
                 <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
               </motion.div>
