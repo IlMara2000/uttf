@@ -59,14 +59,21 @@ export default function LabsPage() {
         </div>
 
         <div className="text-center flex flex-col items-center w-full">
-          {/* ICONA STILE DASHBOARD */}
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-16 h-16 bg-[#FF914D] rounded-full flex items-center justify-center text-black mb-6 shadow-[0_0_20px_rgba(255,145,77,0.3)]"
-          >
-            <FlaskConical size={28} />
-          </motion.div>
+          
+          {/* TASTO BACK CON TESTO ARANCIONE */}
+          <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
+            <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
+          </Link>
+        </div>
+        
+        <div className="text-center flex flex-col items-center">
+          {/* PALLINO ARANCIONE SOPRA LA SCRITTA */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 bg-[#FF914D] blur-xl opacity-20 rounded-full animate-pulse"></div>
+            <div className="relative p-4 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-full text-[#FF914D]">
+              <FlaskConical size={32} strokeWidth={2.5} />
+            </div>
+          </div>
           
           {/* TITOLO RIMPICCIOLITO */}
           <h1 className="hero-title text-[10vw] md:text-6xl leading-none italic uppercase font-black tracking-tighter">
