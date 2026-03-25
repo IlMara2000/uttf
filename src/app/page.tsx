@@ -3,15 +3,28 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Layers, Loader2, ArrowRight, X, Play, Maximize2 } from 'lucide-react';
+import { 
+  Layers, 
+  Loader2, 
+  ArrowRight, 
+  X, 
+  Play, 
+  Maximize2, 
+  Map as MapIcon 
+} from 'lucide-react';
 import Link from 'next/link';
+// Importiamo il componente della mappa
+import MapSection from '@/components/MapSection';
 
 export default function HomePage() {
   const [publications, setPublications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  
+  // Stato per gestire l'apertura della mappa di Rozzano
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
-  // CONFIGURAZIONE SUPABASE
+  // Configurazione Supabase per i media
   const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
   const BUCKET_NAME = 'publications'; 
 
@@ -39,7 +52,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
       
-      {/* HEADER - MANTENUTO INTEGRALE */}
+      {/* HEADER */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-6">
         <img 
           src="/icons/favicon.svg" 
@@ -53,7 +66,7 @@ export default function HomePage() {
         </Link>
       </header>
 
-      {/* HERO SECTION - MANTENUTA INTEGRALE */}
+      {/* HERO SECTION */}
       <section className="px-6 py-12 w-full max-w-7xl flex flex-col items-center">
         <motion.div 
           initial={{ opacity: 0, y: 30 }} 
@@ -73,7 +86,8 @@ export default function HomePage() {
 
           <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
 
-          <Link href="/feed" className="group">
+            {/* BOX MAPPA INTERATTIVA ROZZANO */}
+            <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -85,8 +99,9 @@ export default function HomePage() {
                 </h3>
                 <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
               </motion.div>
-            </Link>
+            </div>
 
+            {/* BOX CREATIVE COLLECTIVE */}
             <Link href="/feed" className="group">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
@@ -101,6 +116,7 @@ export default function HomePage() {
               </motion.div>
             </Link>
 
+            {/* BOX LAB UNIT */}
             <Link href="/labs" className="group">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
@@ -118,7 +134,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* LIVE OUTPUT SECTION - AGGIORNATA STILE INSTAGRAM */}
+      {/* LIVE OUTPUT SECTION - NEWS FEED */}
       <section className="w-full px-6 py-32 mt-20 border-t border-white/5 bg-transparent">
         <div className="max-w-7xl mx-auto flex flex-col items-center">
           <div className="flex flex-col items-center mb-20 text-center">
@@ -151,13 +167,11 @@ export default function HomePage() {
                     onClick={() => setSelectedPost({...post, image_url: imageUrl})}
                     className="glass-panel group overflow-hidden flex flex-col border border-white/5 bg-[#0a0a0a] rounded-[2rem] hover:border-[#FF914D]/30 transition-all duration-500 cursor-pointer"
                   >
-                    {/* Header simile IG */}
                     <div className="p-5 flex items-center gap-3 border-b border-white/5">
                       <div className="w-6 h-6 rounded-full bg-[#FF914D] flex items-center justify-center text-black text-[8px] font-black italic">UT</div>
                       <span className="text-[10px] font-bold uppercase tracking-widest italic">{post.title}</span>
                     </div>
 
-                    {/* Media Container */}
                     <div className="relative aspect-square w-full overflow-hidden bg-zinc-900">
                       {isVideo(imageUrl) ? (
                         <div className="w-full h-full flex items-center justify-center">
@@ -194,7 +208,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* MODAL / POP-UP - AGGIUNTO */}
+      {/* MODAL PER DETTAGLIO POST */}
       <AnimatePresence>
         {selectedPost && (
           <motion.div 
@@ -235,6 +249,13 @@ export default function HomePage() {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* COMPONENTE MODALE MAPPA DI ROZZANO */}
+      <AnimatePresence>
+        {isMapOpen && (
+          <MapSection isOpen={isMapOpen} onClose={() => setIsMapOpen(false)} />
         )}
       </AnimatePresence>
 
