@@ -17,7 +17,7 @@ const teamMembers = [
     name: "Elle Piò",
     role: "Presidente & Founder",
     icon: <User size={20} />,
-    image: "/team/elle-pio.jpg",
+    image: "/team/elle-pio.jpeg",
     description: "Pelato per comodità… così il cervello prende meglio il segnale creativo. Fa rap da una vita e ha visto passare più mode lui che TikTok. Di giorno educa, di notte… educa comunque, ma a suon di rime",
     skills: ["Leadership", "Creative Direction", "Education"],
     tags: ["FOUNDER", "RAP ARTIST", "LVL_ADMIN"]
@@ -35,7 +35,7 @@ const teamMembers = [
     name: "Sarso",
     role: "Educatore / Vocalist",
     icon: <Music size={20} />,
-    image: "/team/sarso.jpg",
+    image: "/team/sarso.jpeg",
     description: "Ex cuoco: ha lasciato la cucina perché le barre gli venivano meglio dei piatti. Ora serve freestyle di vita bollente nel sociale e non lascia mai niente al caso.",
     skills: ["Vocal Coaching", "Social Work", "Stage Presence"],
     tags: ["VOCALIST", "EDUCATOR", "ENERGY"]
@@ -44,7 +44,7 @@ const teamMembers = [
     name: "Gioitz",
     role: "Produttore / DJ",
     icon: <Scissors size={20} />,
-    image: "/team/gioitz.jpg",
+    image: "/team/gioitz.jpeg",
     description: "Sembra sempre in modalità “risparmio energetico”… finché non parte la musica. Parrucchiere di giorno, artista di notte: taglia capelli e beat con la stessa precisione.",
     skills: ["Music Production", "DJing", "Sound Design"],
     tags: ["PRODUCER", "MUSICIAN", "STYLE"]
@@ -53,11 +53,20 @@ const teamMembers = [
     name: "Den",
     role: "Fonico / SMM",
     icon: <Settings size={20} />,
-    image: "/team/den.jpg",
+    image: "/team/den.jpeg",
     description: "Multi-ruolo per necessità o perché non sa dire di no. Grafico, fonico, social manager… insomma quello che nel gruppo fa tutto lui e poi si danna pure (giustamente).",
     skills: ["Audio Engineering", "Social Media", "Graphic Design"],
     tags: ["AUDIO TECH", "SMM", "PROBLEM SOLVER"]
-  }
+  },
+  {
+    name: "Dant.Hor",
+    role: "Comix_Fan_Artist",
+    icon: <Scissors size={20} />,
+    image: "/team/dante.jpeg",
+    description: "Calma, dedizione e attenzione sono i 3 aggettivi che tutti usiamo per descriverlo, ma nessuno usa PRESENZA INVISIBILE! scompare e appare come per magia ma NON MANCA MAI quando c'è bisogno di LUI!",
+    skills: ["Music Production", "DJing", "Sound Design"],
+    tags: ["ARTIST", "COMIX_FAN"]
+  },
 ];
 
 export default function TeamPage() {
