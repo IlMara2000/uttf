@@ -56,7 +56,7 @@ export default function MapSection({ isOpen, onClose }: MapSectionProps) {
               /* Grayscale per rimuovere i colori originali */
               /* Invert per invertire i toni (strade chiare su sfondo scuro) */
               /* Sepia + Hue-Rotate per mappare tutto sul colore #FF914D */
-              filter: grayscale(100%) invert(10%) sepia(40%) saturate(500%) hue-rotate(340deg) brightness(0.9) contrast(1.2);
+              filter: grayscale(100%) invert(10%) black(40%) saturate(500%) hue-rotate(340deg) brightness(0.9) contrast(1.2);
             }
           `}</style>
           
