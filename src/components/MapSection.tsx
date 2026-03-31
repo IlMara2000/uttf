@@ -50,13 +50,13 @@ export default function MapSection({ isOpen, onClose }: MapSectionProps) {
         </div>
 
         {/* Container Mappa con Filtro Arancione Personalizzato */}
-        <div className="flex-1 relative bg-black overflow-hidden">
+        <div className="flex-1 relative bg-white overflow-hidden">
           <style jsx>{`
             .uttf-map-filter {
               /* Grayscale per rimuovere i colori originali */
               /* Invert per invertire i toni (strade chiare su sfondo scuro) */
-              /* Sepia + Hue-Rotate per mappare tutto sul colore #FFFFFF */
-              filter: grayscale(90%) invert(100%) sepia(0%) saturate(500%) hue-rotate(340deg) brightness(0.9) contrast(1.2);
+              /* Sepia + Hue-Rotate per mappare tutto sul colore #FF914D */
+              filter: grayscale(100%) invert(10%) sepia(40%) saturate(500%) hue-rotate(340deg) brightness(0.9) contrast(1.2);
             }
           `}</style>
           
