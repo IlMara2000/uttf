@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   Plus, Search, Trash2, FileText, ChevronLeft, 
-  Paperclip, Image as ImageIcon, Loader2, Save 
+  Paperclip, Loader2, Save 
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -13,28 +13,77 @@ export default function NotesManager() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => { fetchNotes(); }, []);
 
   async function fetchNotes() {
-    const { data } = await supabase.from('notes').select('*').order('updated_at', { ascending: false });
-    setNotes(data || []);
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    
+    if (error) console.error("Error fetching:", error);
+    else setNotes(data || []);
     setLoading(false);
   }
 
   async function handleSave() {
-    if (!activeNote.title) return;
-    const { data, error } = await supabase.from('notes').upsert({
-      id: activeNote.id || undefined,
-      title: activeNote.title,
-      content: activeNote.content,
-      attachments: activeNote.attachments || [],
-      updated_at: new Date()
-    }).select();
+    if (!activeNote || !activeNote.title) return alert("Inserisci almeno un titolo");
     
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Prepariamo i dati eliminando campi temporanei o ID nulli
+      const noteToSave = {
+        title: activeNote.title,
+        content: activeNote.content || '',
+        attachments: activeNote.attachments || [],
+        user_id: user?.id, // Necessario per RLS
+        updated_at: new Date().toISOString()
+      };
+
+      let result;
+
+      if (activeNote.id) {
+        // UPDATE
+        result = await supabase
+          .from('notes')
+          .update(noteToSave)
+          .eq('id', activeNote.id)
+          .select();
+      } else {
+        // INSERT
+        result = await supabase
+          .from('notes')
+          .insert([noteToSave])
+          .select();
+      }
+
+      if (result.error) throw result.error;
+
+      if (result.data) {
+        setActiveNote(result.data[0]);
+        await fetchNotes();
+        // Feedback visivo (opzionale)
+        console.log("Nota salvata!");
+      }
+    } catch (err: any) {
+      console.error("Save error:", err);
+      alert("Errore nel salvataggio: " + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Vuoi eliminare questa nota definitivamente?")) return;
+    
+    const { error } = await supabase.from('notes').delete().eq('id', id);
     if (!error) {
-        setActiveNote(data[0]);
-        fetchNotes();
+      if (activeNote?.id === id) setActiveNote(null);
+      fetchNotes();
     }
   }
 
@@ -43,28 +92,54 @@ export default function NotesManager() {
     if (!file || !activeNote) return;
     setIsUploading(true);
     
-    const fileName = `${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from('factory-assets').upload(`notes/${fileName}`, file);
-    
-    if (!error) {
-      const { data: { publicUrl } } = supabase.storage.from('factory-assets').getPublicUrl(`notes/${fileName}`);
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage
+        .from('factory-assets')
+        .upload(`notes/${fileName}`, file);
+      
+      if (upErr) throw upErr;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('factory-assets')
+        .getPublicUrl(`notes/${fileName}`);
+
       const updatedAttachments = [...(activeNote.attachments || []), publicUrl];
-      setActiveNote({ ...activeNote, attachments: updatedAttachments });
+      
+      // Aggiorniamo lo stato locale immediatamente
+      const updatedNote = { ...activeNote, attachments: updatedAttachments };
+      setActiveNote(updatedNote);
+      
+      // Se la nota esiste già nel DB, salviamo subito l'allegato
+      if (activeNote.id) {
+        await supabase
+          .from('notes')
+          .update({ attachments: updatedAttachments })
+          .eq('id', activeNote.id);
+      }
+    } catch (err: any) {
+      alert("Errore upload: " + err.message);
+    } finally {
+      setIsUploading(false);
     }
-    setIsUploading(false);
   }
 
-  const filteredNotes = notes.filter(n => n.title.toLowerCase().includes(search.toLowerCase()));
+  const filteredNotes = notes.filter(n => 
+    n.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="glass-panel border-white/5 bg-zinc-950/60 rounded-3xl overflow-hidden flex h-[600px]">
+    <div className="glass-panel border-white/5 bg-zinc-950/60 rounded-3xl overflow-hidden flex h-[600px] text-white">
       
-      {/* SIDEBAR LISTA (Stile iPhone) */}
+      {/* SIDEBAR LISTA */}
       <div className={`w-full md:w-80 border-r border-white/5 flex flex-col ${activeNote ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-black italic uppercase tracking-tighter">Testi</h2>
-            <button onClick={() => setActiveNote({ title: '', content: '', attachments: [] })} className="text-[#FF914D] hover:bg-[#FF914D]/10 p-2 rounded-full transition-all">
+            <button 
+              onClick={() => setActiveNote({ title: '', content: '', attachments: [] })} 
+              className="text-[#FF914D] hover:bg-[#FF914D]/10 p-2 rounded-full transition-all"
+            >
               <Plus size={20} />
             </button>
           </div>
@@ -78,28 +153,32 @@ export default function NotesManager() {
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {filteredNotes.map(note => (
+          {loading ? (
+            <div className="p-4 text-center"><Loader2 className="animate-spin inline text-zinc-600" /></div>
+          ) : filteredNotes.map(note => (
             <button 
               key={note.id} 
               onClick={() => setActiveNote(note)}
               className={`w-full text-left p-4 border-b border-white/5 transition-all ${activeNote?.id === note.id ? 'bg-[#FF914D]/10' : 'hover:bg-white/[0.02]'}`}
             >
-              <h3 className="text-[11px] font-black uppercase truncate">{note.title || 'Nuova Nota'}</h3>
+              <h3 className="text-[11px] font-black uppercase truncate">{note.title}</h3>
               <div className="flex justify-between items-center mt-1">
-                <span className="text-[8px] font-mono text-zinc-600">{format(new Date(note.updated_at), 'dd/MM/yy')}</span>
-                <p className="text-[9px] text-zinc-500 truncate ml-2 flex-1">{note.content?.substring(0, 30)}</p>
+                <span className="text-[8px] font-mono text-zinc-600">
+                  {format(new Date(note.updated_at), 'dd/MM/yy')}
+                </span>
+                <p className="text-[9px] text-zinc-500 truncate ml-2 flex-1">{note.content}</p>
               </div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* EDITOR (Stile iPhone) */}
+      {/* EDITOR */}
       <div className={`flex-1 flex flex-col bg-black/20 ${!activeNote ? 'hidden md:flex' : 'flex'}`}>
         {activeNote ? (
           <>
             <div className="p-4 border-b border-white/5 flex justify-between items-center">
-              <button onClick={() => { handleSave(); setActiveNote(null); }} className="md:hidden text-[#FF914D] flex items-center gap-1 text-[10px] font-black">
+              <button onClick={() => { setActiveNote(null); }} className="md:hidden text-[#FF914D] flex items-center gap-1 text-[10px] font-black">
                 <ChevronLeft size={16} /> NOTE
               </button>
               <div className="flex items-center gap-4 ml-auto">
@@ -107,10 +186,14 @@ export default function NotesManager() {
                   {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
                   <input type="file" className="hidden" onChange={uploadFile} />
                 </label>
-                <button onClick={handleSave} className="text-[#FF914D] hover:scale-110 transition-transform">
-                  <Save size={18} />
+                <button 
+                  onClick={handleSave} 
+                  disabled={isSaving}
+                  className="text-[#FF914D] hover:scale-110 transition-transform disabled:opacity-50"
+                >
+                  {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 </button>
-                <button onClick={() => { /* logic delete */ }} className="text-zinc-800 hover:text-red-500">
+                <button onClick={() => handleDelete(activeNote.id)} className="text-zinc-800 hover:text-red-500">
                   <Trash2 size={18} />
                 </button>
               </div>
@@ -130,13 +213,15 @@ export default function NotesManager() {
               
               {/* ALLEGATI */}
               {activeNote.attachments?.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 pt-4 border-t border-white/5">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4 border-t border-white/5">
                   {activeNote.attachments.map((url: string, i: number) => (
-                    <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10">
+                    <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-zinc-900">
                       <img src={url} className="w-full h-32 object-cover opacity-80" />
-                      <a href={url} target="_blank" className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <FileText size={20} />
-                      </a>
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <a href={url} target="_blank" rel="noreferrer" className="p-2 bg-white/10 rounded-full hover:bg-white/20">
+                          <FileText size={18} />
+                        </a>
+                      </div>
                     </div>
                   ))}
                 </div>
