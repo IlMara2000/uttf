@@ -44,7 +44,7 @@ export default function NewActivityForm() {
             description, 
             status: 'draft', 
             deadline: deadline || null,
-            // RIMOSSO parseInt: gli ID profilo sono UUID (stringhe)
+            // Gli ID profilo sono UUID, quindi passiamo direttamente la stringa
             assigned_to: assignedTo || null, 
             is_public: false
           }
@@ -58,7 +58,7 @@ export default function NewActivityForm() {
       setDeadline('')
       setAssignedTo('')
       
-      // Notifica ai widget (Calendario/Planner) di aggiornarsi
+      // Notifica al Calendario di fare un nuovo fetch unificato
       window.dispatchEvent(new Event('refreshCalendar'))
       
       router.refresh()
