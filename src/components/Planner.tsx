@@ -7,7 +7,8 @@ import {
 import { format, isBefore, startOfDay } from 'date-fns';
 import { motion } from 'framer-motion';
 
-export default function Planner({ isAdmin }: { isAdmin: boolean }) {
+// Rimosso { isAdmin }: { isAdmin: boolean } per sbloccare la build!
+export default function Planner() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -68,7 +69,7 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
   const getPriorityStyle = (p: string) => {
     switch(p) {
       case 'high': return 'bg-red-500 text-white';
-      case 'medium': return 'bg-orange-500 text-black font-black';
+      case 'medium': return 'bg-[#FF914D] text-black font-black';
       case 'low': return 'bg-blue-500 text-white';
       default: return 'bg-zinc-800 text-zinc-400';
     }
@@ -104,7 +105,7 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
           <input type="text" placeholder="+ Nome Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
           <input type="text" placeholder="Referente" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
           <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500" />
-          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500">
+          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 outline-none">
             <option value="low">LOW</option>
             <option value="medium">MED</option>
             <option value="high">HIGH</option>
@@ -141,7 +142,7 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
                     </div>
                   </td>
                   <td className="p-1 border-r border-white/5">
-                    <button onClick={() => updateStatus(task.id, task.status)} className={`w-full py-2.5 rounded-sm text-[9px] font-black uppercase italic ${task.status === 'done' ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-500'}`}>{task.status === 'done' ? 'STUCK_OFF' : 'WORKING'}</button>
+                    <button onClick={() => updateStatus(task.id, task.status)} className={`w-full py-2.5 rounded-sm text-[9px] font-black uppercase italic transition-all ${task.status === 'done' ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'}`}>{task.status === 'done' ? 'STUCK_OFF' : 'WORKING'}</button>
                   </td>
                   <td className="p-1 border-r border-white/5">
                     <div className={`w-full py-2.5 rounded-sm text-[9px] font-black uppercase text-center italic ${getPriorityStyle(task.priority)}`}>{task.priority}</div>
