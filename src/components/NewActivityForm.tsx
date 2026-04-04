@@ -71,9 +71,9 @@ export default function NewActivityForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-zinc-950 border-2 border-orange-500 shadow-[4px_4px_0px_0px_rgba(249,115,22,1)] relative z-20 font-sans">
+    <form onSubmit={handleSubmit} className="space-y-4 p-6 bg-zinc-950 border-2 border-[#FF914D] shadow-[4px_4px_0px_0px_#FF914D] relative z-20 font-sans">
       <h3 className="text-xl font-black uppercase italic text-white tracking-tighter">
-        _NEW <span className="text-orange-500 font-mono">_ACTIVITY</span>
+        _NEW <span className="text-[#FF914D] font-mono">_ACTIVITY</span>
       </h3>
       
       <div className="space-y-1">
@@ -83,7 +83,7 @@ export default function NewActivityForm() {
           placeholder="Esempio: RECORDING_SESSION" 
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="bg-black border-zinc-800 text-white rounded-none focus:border-orange-500 uppercase font-bold text-xs h-12"
+          className="bg-black border-zinc-800 text-white rounded-none focus:border-[#FF914D] focus:ring-0 uppercase font-bold text-xs h-12"
         />
       </div>
 
@@ -94,7 +94,7 @@ export default function NewActivityForm() {
             type="date"
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
-            className="bg-black border-zinc-800 text-white rounded-none focus:border-orange-500 appearance-none text-xs h-12"
+            className="bg-black border-zinc-800 text-white rounded-none focus:border-[#FF914D] focus:ring-0 appearance-none text-xs h-12"
             style={{ colorScheme: 'dark' }}
           />
         </div>
@@ -105,14 +105,14 @@ export default function NewActivityForm() {
             <select 
               value={assignedTo} 
               onChange={e => setAssignedTo(e.target.value)}
-              className="w-full h-12 bg-black border border-zinc-800 text-white text-[10px] px-3 font-black uppercase focus:border-orange-500 outline-none appearance-none cursor-pointer hover:bg-zinc-900 transition-colors"
+              className="w-full h-12 bg-black border border-zinc-800 text-white text-[10px] px-3 font-black uppercase focus:border-[#FF914D] outline-none appearance-none cursor-pointer hover:bg-zinc-900 transition-colors"
             >
               <option value="">-- SELEZIONA --</option>
               {profiles.map(p => (
                 <option key={p.id} value={p.id}>{p.full_name}</option>
               ))}
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-orange-500 text-[8px]">▼</div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#FF914D] text-[8px]">▼</div>
           </div>
         </div>
       </div>
@@ -123,14 +123,14 @@ export default function NewActivityForm() {
           placeholder="Descrizione tecnica del task..." 
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="bg-black border-zinc-800 text-white rounded-none focus:border-orange-500 min-h-[100px] text-xs resize-none"
+          className="bg-black border-zinc-800 text-white rounded-none focus:border-[#FF914D] focus:ring-0 min-h-[100px] text-xs resize-none"
         />
       </div>
 
       <Button 
         type="submit" 
         disabled={loading}
-        className="w-full bg-orange-500 hover:bg-white text-black font-black uppercase rounded-none transition-all py-8 text-sm group"
+        className="w-full bg-[#FF914D] hover:bg-white text-black font-black uppercase rounded-none transition-all py-8 text-sm group"
       >
         {loading ? (
           <Loader2 className="animate-spin" size={20} />
