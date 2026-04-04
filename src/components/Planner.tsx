@@ -7,7 +7,6 @@ import {
 import { format, isBefore, startOfDay } from 'date-fns';
 import { motion } from 'framer-motion';
 
-// Rimosso { isAdmin }: { isAdmin: boolean } per sbloccare la build!
 export default function Planner() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,47 +22,62 @@ export default function Planner() {
 
   useEffect(() => { fetchTasks(); }, []);
 
-  // Funzione helper per avvisare il calendario
   const notifyCalendar = () => {
     window.dispatchEvent(new Event('refreshCalendar'));
   };
 
   async function fetchTasks() {
-    const { data } = await supabase.from('tasks').select('*').order('status', { ascending: false }).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('tasks').select('*').order('status', { ascending: false }).order('created_at', { ascending: false });
+    if (error) console.error("Errore fetch tasks:", error);
     setTasks(data || []);
     setLoading(false);
   }
 
   async function addTask(e: React.FormEvent) {
     e.preventDefault();
+    if (!title) return;
+    
     setIsAdding(true);
-    const { error } = await supabase.from('tasks').insert([{ 
-      title: title.toUpperCase(), 
-      assigned_to: assignee.toLowerCase().trim() || null,
-      priority,
-      deadline: deadline || null,
-      status: 'todo'
-    }]);
-    if (!error) { 
-        setTitle(''); setAssignee(''); setDeadline(''); setShowForm(false); 
-        fetchTasks(); 
-        notifyCalendar(); // Aggiorna il calendario
+    
+    try {
+      const { error } = await supabase.from('tasks').insert([{ 
+        title: title.toUpperCase(), 
+        assigned_to: assignee.toLowerCase().trim() || null,
+        priority,
+        deadline: deadline || null,
+        status: 'todo'
+      }]);
+
+      if (error) throw error; // Se c'è un errore, lancia l'allarme!
+
+      // Se va tutto bene:
+      setTitle(''); 
+      setAssignee(''); 
+      setDeadline(''); 
+      setShowForm(false); 
+      fetchTasks(); 
+      notifyCalendar();
+      
+    } catch (err: any) {
+      console.error("Errore Supabase:", err);
+      alert("ERRORE DI SALVATAGGIO: " + err.message); // Ora lo schermo ti dirà cosa non va
+    } finally {
+      setIsAdding(false);
     }
-    setIsAdding(false);
   }
 
   async function updateStatus(id: string, currentStatus: string) {
     const newStatus = currentStatus === 'done' ? 'todo' : 'done';
     await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
     fetchTasks();
-    notifyCalendar(); // Aggiorna il calendario
+    notifyCalendar();
   }
 
   async function deleteTask(id: string) {
     if(!confirm("ELIMINARE TASK?")) return;
     await supabase.from('tasks').delete().eq('id', id);
     fetchTasks();
-    notifyCalendar(); // Aggiorna il calendario
+    notifyCalendar();
   }
 
   const getPriorityStyle = (p: string) => {
@@ -102,15 +116,17 @@ export default function Planner() {
           onSubmit={addTask} 
           className="p-2 border-b border-white/5 bg-white/[0.02] flex flex-wrap gap-2"
         >
-          <input type="text" placeholder="+ Nome Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
-          <input type="text" placeholder="Referente" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
-          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500" />
-          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 outline-none">
+          <input type="text" placeholder="+ Nome Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/50 transition-all" />
+          <input type="text" placeholder="Referente" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/50 transition-all" />
+          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 focus:border-[#FF914D]/50 transition-all" />
+          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 outline-none focus:border-[#FF914D]/50 transition-all">
             <option value="low">LOW</option>
             <option value="medium">MED</option>
             <option value="high">HIGH</option>
           </select>
-          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px]">Invia</button>
+          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] hover:bg-white transition-all disabled:opacity-50">
+            {isAdding ? '...' : 'Invia'}
+          </button>
         </motion.form>
       )}
 
