@@ -8,7 +8,7 @@ import {
 import { it } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
-export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
+export default function CalendarWidget() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [events, setEvents] = useState<any[]>([]);
@@ -91,7 +91,6 @@ export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
               </span>
               <div className="mt-1 flex flex-wrap gap-0.5">
                 {dayEvents.map((e, idx) => {
-                  // Assegna colori diversi: arancione (task), verde (task completata), bianco (activity)
                   let dotClass = 'bg-[#FF914D]'; 
                   if (e.eventType === 'task' && e.status === 'done') dotClass = 'bg-emerald-500';
                   if (e.eventType === 'activity') dotClass = 'bg-white';

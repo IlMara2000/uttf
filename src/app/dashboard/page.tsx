@@ -121,10 +121,10 @@ export default function Dashboard() {
           {/* 1. SEZIONE PLANNER & CALENDARIO (In alto) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-7">
-              <Planner isAdmin={true} />
+              <Planner />
             </div>
             <div className="lg:col-span-5">
-              <CalendarWidget isAdmin={true} />
+              <CalendarWidget />
             </div>
           </div>
 
@@ -161,7 +161,6 @@ export default function Dashboard() {
 
           {/* 3. SEZIONE OUTPUT & PUBBLICAZIONE (In basso) */}
           <div className="max-w-3xl mx-auto w-full space-y-6">
-            {/* Pulsante Published Outputs */}
             <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
@@ -175,7 +174,6 @@ export default function Dashboard() {
               <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
             </button>
 
-            {/* Box New Output Unit */}
             <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
               <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
                 <Send size={14} /> New_Output_Unit
