@@ -136,7 +136,8 @@ export default function NewActivityForm() {
           <Loader2 className="animate-spin" size={20} />
         ) : (
           <span className="flex items-center gap-2">
-            ESEGUI_ORDINE <span className="opacity-0 group-hover:opacity-100 transition-opacity">>></span>
+            {/* ECCO LA RIGA FIXATA: {'>>'} */}
+            ESEGUI_ORDINE <span className="opacity-0 group-hover:opacity-100 transition-opacity">{'>>'}</span>
           </span>
         )}
       </Button>
