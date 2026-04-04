@@ -70,11 +70,11 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
       <div className="p-4 border-b border-white/5 flex justify-between items-center bg-zinc-900/40">
         <div className="flex items-center gap-3">
           <ClipboardList className="text-[#FF914D]" size={18} />
-          <h2 className="text-sm font-black uppercase italic tracking-widest text-white">Main_Workspace</h2>
+          <h2 className="text-sm font-black uppercase italic tracking-widest text-white">Planner:</h2>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-[8px] font-mono text-zinc-500 uppercase bg-white/5 px-2 py-1 rounded">
-            Active_Tasks: {tasks.filter(t => t.status !== 'done').length}
+            Tasks Attive: {tasks.filter(t => t.status !== 'done').length}
           </div>
           <button 
             onClick={() => setShowForm(!showForm)}
@@ -92,15 +92,15 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
           onSubmit={addTask} 
           className="p-2 border-b border-white/5 bg-white/[0.02] flex flex-wrap gap-2"
         >
-          <input type="text" placeholder="+ Add Task Name" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
-          <input type="text" placeholder="@Assignee" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
+          <input type="text" placeholder="+ Nome Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
+          <input type="text" placeholder="Referente" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
           <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500" />
           <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500">
             <option value="low">LOW</option>
             <option value="medium">MED</option>
             <option value="high">HIGH</option>
           </select>
-          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px]">Inject</button>
+          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px]">Invia</button>
         </motion.form>
       )}
 
@@ -109,10 +109,10 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
           <thead>
             <tr className="text-[8px] font-mono text-zinc-600 uppercase tracking-[0.2em] border-b border-white/5">
               <th className="p-3 pl-6 border-r border-white/5 w-10">#</th>
-              <th className="p-3 border-r border-white/5">Item_Task</th>
-              <th className="p-3 border-r border-white/5 w-40 text-center">Owner</th>
-              <th className="p-3 border-r border-white/5 w-32 text-center">Status</th>
-              <th className="p-3 border-r border-white/5 w-32 text-center">Priority</th>
+              <th className="p-3 border-r border-white/5">Nome Task</th>
+              <th className="p-3 border-r border-white/5 w-40 text-center">Referente</th>
+              <th className="p-3 border-r border-white/5 w-32 text-center">Stato</th>
+              <th className="p-3 border-r border-white/5 w-32 text-center">Priorità</th>
               <th className="p-3 w-32 text-center">Deadline</th>
               <th className="p-3 w-10"></th>
             </tr>
