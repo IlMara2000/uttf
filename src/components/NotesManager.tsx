@@ -33,14 +33,19 @@ export default function NotesManager() {
     
     setIsSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Controllo sessione ferreo
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      // Prepariamo i dati eliminando campi temporanei o ID nulli
+      if (authError || !user) {
+        throw new Error("Utente non autenticato o sessione scaduta.");
+      }
+      
+      // Prepariamo i dati
       const noteToSave = {
         title: activeNote.title,
         content: activeNote.content || '',
         attachments: activeNote.attachments || [],
-        user_id: user?.id, // Necessario per RLS
+        user_id: user.id, // Passaggio esatto dell'UUID per l'RLS
         updated_at: new Date().toISOString()
       };
 
@@ -66,8 +71,6 @@ export default function NotesManager() {
       if (result.data) {
         setActiveNote(result.data[0]);
         await fetchNotes();
-        // Feedback visivo (opzionale)
-        console.log("Nota salvata!");
       }
     } catch (err: any) {
       console.error("Save error:", err);
@@ -106,11 +109,9 @@ export default function NotesManager() {
 
       const updatedAttachments = [...(activeNote.attachments || []), publicUrl];
       
-      // Aggiorniamo lo stato locale immediatamente
       const updatedNote = { ...activeNote, attachments: updatedAttachments };
       setActiveNote(updatedNote);
       
-      // Se la nota esiste già nel DB, salviamo subito l'allegato
       if (activeNote.id) {
         await supabase
           .from('notes')
