@@ -17,14 +17,14 @@ export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
     const start = startOfMonth(currentMonth).toISOString();
     const end = endOfMonth(currentMonth).toISOString();
     
-    // 1. Fetch delle Task
+    // 1. Fetch delle Task dal Planner
     const { data: tasks, error: tasksError } = await supabase
       .from('tasks')
       .select('*')
       .gte('deadline', start)
       .lte('deadline', end);
     
-    // 2. Fetch delle Activities
+    // 2. Fetch delle Activities dal NewActivityForm
     const { data: activities, error: activitiesError } = await supabase
       .from('activities')
       .select('*')
@@ -34,17 +34,16 @@ export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
     if (tasksError) console.error("Tasks fetch error:", tasksError);
     if (activitiesError) console.error("Activities fetch error:", activitiesError);
 
-    // Formattiamo aggiungendo il tipo per distinguerli visivamente
+    // Uniamo i due set di dati aggiungendo un flag "eventType" per distinguerli
     const formattedTasks = (tasks || []).map(t => ({ ...t, eventType: 'task' }));
     const formattedActivities = (activities || []).map(a => ({ ...a, eventType: 'activity' }));
 
-    // Uniamo e salviamo nello stato
     setEvents([...formattedTasks, ...formattedActivities]);
   }, [currentMonth]);
 
   useEffect(() => {
     fetchEvents();
-    // Questo listener cattura il salvataggio dal Planner o dal NewActivityForm
+    // Listener per aggiornare in automatico quando Planner o ActivityForm salvano
     window.addEventListener('refreshCalendar', fetchEvents);
     return () => window.removeEventListener('refreshCalendar', fetchEvents);
   }, [fetchEvents]);
@@ -87,15 +86,15 @@ export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
                 ${isSelected ? 'bg-zinc-900 ring-1 ring-inset ring-[#FF914D]/30' : ''}
               `}
             >
-              <span className={`text-[9px] font-mono ${isSameDay(day, new Date()) ? 'text-[#FF914D] font-bold' : 'text-zinc-500'}`}>
+              <span className={`text-[9px] font-mono ${isSameDay(day, new Date()) ? 'text-[#FF914D] font-bold underline' : 'text-zinc-500'}`}>
                 {format(day, 'd')}
               </span>
               <div className="mt-1 flex flex-wrap gap-0.5">
                 {dayEvents.map((e, idx) => {
-                  // Colore dei pallini nel calendario
-                  let dotClass = 'bg-[#FF914D]'; // Default task arancione
+                  // Assegna colori diversi: arancione (task), verde (task completata), bianco (activity)
+                  let dotClass = 'bg-[#FF914D]'; 
                   if (e.eventType === 'task' && e.status === 'done') dotClass = 'bg-emerald-500';
-                  if (e.eventType === 'activity') dotClass = 'bg-white'; // Attività bianche
+                  if (e.eventType === 'activity') dotClass = 'bg-white';
 
                   return <div key={idx} className={`w-1 h-1 rounded-full ${dotClass}`} title={e.title} />;
                 })}
@@ -109,7 +108,6 @@ export default function CalendarWidget({ isAdmin }: { isAdmin: boolean }) {
         <p className="text-[8px] font-mono text-zinc-600 uppercase mb-3">Focus_Day: {format(selectedDate, 'dd/MM')}</p>
         <div className="space-y-2">
           {events.filter(e => e.deadline && isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => {
-            // Colore delle barre nella lista
             let barClass = 'bg-[#FF914D]'; 
             if (e.eventType === 'task' && e.status === 'done') barClass = 'bg-emerald-500';
             if (e.eventType === 'activity') barClass = 'bg-white';
