@@ -22,6 +22,11 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
 
   useEffect(() => { fetchTasks(); }, []);
 
+  // Funzione helper per avvisare il calendario
+  const notifyCalendar = () => {
+    window.dispatchEvent(new Event('refreshCalendar'));
+  };
+
   async function fetchTasks() {
     const { data } = await supabase.from('tasks').select('*').order('status', { ascending: false }).order('created_at', { ascending: false });
     setTasks(data || []);
@@ -39,7 +44,9 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
       status: 'todo'
     }]);
     if (!error) { 
-        setTitle(''); setAssignee(''); setDeadline(''); setShowForm(false); fetchTasks(); 
+        setTitle(''); setAssignee(''); setDeadline(''); setShowForm(false); 
+        fetchTasks(); 
+        notifyCalendar(); // Aggiorna il calendario
     }
     setIsAdding(false);
   }
@@ -48,12 +55,14 @@ export default function Planner({ isAdmin }: { isAdmin: boolean }) {
     const newStatus = currentStatus === 'done' ? 'todo' : 'done';
     await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
     fetchTasks();
+    notifyCalendar(); // Aggiorna il calendario
   }
 
   async function deleteTask(id: string) {
     if(!confirm("ELIMINARE TASK?")) return;
     await supabase.from('tasks').delete().eq('id', id);
     fetchTasks();
+    notifyCalendar(); // Aggiorna il calendario
   }
 
   const getPriorityStyle = (p: string) => {
