@@ -132,6 +132,37 @@ export default function HomePage() {
             </Link>
           </div>
         </motion.div>
+
+        {/* CHI SIAMO - TEAM */}
+          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter">
+            COS_<span className="text-[#FF914D]">È</span>
+          </h2>
+          <div className="glass-panel p-8 md:p-12 border-white/5 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
+            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter">
+              UNDER THE TOWER?
+            </h3>
+            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed max-w-4xl mx-auto">
+              Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
+              L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello UMANO che SOCIALE, trasformando una community in un vero movimento.
+            </p>
+          </div>
+        </section>
+
+        {/* CTA LABS SECTION */}
+        <Link href="/team" className="group">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5 group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
+          >
+            <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">CHI SIAMO?</span>
+            <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
+              CONOSCI IL NOSTRO TEAM!
+            </h3>
+            <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+          </motion.div>
+        </Link>
       </section>
 
       {/* LIVE OUTPUT SECTION - NEWS FEED */}
