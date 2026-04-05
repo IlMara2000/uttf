@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  --color-uttf-orange: #FF914D;
+  --font-display: var(--font-display), ui-sans-serif, system-ui;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular;
+}
+
+@layer base {
+  body {
+    /* Gradiente Radiale Ellittico per l'effetto "Sfumatura dai lati" */
+    background-color: #000000;
+    background-image: 
+      radial-gradient(ellipse at -20% 50%, rgba(255, 145, 77, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 120% 50%, rgba(255, 145, 77, 0.15) 0%, transparent 50%);
+    background-attachment: fixed;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@utility hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 11vw, 8rem);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  text-align: center;
+  background: linear-gradient(to bottom, #ffffff 60%, rgba(255, 255, 255, 0.2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+@utility glass-panel {
+  background-color: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 2.5rem;
+}
+
+@utility nav-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6em;
+  color: #FF914D;
+  border: 1px solid rgba(255, 145, 77, 0.3);
+  padding: 0.6rem 1.5rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 145, 77, 0.05);
+}
+
+@utility btn-urban {
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1.5rem 3.5rem;
+  border-radius: 9999px;
+  letter-spacing: 0.2em;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.btn-urban:hover {
+  background-color: #FF914D;
+  color: #ffffff;
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(255, 145, 77, 0.3);
+}
