@@ -44,10 +44,7 @@ export default function HomePage() {
     fetchPublications();
   }, []);
 
-  // Helper per distinguere Video da Immagini
-  const isVideo = (url: string) => {
-    return url?.match(/\.(mp4|webm|ogg|mov)$/i);
-  };
+  const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
@@ -66,113 +63,89 @@ export default function HomePage() {
         </Link>
       </header>
 
-      {/* HERO SECTION */}
-      <section className="px-6 py-12 w-full max-w-7xl flex flex-col items-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full flex flex-col items-center"
-        >
-          <h1 className="hero-title text-[14vw] md:text-[8vw] leading-[0.9] text-center mb-16 font-black uppercase italic tracking-tighter">
-            Under The<br />
-            Tower<br />
-            <span style={{ color: '#FF914D' }}>Factory</span>
-          </h1>
+      {/* MAIN CONTENT WRAPPER */}
+      <main className="w-full max-w-7xl px-6 flex flex-col items-center">
+        
+        {/* HERO SECTION */}
+        <section className="py-12 w-full flex flex-col items-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full flex flex-col items-center"
+          >
+            <h1 className="hero-title text-[14vw] md:text-[8vw] leading-[0.9] text-center mb-16 font-black uppercase italic tracking-tighter">
+              Under The<br />
+              Tower<br />
+              <span style={{ color: '#FF914D' }}>Factory</span>
+            </h1>
 
-          <p className="text-zinc-400 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10 opacity-80">
-            Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dalla strada per la comunità.
-          </p>
+            <p className="text-zinc-400 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10 opacity-80">
+              Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dalla strada per la comunità.
+            </p>
 
-          <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
+            <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
+              {/* BOX MAPPA */}
+              <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">MAPPA DI ROZZANO:</span>
+                  <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">VIENI A TROVARCI</h3>
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                </motion.div>
+              </div>
 
-            {/* BOX MAPPA INTERATTIVA ROZZANO */}
-            <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
-              >
-                <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">MAPPA DI ROZZANO:</span>
-                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
-                  VIENI A TROVARCI
-                </h3>
-                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-              </motion.div>
+              {/* BOX COLLECTIVE */}
+              <Link href="/feed" className="group">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
+                  <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">Under The Tower</h3>
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                </motion.div>
+              </Link>
+
+              {/* BOX LAB UNIT */}
+              <Link href="/labs" className="group">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                  <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
+                  <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">RAPF*CKTORY</h3>
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                </motion.div>
+              </Link>
             </div>
+          </motion.div>
+        </section>
 
-            {/* BOX CREATIVE COLLECTIVE */}
-            <Link href="/feed" className="group">
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
-              >
-                <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
-                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
-                  Under The Tower
-                </h3>
-                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-              </motion.div>
-            </Link>
-
-            {/* BOX LAB UNIT */}
-            <Link href="/labs" className="group">
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
-              >
-                <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
-                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
-                  RAPF*CKTORY
-                </h3>
-                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-              </motion.div>
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* CHI SIAMO - TEAM */}
+        {/* CHI SIAMO SECTION */}
+        <section className="w-full py-20 flex flex-col items-center">
           <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter">
             COS_<span className="text-[#FF914D]">È</span>
           </h2>
-          <div className="glass-panel p-8 md:p-12 border-white/5 relative overflow-hidden group">
+          <div className="glass-panel p-8 md:p-12 border border-white/5 relative overflow-hidden group w-full max-w-4xl">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
             <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter">
               UNDER THE TOWER?
             </h3>
-            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed max-w-4xl mx-auto">
+            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
               Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
-              L’obiettivo è costruire una realtà solida e riconoscibile, capace di evolversi nel tempo, offrendo valore sia a livello UMANO che SOCIALE, trasformando una community in un vero movimento.
             </p>
+          </div>
+
+          <div className="mt-20 w-full max-w-3xl">
+            <Link href="/team" className="group">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">CHI SIAMO?</span>
+                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">CONOSCI IL NOSTRO TEAM!</h3>
+                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+              </motion.div>
+            </Link>
           </div>
         </section>
 
-        {/* CTA LABS SECTION */}
-        <Link href="/team" className="group">
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border-white/5 group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden"
-          >
-            <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">CHI SIAMO?</span>
-            <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">
-              CONOSCI IL NOSTRO TEAM!
-            </h3>
-            <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-          </motion.div>
-        </Link>
-      </section>
-
-      {/* LIVE OUTPUT SECTION - NEWS FEED */}
-      <section className="w-full px-6 py-32 mt-20 border-t border-white/5 bg-transparent">
-        <div className="max-w-7xl mx-auto flex flex-col items-center">
+        {/* NEWS FEED SECTION */}
+        <section className="w-full py-32 mt-20 border-t border-white/5 bg-transparent">
           <div className="flex flex-col items-center mb-20 text-center">
              <span className="text-[#FF914D] font-mono text-[10px] tracking-[0.6em] uppercase mb-4">QUA SOTTO GLI ULTIMI AGGIORNAMENTI</span>
-             <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">
-               UTTF_<span className="text-[#FF914D]">NEWS</span>
-             </h2>
+             <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">UTTF_<span className="text-[#FF914D]">NEWS</span></h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
@@ -188,21 +161,12 @@ export default function HomePage() {
                 if (imageUrl && !imageUrl.startsWith('http')) {
                   imageUrl = `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${imageUrl}`;
                 }
-
                 return (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    key={post.id} 
-                    onClick={() => setSelectedPost({...post, image_url: imageUrl})}
-                    className="glass-panel group overflow-hidden flex flex-col border border-white/5 bg-[#0a0a0a] rounded-[2rem] hover:border-[#FF914D]/30 transition-all duration-500 cursor-pointer"
-                  >
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} key={post.id} onClick={() => setSelectedPost({...post, image_url: imageUrl})} className="glass-panel group overflow-hidden flex flex-col border border-white/5 bg-[#0a0a0a] rounded-[2rem] hover:border-[#FF914D]/30 transition-all duration-500 cursor-pointer">
                     <div className="p-5 flex items-center gap-3 border-b border-white/5">
                       <div className="w-6 h-6 rounded-full bg-[#FF914D] flex items-center justify-center text-black text-[8px] font-black italic">UT</div>
                       <span className="text-[10px] font-bold uppercase tracking-widest italic">{post.title}</span>
                     </div>
-
                     <div className="relative aspect-square w-full overflow-hidden bg-zinc-900">
                       {isVideo(imageUrl) ? (
                         <div className="w-full h-full flex items-center justify-center">
@@ -210,18 +174,11 @@ export default function HomePage() {
                           <Play className="absolute text-white/50 group-hover:text-[#FF914D] transition-colors" size={40} fill="currentColor" />
                         </div>
                       ) : (
-                        <img 
-                          src={imageUrl} 
-                          alt={post.title} 
-                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out"
-                        />
+                        <img src={imageUrl} alt={post.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out" />
                       )}
                     </div>
-
                     <div className="p-6">
-                      <p className="text-zinc-500 text-[11px] uppercase tracking-wide leading-relaxed font-mono line-clamp-2">
-                        {post.description || "FACTORY_LOG_ENTRY_ALPHA"}
-                      </p>
+                      <p className="text-zinc-500 text-[11px] uppercase tracking-wide leading-relaxed font-mono line-clamp-2">{post.description || "FACTORY_LOG_ENTRY_ALPHA"}</p>
                       <div className="flex justify-between items-center pt-4 mt-4 border-t border-white/5 font-mono text-[8px] text-zinc-700">
                         <span>{new Date(post.created_at).toLocaleDateString('it-IT')}</span>
                         <Maximize2 size={12} className="group-hover:text-[#FF914D] transition-colors" />
@@ -236,58 +193,33 @@ export default function HomePage() {
               </div>
             )}
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* MODAL PER DETTAGLIO POST */}
+      {/* MODALS */}
       <AnimatePresence>
         {selectedPost && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 backdrop-blur-md bg-black/80"
-            onClick={() => setSelectedPost(null)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-              className="relative max-w-4xl w-full bg-zinc-950 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row max-h-[90vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button onClick={() => setSelectedPost(null)} className="absolute top-5 right-5 z-10 p-2 bg-black/50 text-white rounded-full hover:text-[#FF914D] transition-all">
-                <X size={24} />
-              </button>
-
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 backdrop-blur-md bg-black/80" onClick={() => setSelectedPost(null)}>
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="relative max-w-4xl w-full bg-zinc-950 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setSelectedPost(null)} className="absolute top-5 right-5 z-10 p-2 bg-black/50 text-white rounded-full hover:text-[#FF914D] transition-all"><X size={24} /></button>
               <div className="w-full md:w-3/5 bg-black flex items-center justify-center">
-                {isVideo(selectedPost.image_url) ? (
-                  <video src={selectedPost.image_url} controls autoPlay className="w-full max-h-[80vh]" />
-                ) : (
-                  <img src={selectedPost.image_url} className="w-full h-full object-contain" alt="" />
-                )}
+                {isVideo(selectedPost.image_url) ? <video src={selectedPost.image_url} controls autoPlay className="w-full max-h-[80vh]" /> : <img src={selectedPost.image_url} className="w-full h-full object-contain" alt="" />}
               </div>
-
               <div className="w-full md:w-2/5 p-8 flex flex-col bg-zinc-950">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 rounded-full bg-[#FF914D] flex items-center justify-center text-black font-black italic text-xs">UT</div>
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">{selectedPost.title}</h3>
                 </div>
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  <p className="text-zinc-400 text-sm leading-relaxed font-mono uppercase tracking-tight">
-                    {selectedPost.description || "Nessuna specifica tecnica registrata."}
-                  </p>
-                </div>
-                <div className="pt-6 mt-6 border-t border-white/5 text-[9px] font-mono text-zinc-600 uppercase">
-                  Log_Date: {new Date(selectedPost.created_at).toLocaleString('it-IT')}
-                </div>
+                <p className="text-zinc-400 text-sm font-mono uppercase">{selectedPost.description || "Nessuna specifica tecnica registrata."}</p>
+                <div className="pt-6 mt-6 border-t border-white/5 text-[9px] font-mono text-zinc-600 uppercase">Log_Date: {new Date(selectedPost.created_at).toLocaleString('it-IT')}</div>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* COMPONENTE MODALE MAPPA DI ROZZANO */}
       <AnimatePresence>
-        {isMapOpen && (
-          <MapSection isOpen={isMapOpen} onClose={() => setIsMapOpen(false)} />
-        )}
+        {isMapOpen && <MapSection isOpen={isMapOpen} onClose={() => setIsMapOpen(false)} />}
       </AnimatePresence>
 
       <footer className="py-24 text-center opacity-30">
