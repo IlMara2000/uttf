@@ -9,22 +9,33 @@ import { motion } from 'framer-motion';
 
 export default function Planner() {
   const [tasks, setTasks] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]); // <-- AGGIUNTO: Stato per gli utenti reali
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
   const [title, setTitle] = useState('');
-  const [assignee, setAssignee] = useState('');
+  const [assigneeId, setAssigneeId] = useState(''); // <-- CAMBIATO: Salviamo l'ID, non il nome
   const [priority, setPriority] = useState('medium');
   const [deadline, setDeadline] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
   const today = startOfDay(new Date());
 
-  useEffect(() => { fetchTasks(); }, []);
+  useEffect(() => { 
+    fetchTasks(); 
+    fetchUsers(); // <-- AGGIUNTO: Carica gli utenti all'avvio
+  }, []);
 
   const notifyCalendar = () => {
     window.dispatchEvent(new Event('refreshCalendar'));
   };
+
+  // Funzione per caricare gli utenti dal database
+  async function fetchUsers() {
+    const { data, error } = await supabase.from('profiles').select('id, full_name, email'); 
+    // Nota: Ho usato 'profiles', se la tua tabella utenti si chiama 'users' o altro, cambia il nome qui sopra.
+    if (!error) setUsers(data || []);
+  }
 
   async function fetchTasks() {
     const { data, error } = await supabase.from('tasks').select('*').order('status', { ascending: false }).order('created_at', { ascending: false });
@@ -42,17 +53,16 @@ export default function Planner() {
     try {
       const { error } = await supabase.from('tasks').insert([{ 
         title: title.toUpperCase(), 
-        assigned_to: assignee.toLowerCase().trim() || null,
+        assigned_to: assigneeId || null, // <-- ORA PASSA L'ID REALE
         priority,
         deadline: deadline || null,
         status: 'todo'
       }]);
 
-      if (error) throw error; // Se c'è un errore, lancia l'allarme!
+      if (error) throw error;
 
-      // Se va tutto bene:
       setTitle(''); 
-      setAssignee(''); 
+      setAssigneeId(''); 
       setDeadline(''); 
       setShowForm(false); 
       fetchTasks(); 
@@ -60,12 +70,13 @@ export default function Planner() {
       
     } catch (err: any) {
       console.error("Errore Supabase:", err);
-      alert("ERRORE DI SALVATAGGIO: " + err.message); // Ora lo schermo ti dirà cosa non va
+      alert("ERRORE: Devi selezionare un referente valido o lasciarlo vuoto.");
     } finally {
       setIsAdding(false);
     }
   }
 
+  // ... (restanti funzioni updateStatus e deleteTask rimangono uguali)
   async function updateStatus(id: string, currentStatus: string) {
     const newStatus = currentStatus === 'done' ? 'todo' : 'done';
     await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
@@ -96,17 +107,12 @@ export default function Planner() {
           <ClipboardList className="text-[#FF914D]" size={18} />
           <h2 className="text-sm font-black uppercase italic tracking-widest text-white">Planner:</h2>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-[8px] font-mono text-zinc-500 uppercase bg-white/5 px-2 py-1 rounded">
-            Tasks Attive: {tasks.filter(t => t.status !== 'done').length}
-          </div>
-          <button 
-            onClick={() => setShowForm(!showForm)}
-            className={`p-1.5 rounded transition-all flex items-center justify-center ${showForm ? 'bg-red-500/10 text-red-500' : 'bg-[#FF914D] text-black hover:scale-105'}`}
-          >
-            {showForm ? <X size={14} /> : <Plus size={14} />}
-          </button>
-        </div>
+        <button 
+          onClick={() => setShowForm(!showForm)}
+          className={`p-1.5 rounded transition-all ${showForm ? 'bg-red-500/10 text-red-500' : 'bg-[#FF914D] text-black hover:scale-105'}`}
+        >
+          {showForm ? <X size={14} /> : <Plus size={14} />}
+        </button>
       </div>
 
       {showForm && (
@@ -116,20 +122,35 @@ export default function Planner() {
           onSubmit={addTask} 
           className="p-2 border-b border-white/5 bg-white/[0.02] flex flex-wrap gap-2"
         >
-          <input type="text" placeholder="+ Nome Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/50 transition-all" />
-          <input type="text" placeholder="Referente" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/50 transition-all" />
-          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 focus:border-[#FF914D]/50 transition-all" />
-          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 outline-none focus:border-[#FF914D]/50 transition-all">
+          <input type="text" placeholder="+ Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
+          
+          {/* SELETTORE REFERENTE - SOSTITUISCE L'INPUT DI TESTO */}
+          <select 
+            value={assigneeId} 
+            onChange={(e) => setAssigneeId(e.target.value)}
+            className="w-32 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none"
+          >
+            <option value="">CHIUNQUE</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.full_name || u.email}</option>
+            ))}
+          </select>
+
+          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500" />
+          
+          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500">
             <option value="low">LOW</option>
             <option value="medium">MED</option>
             <option value="high">HIGH</option>
           </select>
-          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] hover:bg-white transition-all disabled:opacity-50">
+          
+          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50">
             {isAdding ? '...' : 'Invia'}
           </button>
         </motion.form>
       )}
 
+      {/* ... TABELLA RIMANE UGUALE ... */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
@@ -154,7 +175,7 @@ export default function Planner() {
                   </td>
                   <td className="p-3 border-r border-white/5">
                     <div className="flex items-center justify-center gap-2 text-[9px] font-mono text-zinc-500 uppercase">
-                      <User size={10} /> {task.assigned_to ? task.assigned_to.split('@')[0] : '---'}
+                      <User size={10} /> {task.assigned_to ? 'UTENTE SETTATO' : '---'}
                     </div>
                   </td>
                   <td className="p-1 border-r border-white/5">
@@ -169,7 +190,7 @@ export default function Planner() {
                       {isOverdue && <AlertTriangle size={10} className="animate-pulse" />}
                     </div>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 text-right">
                     <button onClick={() => deleteTask(task.id)} className="opacity-0 group-hover:opacity-100 text-zinc-800 hover:text-red-500 transition-all"><Trash2 size={12} /></button>
                   </td>
                 </tr>
