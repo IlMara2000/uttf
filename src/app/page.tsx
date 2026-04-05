@@ -4,27 +4,21 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Layers, 
   Loader2, 
   ArrowRight, 
   X, 
   Play, 
-  Maximize2, 
-  Map as MapIcon 
+  Maximize2 
 } from 'lucide-react';
 import Link from 'next/link';
-// Importiamo il componente della mappa
 import MapSection from '@/components/MapSection';
 
 export default function HomePage() {
   const [publications, setPublications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
-  
-  // Stato per gestire l'apertura della mappa di Rozzano
   const [isMapOpen, setIsMapOpen] = useState(false);
 
-  // Configurazione Supabase per i media
   const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
   const BUCKET_NAME = 'publications'; 
 
@@ -35,10 +29,7 @@ export default function HomePage() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(6);
-
-      if (!error && data) {
-        setPublications(data);
-      }
+      if (!error && data) setPublications(data);
       setLoading(false);
     }
     fetchPublications();
@@ -63,7 +54,7 @@ export default function HomePage() {
         </Link>
       </header>
 
-      {/* MAIN CONTENT WRAPPER */}
+      {/* MAIN CONTENT */}
       <main className="w-full max-w-7xl px-6 flex flex-col items-center">
         
         {/* HERO SECTION */}
@@ -80,34 +71,52 @@ export default function HomePage() {
               <span style={{ color: '#FF914D' }}>Factory</span>
             </h1>
 
-            <p className="text-zinc-400 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10 opacity-80">
-              Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dalla strada per la comunità.
-            </p>
+            {/* SEZIONE COS'È (INTEGRATA NELL'HERO) */}
+            <div className="glass-panel p-8 md:p-12 border border-white/5 relative overflow-hidden group w-full max-w-4xl mb-16">
+              <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
+              <h3 className="text-xl md:text-3xl font-black uppercase italic mb-4 text-center tracking-tighter">
+                COS'È <span className="text-[#FF914D]">UNDER THE TOWER?</span>
+              </h3>
+              <p className="text-zinc-500 text-xs md:text-base uppercase text-center tracking-[0.2em] font-mono leading-relaxed">
+                UN PROGETTO CREATIVO CHE NASCE CON L’OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL’INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE.
+              </p>
+            </div>
 
-            <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
-              {/* BOX MAPPA */}
-              <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">MAPPA DI ROZZANO:</span>
-                  <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">VIENI A TROVARCI</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-                </motion.div>
-              </div>
-
-              {/* BOX COLLECTIVE */}
-              <Link href="/feed" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
-                  <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">Under The Tower</h3>
+            {/* GRID DELLE 4 BOX (TEAM + MAPPA + COLLECTIVE + LABS) */}
+            <div className="w-full max-w-3xl flex flex-col gap-6 md:gap-8">
+              
+              {/* 1. BOX TEAM */}
+              <Link href="/team" className="group">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">IDENTITY_CORE:</span>
+                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">CONOSCI IL NOSTRO TEAM!</h3>
                   <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
                 </motion.div>
               </Link>
 
-              {/* BOX LAB UNIT */}
+              {/* 2. BOX MAPPA */}
+              <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">LOCATION_DATA:</span>
+                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">VIENI A TROVARCI</h3>
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                </motion.div>
+              </div>
+
+              {/* 3. BOX COLLECTIVE */}
+              <Link href="/feed" className="group">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
+                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">Under The Tower</h3>
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                </motion.div>
+              </Link>
+
+              {/* 4. BOX LAB UNIT */}
               <Link href="/labs" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
-                  <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">RAPF*CKTORY</h3>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
+                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">RAPF*CKTORY</h3>
                   <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
                 </motion.div>
               </Link>
@@ -115,34 +124,8 @@ export default function HomePage() {
           </motion.div>
         </section>
 
-        {/* CHI SIAMO SECTION */}
-        <section className="w-full py-20 flex flex-col items-center">
-          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter">
-            COS_<span className="text-[#FF914D]">È</span>
-          </h2>
-          <div className="glass-panel p-8 md:p-12 border border-white/5 relative overflow-hidden group w-full max-w-4xl">
-            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
-            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter">
-              UNDER THE TOWER?
-            </h3>
-            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
-              Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
-            </p>
-          </div>
-
-          <div className="mt-20 w-full max-w-3xl">
-            <Link href="/team" className="group">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-10 md:p-16 flex flex-col items-center text-center border border-white/5 group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                <span className="text-[12px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">CHI SIAMO?</span>
-                <h3 className="text-3xl md:text-5xl font-black italic uppercase text-white tracking-tighter leading-none">CONOSCI IL NOSTRO TEAM!</h3>
-                <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-              </motion.div>
-            </Link>
-          </div>
-        </section>
-
         {/* NEWS FEED SECTION */}
-        <section className="w-full py-32 mt-20 border-t border-white/5 bg-transparent">
+        <section className="w-full py-32 mt-10 border-t border-white/5 bg-transparent">
           <div className="flex flex-col items-center mb-20 text-center">
              <span className="text-[#FF914D] font-mono text-[10px] tracking-[0.6em] uppercase mb-4">QUA SOTTO GLI ULTIMI AGGIORNAMENTI</span>
              <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">UTTF_<span className="text-[#FF914D]">NEWS</span></h2>
@@ -162,7 +145,14 @@ export default function HomePage() {
                   imageUrl = `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${imageUrl}`;
                 }
                 return (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} key={post.id} onClick={() => setSelectedPost({...post, image_url: imageUrl})} className="glass-panel group overflow-hidden flex flex-col border border-white/5 bg-[#0a0a0a] rounded-[2rem] hover:border-[#FF914D]/30 transition-all duration-500 cursor-pointer">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }} 
+                    whileInView={{ opacity: 1, scale: 1 }} 
+                    viewport={{ once: true }} 
+                    key={post.id} 
+                    onClick={() => setSelectedPost({...post, image_url: imageUrl})} 
+                    className="glass-panel group overflow-hidden flex flex-col border border-white/5 bg-[#0a0a0a] rounded-[2rem] hover:border-[#FF914D]/30 transition-all duration-500 cursor-pointer"
+                  >
                     <div className="p-5 flex items-center gap-3 border-b border-white/5">
                       <div className="w-6 h-6 rounded-full bg-[#FF914D] flex items-center justify-center text-black text-[8px] font-black italic">UT</div>
                       <span className="text-[10px] font-bold uppercase tracking-widest italic">{post.title}</span>
