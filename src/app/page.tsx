@@ -80,20 +80,9 @@ export default function HomePage() {
               <span style={{ color: '#FF914D' }}>Factory</span>
             </h1>
 
-        {/* CHI SIAMO SECTION */}
-        <section className="w-full py-20 flex flex-col items-center">
-          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter">
-            COS_<span className="text-[#FF914D]">È</span>
-          </h2>
-          <div className="glass-panel p-8 md:p-12 border border-white/5 relative overflow-hidden group w-full max-w-4xl">
-            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
-            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter">
-              UNDER THE TOWER?
-            </h3>
-            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
-              Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
+            <p className="text-zinc-400 text-lg md:text-2xl text-center uppercase tracking-tight leading-relaxed max-w-2xl font-medium mt-10 opacity-80">
+              Associazione culturale dedicata alla creatività urbana. Un incubatore d'arte, musica e cultura nato dalla strada per la comunità.
             </p>
-          </div>
 
             <div className="mt-24 w-full max-w-3xl flex flex-col gap-6 md:gap-10">
               {/* BOX MAPPA */}
@@ -125,6 +114,21 @@ export default function HomePage() {
             </div>
           </motion.div>
         </section>
+
+        {/* CHI SIAMO SECTION */}
+        <section className="w-full py-20 flex flex-col items-center">
+          <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-10 text-center tracking-tighter">
+            COS_<span className="text-[#FF914D]">È</span>
+          </h2>
+          <div className="glass-panel p-8 md:p-12 border border-white/5 relative overflow-hidden group w-full max-w-4xl">
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
+            <h3 className="text-2xl md:text-5xl font-black uppercase italic mb-6 text-center tracking-tighter">
+              UNDER THE TOWER?
+            </h3>
+            <p className="text-zinc-500 text-sm md:text-lg uppercase text-center tracking-widest font-mono leading-relaxed">
+              Under the Tower è un progetto creativo che nasce con l’obiettivo di unire persone, idee e passioni all’interno di un ecosistema dinamico e in continua evoluzione. Si sviluppa come una vera e propria community hub, dove ARTE, INTRATTENIMENTO, CONTENUTI e INGEGNO si incontrano per creare esperienze immersive e coinvolgenti.
+            </p>
+          </div>
 
           <div className="mt-20 w-full max-w-3xl">
             <Link href="/team" className="group">
@@ -206,7 +210,7 @@ export default function HomePage() {
                   <div className="w-8 h-8 rounded-full bg-[#FF914D] flex items-center justify-center text-black font-black italic text-xs">UT</div>
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">{selectedPost.title}</h3>
                 </div>
-                <p className="text-zinc-400 text-sm font-mono uppercase">{selectedPost.description || "Nessuna specifica tecnica registrata."}</p>
+                <p className="text-zinc-400 text-sm font-mono uppercase leading-relaxed">{selectedPost.description || "Nessuna specifica tecnica registrata."}</p>
                 <div className="pt-6 mt-6 border-t border-white/5 text-[9px] font-mono text-zinc-600 uppercase">Log_Date: {new Date(selectedPost.created_at).toLocaleString('it-IT')}</div>
               </div>
             </motion.div>
