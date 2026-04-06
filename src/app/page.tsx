@@ -71,53 +71,53 @@ export default function HomePage() {
               <span style={{ color: '#FF914D' }}>Factory</span>
             </h1>
 
-            {/* SEZIONE COS'È (INTEGRATA NELL'HERO) */}
-            <div className="glass-panel p-8 md:p-12 border border-white/5 relative overflow-hidden group w-full max-w-4xl mb-16">
-              <div className="absolute top-0 left-0 w-1 h-full bg-[#FF914D] opacity-50" />
+            {/* SEZIONE COS'È (EFFETTO GLASSMORPHISM) */}
+            <div className="relative p-8 md:p-12 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.8)]">
+              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF914D] to-transparent opacity-40" />
               <h3 className="text-xl md:text-3xl font-black uppercase italic mb-4 text-center tracking-tighter">
                 COS'È <span className="text-[#FF914D]">UNDER THE TOWER?</span>
               </h3>
-              <p className="text-zinc-500 text-xs md:text-base uppercase text-center tracking-[0.2em] font-mono leading-relaxed">
+              <p className="text-zinc-300 text-xs md:text-base uppercase text-center tracking-[0.2em] font-mono leading-relaxed relative z-10">
                 UN PROGETTO CREATIVO CHE NASCE CON L’OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL’INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE.
               </p>
             </div>
 
-            {/* GRID DELLE 4 BOX (TEAM + MAPPA + COLLECTIVE + LABS) */}
+            {/* GRID DELLE 4 BOX (EFFETTO GLASSMORPHISM) */}
             <div className="w-full max-w-3xl flex flex-col gap-6 md:gap-8">
               
               {/* 1. BOX TEAM */}
               <Link href="/team" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="relative p-8 md:p-12 flex flex-col items-center text-center border border-white/10 bg-white/[0.02] backdrop-blur-lg rounded-[2rem] group-hover:bg-white/[0.05] group-hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">IDENTITY_CORE:</span>
                   <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">CONOSCI IL NOSTRO TEAM!</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/20 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
                 </motion.div>
               </Link>
 
               {/* 2. BOX MAPPA */}
               <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="relative p-8 md:p-12 flex flex-col items-center text-center border border-white/10 bg-white/[0.02] backdrop-blur-lg rounded-[2rem] group-hover:bg-white/[0.05] group-hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">LOCATION_DATA:</span>
                   <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">VIENI A TROVARCI</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/20 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
                 </motion.div>
               </div>
 
               {/* 3. BOX COLLECTIVE */}
               <Link href="/feed" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="relative p-8 md:p-12 flex flex-col items-center text-center border border-white/10 bg-white/[0.02] backdrop-blur-lg rounded-[2rem] group-hover:bg-white/[0.05] group-hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
                   <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">Under The Tower</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/20 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
                 </motion.div>
               </Link>
 
               {/* 4. BOX LAB UNIT */}
               <Link href="/labs" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="relative p-8 md:p-12 flex flex-col items-center text-center border border-white/10 bg-white/[0.02] backdrop-blur-lg rounded-[2rem] group-hover:bg-white/[0.05] group-hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
                   <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">RAPF*CKTORY</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
+                  <ArrowRight className="absolute right-8 bottom-8 text-white/20 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
                 </motion.div>
               </Link>
             </div>
