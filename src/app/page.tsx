@@ -102,11 +102,11 @@ export default function HomePage() {
               
               <div className="relative z-10">
                 <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-6 text-center tracking-tighter text-black">
-                  COS'È UNDER THE TOWER?
+                  COS&apos;È UNDER THE TOWER?
                 </h3>
                 {/* Font sans pulito e medio per massima leggibilità, testo nero su arancione */}
                 <p className="text-black text-sm md:text-lg uppercase text-center tracking-[0.15em] font-sans font-medium leading-relaxed max-w-3xl mx-auto">
-                  UN PROGETTO CREATIVO CHE NASCE CON L’OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL’INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
+                  UN PROGETTO CREATIVO CHE NASCE CON L&apos;OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL&apos;INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
                 </p>
               </div>
             </motion.div>
