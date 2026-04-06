@@ -37,6 +37,22 @@ export default function HomePage() {
 
   const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
 
+  // Definizione dell'animazione di pulsazione per la box arancione
+  const pulseGlow = {
+    animate: {
+      boxShadow: [
+        "0 0 20px 0px rgba(255, 145, 77, 0.4)",
+        "0 0 40px 10px rgba(255, 145, 77, 0.7)",
+        "0 0 20px 0px rgba(255, 145, 77, 0.4)"
+      ],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
       
@@ -71,18 +87,32 @@ export default function HomePage() {
               <span style={{ color: '#FF914D' }}>Factory</span>
             </h1>
 
-            {/* SEZIONE COS'È (SOLO QUESTO CON EFFETTO GLASSMORPHISM BELLO) */}
-            <div className="relative p-8 md:p-12 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.8)]">
-              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF914D] to-transparent opacity-40" />
-              <h3 className="text-xl md:text-3xl font-black uppercase italic mb-4 text-center tracking-tighter">
-                COS'È <span className="text-[#FF914D]">UNDER THE TOWER?</span>
-              </h3>
-              <p className="text-zinc-300 text-xs md:text-base uppercase text-center tracking-[0.2em] font-mono leading-relaxed relative z-10">
-                UN PROGETTO CREATIVO CHE NASCE CON L’OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL’INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE.
-              </p>
-            </div>
+            {/* !!! SEZIONE COS'È - RESTYLING ARANCIONE ANIMATO !!! */}
+            <motion.div 
+              className="relative p-10 md:p-14 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden bg-[#FF914D] bg-gradient-to-br from-[#FF914D] to-[#ff7a29]"
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              variants={pulseGlow}
+              animate="animate"
+            >
+              {/* Overlay grafico sottile per dare texture */}
+              <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-10 mix-blend-overlay z-0" />
+              
+              <div className="relative z-10">
+                <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-6 text-center tracking-tighter text-black">
+                  COS'È UNDER THE TOWER?
+                </h3>
+                {/* Font sans pulito e medio per massima leggibilità, testo nero su arancione */}
+                <p className="text-black text-sm md:text-lg uppercase text-center tracking-[0.15em] font-sans font-medium leading-relaxed max-w-3xl mx-auto">
+                  UN PROGETTO CREATIVO CHE NASCE CON L’OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL’INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
+                </p>
+              </div>
+            </motion.div>
+            {/* !!! FINE SEZIONE COS'È RESTYLING !!! */}
 
-            {/* GRID DELLE 4 BOX (RIPORTATE ALLO STILE CLASSICO E PULITO) */}
+            {/* GRID DELLE 4 BOX (TORNATE ORIGINALI PULITE) */}
             <div className="w-full max-w-3xl flex flex-col gap-6 md:gap-8">
               
               {/* 1. BOX TEAM */}
