@@ -14,6 +14,7 @@ export default function Planner() {
   const [showForm, setShowForm] = useState(false);
   
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState(''); // <-- State per la descrizione aggiunto qui
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]); 
   const [priority, setPriority] = useState('medium');
   const [deadline, setDeadline] = useState('');
@@ -55,6 +56,7 @@ export default function Planner() {
 
       const { error } = await supabase.from('tasks').insert([{ 
         title: title.toUpperCase(), 
+        description: description, // <-- Salvataggio della descrizione nel DB
         assigned_to: finalAssignees, 
         priority,
         deadline: deadline || null,
@@ -63,7 +65,9 @@ export default function Planner() {
 
       if (error) throw error;
 
+      // Resetta i campi del form
       setTitle(''); 
+      setDescription(''); // <-- Reset della descrizione
       setAssigneeIds([]); 
       setDeadline(''); 
       setShowForm(false); 
@@ -140,38 +144,71 @@ export default function Planner() {
           initial={{ opacity: 0, y: -10 }} 
           animate={{ opacity: 1, y: 0 }}
           onSubmit={addTask} 
-          className="p-2 border-b border-white/5 bg-white/[0.02] flex flex-wrap gap-2 items-start"
+          className="p-4 border-b border-white/5 bg-white/[0.02] flex flex-col gap-3"
         >
-          <input type="text" placeholder="+ Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none h-[34px]" />
-          
-          <div className="flex flex-col gap-1">
-             <span className="text-[8px] text-zinc-500 font-mono uppercase">Referenti (Cmd/Ctrl per multiselezione)</span>
-             <select 
-               multiple
-               value={assigneeIds.length === 0 ? [""] : assigneeIds} 
-               onChange={handleSelectChange}
-               className="w-40 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] scrollbar-thin"
-             >
-               <option value="">CHIUNQUE</option>
-               {users.map(u => (
-                 <option key={u.id} value={u.id}>
-                   {u.username || u.full_name || u.email.split('@')[0]}
-                 </option>
-               ))}
-             </select>
+          {/* PRIMA RIGA: Titolo, Referenti, Deadline, Priorità e Pulsante */}
+          <div className="flex flex-wrap gap-2 items-start">
+            <input 
+              type="text" 
+              placeholder="+ Attività" 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              required 
+              className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none h-[34px]" 
+            />
+            
+            <div className="flex flex-col gap-1">
+               <span className="text-[8px] text-zinc-500 font-mono uppercase">Referenti (Cmd/Ctrl per multiselezione)</span>
+               <select 
+                 multiple
+                 value={assigneeIds.length === 0 ? [""] : assigneeIds} 
+                 onChange={handleSelectChange}
+                 className="w-40 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] scrollbar-thin"
+               >
+                 <option value="">CHIUNQUE</option>
+                 {users.map(u => (
+                   <option key={u.id} value={u.id}>
+                     {u.username || u.full_name || u.email.split('@')[0]}
+                   </option>
+                 ))}
+               </select>
+            </div>
+
+            <input 
+              type="date" 
+              value={deadline} 
+              onChange={(e) => setDeadline(e.target.value)} 
+              className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4" 
+            />
+            
+            <select 
+              value={priority} 
+              onChange={(e) => setPriority(e.target.value)} 
+              className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4"
+            >
+              <option value="low">LOW</option>
+              <option value="medium">MED</option>
+              <option value="high">HIGH</option>
+            </select>
+            
+            <button 
+              type="submit" 
+              disabled={isAdding} 
+              className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50 h-[34px] mt-4"
+            >
+              {isAdding ? '...' : 'Invia'}
+            </button>
           </div>
 
-          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4" />
-          
-          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4">
-            <option value="low">LOW</option>
-            <option value="medium">MED</option>
-            <option value="high">HIGH</option>
-          </select>
-          
-          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50 h-[34px] mt-4">
-            {isAdding ? '...' : 'Invia'}
-          </button>
+          {/* SECONDA RIGA: Campo Descrizione */}
+          <div className="w-full">
+            <textarea 
+              placeholder="DESCRIZIONE OPZIONALE E NOTE AGGIUNTIVE..." 
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)} 
+              className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] resize-none"
+            />
+          </div>
         </motion.form>
       )}
 
@@ -194,9 +231,19 @@ export default function Planner() {
               return (
                 <tr key={task.id} className="border-b border-white/5 hover:bg-white/[0.02] group">
                   <td className="p-3 pl-6 text-[8px] font-mono text-zinc-800 border-r border-white/5">{idx + 1}</td>
-                  <td className="p-3 border-r border-white/5">
-                    <span className={`text-[10px] font-bold uppercase italic ${task.status === 'done' ? 'line-through text-zinc-700' : 'text-zinc-200'}`}>{task.title}</span>
+                  
+                  {/* Cella Nome Task aggiornata per mostrare anche la descrizione */}
+                  <td className="p-3 border-r border-white/5 flex flex-col justify-center">
+                    <span className={`text-[10px] font-bold uppercase italic ${task.status === 'done' ? 'line-through text-zinc-700' : 'text-zinc-200'}`}>
+                      {task.title}
+                    </span>
+                    {task.description && (
+                      <span className="text-[8px] font-mono text-zinc-500 mt-0.5 truncate max-w-[200px]" title={task.description}>
+                        {task.description}
+                      </span>
+                    )}
                   </td>
+
                   <td className="p-3 border-r border-white/5">
                     <div className="flex items-center justify-center gap-2 text-[9px] font-mono text-zinc-500 uppercase truncate px-2">
                       <User size={10} className="shrink-0" /> 
