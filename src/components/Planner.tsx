@@ -9,12 +9,13 @@ import { motion } from 'framer-motion';
 
 export default function Planner() {
   const [tasks, setTasks] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]); // <-- AGGIUNTO: Stato per gli utenti reali
+  const [users, setUsers] = useState<any[]>([]); 
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
   const [title, setTitle] = useState('');
-  const [assigneeId, setAssigneeId] = useState(''); // <-- CAMBIATO: Salviamo l'ID, non il nome
+  // CHANGED: assigneeIds is now an array of strings to handle multiple selections
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]); 
   const [priority, setPriority] = useState('medium');
   const [deadline, setDeadline] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -23,21 +24,21 @@ export default function Planner() {
 
   useEffect(() => { 
     fetchTasks(); 
-    fetchUsers(); // <-- AGGIUNTO: Carica gli utenti all'avvio
+    fetchUsers(); 
   }, []);
 
   const notifyCalendar = () => {
     window.dispatchEvent(new Event('refreshCalendar'));
   };
 
-  // Funzione per caricare gli utenti dal database
   async function fetchUsers() {
     const { data, error } = await supabase.from('profiles').select('id, full_name, email'); 
-    // Nota: Ho usato 'profiles', se la tua tabella utenti si chiama 'users' o altro, cambia il nome qui sopra.
     if (!error) setUsers(data || []);
   }
 
   async function fetchTasks() {
+    // We need to fetch the assigned users data as well if it's stored relationally.
+    // Assuming your tasks table stores an array of UUIDs in a column named `assigned_to`
     const { data, error } = await supabase.from('tasks').select('*').order('status', { ascending: false }).order('created_at', { ascending: false });
     if (error) console.error("Errore fetch tasks:", error);
     setTasks(data || []);
@@ -51,9 +52,13 @@ export default function Planner() {
     setIsAdding(true);
     
     try {
+      // If "CHIUNQUE" (empty value) is in the array, or array is empty, we set it to null or empty array depending on your DB setup. 
+      // Assuming your DB accepts an array of text/uuids for `assigned_to`.
+      const finalAssignees = assigneeIds.includes("") || assigneeIds.length === 0 ? null : assigneeIds;
+
       const { error } = await supabase.from('tasks').insert([{ 
         title: title.toUpperCase(), 
-        assigned_to: assigneeId || null, // <-- ORA PASSA L'ID REALE
+        assigned_to: finalAssignees, 
         priority,
         deadline: deadline || null,
         status: 'todo'
@@ -62,7 +67,7 @@ export default function Planner() {
       if (error) throw error;
 
       setTitle(''); 
-      setAssigneeId(''); 
+      setAssigneeIds([]); 
       setDeadline(''); 
       setShowForm(false); 
       fetchTasks(); 
@@ -70,13 +75,12 @@ export default function Planner() {
       
     } catch (err: any) {
       console.error("Errore Supabase:", err);
-      alert("ERRORE: Devi selezionare un referente valido o lasciarlo vuoto.");
+      alert("ERRORE: Impossibile aggiungere il task. Verifica i permessi o i dati inseriti.");
     } finally {
       setIsAdding(false);
     }
   }
 
-  // ... (restanti funzioni updateStatus e deleteTask rimangono uguali)
   async function updateStatus(id: string, currentStatus: string) {
     const newStatus = currentStatus === 'done' ? 'todo' : 'done';
     await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
@@ -100,6 +104,30 @@ export default function Planner() {
     }
   };
 
+  // Helper to handle multiple select changes
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    
+    // If they select "CHIUNQUE" (value=""), clear other selections
+    if (selectedOptions.includes("")) {
+        setAssigneeIds([""]);
+    } else {
+        // Remove empty string if they previously selected CHIUNQUE but now selected users
+        setAssigneeIds(selectedOptions.filter(val => val !== ""));
+    }
+  };
+
+  // Helper to render assigned names in the table
+  const renderAssignedNames = (assignedIds: string[] | null) => {
+    if (!assignedIds || assignedIds.length === 0) return 'CHIUNQUE';
+    
+    const assignedUsers = users.filter(u => assignedIds.includes(u.id));
+    if (assignedUsers.length === 0) return 'CHIUNQUE';
+
+    // Return comma-separated names, or emails if name is empty
+    return assignedUsers.map(u => u.full_name || u.email.split('@')[0]).join(', ');
+  }
+
   return (
     <div className="glass-panel border-white/5 bg-zinc-950/40 overflow-hidden rounded-xl">
       <div className="p-4 border-b border-white/5 flex justify-between items-center bg-zinc-900/40">
@@ -120,37 +148,40 @@ export default function Planner() {
           initial={{ opacity: 0, y: -10 }} 
           animate={{ opacity: 1, y: 0 }}
           onSubmit={addTask} 
-          className="p-2 border-b border-white/5 bg-white/[0.02] flex flex-wrap gap-2"
+          className="p-2 border-b border-white/5 bg-white/[0.02] flex flex-wrap gap-2 items-start"
         >
-          <input type="text" placeholder="+ Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none" />
+          <input type="text" placeholder="+ Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none h-[34px]" />
           
-          {/* SELETTORE REFERENTE - SOSTITUISCE L'INPUT DI TESTO */}
-          <select 
-            value={assigneeId} 
-            onChange={(e) => setAssigneeId(e.target.value)}
-            className="w-32 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none"
-          >
-            <option value="">CHIUNQUE</option>
-            {users.map(u => (
-              <option key={u.id} value={u.id}>{u.full_name || u.email}</option>
-            ))}
-          </select>
+          {/* UPDATED: Multiple Select */}
+          <div className="flex flex-col gap-1">
+             <span className="text-[8px] text-zinc-500 font-mono uppercase">Referenti (Cmd/Ctrl per multiselezione)</span>
+             <select 
+               multiple
+               value={assigneeIds.length === 0 ? [""] : assigneeIds} 
+               onChange={handleSelectChange}
+               className="w-40 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px]"
+             >
+               <option value="">CHIUNQUE</option>
+               {users.map(u => (
+                 <option key={u.id} value={u.id}>{u.full_name || u.email}</option>
+               ))}
+             </select>
+          </div>
 
-          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500" />
+          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4" />
           
-          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500">
+          <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4">
             <option value="low">LOW</option>
             <option value="medium">MED</option>
             <option value="high">HIGH</option>
           </select>
           
-          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50">
+          <button type="submit" disabled={isAdding} className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50 h-[34px] mt-4">
             {isAdding ? '...' : 'Invia'}
           </button>
         </motion.form>
       )}
 
-      {/* ... TABELLA RIMANE UGUALE ... */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[700px]">
           <thead>
@@ -174,8 +205,9 @@ export default function Planner() {
                     <span className={`text-[10px] font-bold uppercase italic ${task.status === 'done' ? 'line-through text-zinc-700' : 'text-zinc-200'}`}>{task.title}</span>
                   </td>
                   <td className="p-3 border-r border-white/5">
-                    <div className="flex items-center justify-center gap-2 text-[9px] font-mono text-zinc-500 uppercase">
-                      <User size={10} /> {task.assigned_to ? 'UTENTE SETTATO' : '---'}
+                    <div className="flex items-center justify-center gap-2 text-[9px] font-mono text-zinc-500 uppercase truncate px-2">
+                      <User size={10} className="shrink-0" /> 
+                      <span className="truncate">{renderAssignedNames(task.assigned_to)}</span>
                     </div>
                   </td>
                   <td className="p-1 border-r border-white/5">
