@@ -128,7 +128,7 @@ export default function CalendarWidget() {
                 {/* RENDER DELLA DESCRIZIONE SE ESISTE */}
                 {e.description && (
                   <div className="pl-4 ml-0.5 border-l border-white/10 mt-1">
-                    <p className="text-[9px] font-mono text-zinc-400 leading-relaxed">
+                    <p className="text-[9px] font-mono text-zinc-400 leading-relaxed whitespace-pre-wrap">
                       {e.description}
                     </p>
                   </div>
