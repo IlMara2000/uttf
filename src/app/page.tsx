@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion'; // Aggiunto Variants per precisione
 import { 
   Loader2, 
   ArrowRight, 
@@ -37,7 +37,7 @@ export default function HomePage() {
 
   const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
 
-  // Definizione dell'animazione di pulsazione per la box arancione
+  // Definizione dell'animazione corretta con 'as const' per evitare errori di tipo
   const pulseGlow = {
     animate: {
       boxShadow: [
@@ -51,7 +51,7 @@ export default function HomePage() {
         ease: "easeInOut"
       }
     }
-  };
+  } as const; // <--- Questo risolve l'errore nel build di Vercel
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
@@ -87,35 +87,30 @@ export default function HomePage() {
               <span style={{ color: '#FF914D' }}>Factory</span>
             </h1>
 
-            {/* !!! SEZIONE COS'È - RESTYLING ARANCIONE ANIMATO !!! */}
+            {/* SEZIONE COS'È */}
             <motion.div 
               className="relative p-10 md:p-14 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden bg-[#FF914D] bg-gradient-to-br from-[#FF914D] to-[#ff7a29]"
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              variants={pulseGlow}
+              variants={pulseGlow as any} // Casting per compatibilità sicura
               animate="animate"
             >
-              {/* Overlay grafico sottile per dare texture */}
               <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-10 mix-blend-overlay z-0" />
               
               <div className="relative z-10">
                 <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-6 text-center tracking-tighter text-black">
                   COS&apos;È UNDER THE TOWER?
                 </h3>
-                {/* Font sans pulito e medio per massima leggibilità, testo nero su arancione */}
                 <p className="text-black text-sm md:text-lg uppercase text-center tracking-[0.15em] font-sans font-medium leading-relaxed max-w-3xl mx-auto">
                   UN PROGETTO CREATIVO CHE NASCE CON L&apos;OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL&apos;INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
                 </p>
               </div>
             </motion.div>
-            {/* !!! FINE SEZIONE COS'È RESTYLING !!! */}
 
-            {/* GRID DELLE 4 BOX (TORNATE ORIGINALI PULITE) */}
+            {/* GRID DELLE 4 BOX */}
             <div className="w-full max-w-3xl flex flex-col gap-6 md:gap-8">
-              
-              {/* 1. BOX TEAM */}
               <Link href="/team" className="group">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">IDENTITY_CORE:</span>
@@ -124,7 +119,6 @@ export default function HomePage() {
                 </motion.div>
               </Link>
 
-              {/* 2. BOX MAPPA */}
               <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">LOCATION_DATA:</span>
@@ -133,7 +127,6 @@ export default function HomePage() {
                 </motion.div>
               </div>
 
-              {/* 3. BOX COLLECTIVE */}
               <Link href="/feed" className="group">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
@@ -142,7 +135,6 @@ export default function HomePage() {
                 </motion.div>
               </Link>
 
-              {/* 4. BOX LAB UNIT */}
               <Link href="/labs" className="group">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
