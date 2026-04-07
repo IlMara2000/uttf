@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence, Variants } from 'framer-motion'; // Aggiunto Variants per precisione
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Loader2, 
   ArrowRight, 
@@ -37,21 +37,20 @@ export default function HomePage() {
 
   const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
 
-  // Definizione dell'animazione corretta con 'as const' per evitare errori di tipo
   const pulseGlow = {
     animate: {
       boxShadow: [
-        "0 0 20px 0px rgba(255, 145, 77, 0.4)",
-        "0 0 40px 10px rgba(255, 145, 77, 0.7)",
-        "0 0 20px 0px rgba(255, 145, 77, 0.4)"
+        "0 0 20px 0px rgba(255, 145, 77, 0.2)",
+        "0 0 40px 10px rgba(255, 145, 77, 0.4)",
+        "0 0 20px 0px rgba(255, 145, 77, 0.2)"
       ],
       transition: {
-        duration: 2,
+        duration: 3,
         repeat: Infinity,
         ease: "easeInOut"
       }
     }
-  } as const; // <--- Questo risolve l'errore nel build di Vercel
+  } as const;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
@@ -87,23 +86,27 @@ export default function HomePage() {
               <span style={{ color: '#FF914D' }}>Factory</span>
             </h1>
 
-            {/* SEZIONE COS'È */}
+            {/* SEZIONE COS'È - RESTYLING GLASSMORPHISM ARANCIONE */}
             <motion.div 
-              className="relative p-10 md:p-14 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden bg-[#FF914D] bg-gradient-to-br from-[#FF914D] to-[#ff7a29]"
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              className="relative p-10 md:p-14 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden border border-[#FF914D]/30 bg-[#FF914D]/10 backdrop-blur-xl shadow-2xl"
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              variants={pulseGlow as any} // Casting per compatibilità sicura
+              variants={pulseGlow}
               animate="animate"
             >
-              <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-10 mix-blend-overlay z-0" />
+              {/* Grain Texture Overlay */}
+              <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-20 mix-blend-soft-light pointer-events-none" />
+              
+              {/* Luce interna soffusa */}
+              <div className="absolute -top-24 -left-24 w-64 h-64 bg-[#FF914D]/20 rounded-full blur-[100px]" />
               
               <div className="relative z-10">
-                <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-6 text-center tracking-tighter text-black">
+                <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-8 text-center tracking-tighter text-[#FF914D]">
                   COS&apos;È UNDER THE TOWER?
                 </h3>
-                <p className="text-black text-sm md:text-lg uppercase text-center tracking-[0.15em] font-sans font-medium leading-relaxed max-w-3xl mx-auto">
+                <p className="text-white text-sm md:text-lg uppercase text-center tracking-[0.15em] font-sans font-medium leading-relaxed max-w-3xl mx-auto opacity-90">
                   UN PROGETTO CREATIVO CHE NASCE CON L&apos;OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL&apos;INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
                 </p>
               </div>
