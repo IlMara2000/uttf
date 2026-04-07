@@ -105,23 +105,34 @@ export default function CalendarWidget() {
 
       <div className="p-6 bg-zinc-900/40 border-t border-white/5">
         <p className="text-[8px] font-mono text-zinc-600 uppercase mb-3">Focus_Day: {format(selectedDate, 'dd/MM')}</p>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {events.filter(e => e.deadline && isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => {
             let barClass = 'bg-[#FF914D]'; 
             if (e.eventType === 'task' && e.status === 'done') barClass = 'bg-emerald-500';
             if (e.eventType === 'activity') barClass = 'bg-white';
 
             return (
-              <div key={idx} className="flex items-center gap-3 p-2 bg-black/40 rounded-lg border border-white/5">
-                <div className={`w-1 h-4 rounded-full ${barClass}`} />
-                <div className="flex flex-col">
-                  <span className={`text-[10px] font-black uppercase italic ${e.eventType === 'activity' ? 'text-white' : 'text-zinc-300'}`}>
-                    {e.title}
-                  </span>
-                  <span className="text-[7px] font-mono text-zinc-500 tracking-widest uppercase">
-                    {e.eventType === 'activity' ? 'ACT_UNIT' : 'TSK_UNIT'}
-                  </span>
+              <div key={idx} className="flex flex-col gap-2 p-3 bg-black/40 rounded-xl border border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className={`w-1 h-4 rounded-full ${barClass}`} />
+                  <div className="flex flex-col">
+                    <span className={`text-[10px] font-black uppercase italic ${e.eventType === 'activity' ? 'text-white' : 'text-zinc-300'}`}>
+                      {e.title}
+                    </span>
+                    <span className="text-[7px] font-mono text-zinc-500 tracking-widest uppercase">
+                      {e.eventType === 'activity' ? 'ACT_UNIT' : 'TSK_UNIT'}
+                    </span>
+                  </div>
                 </div>
+                
+                {/* RENDER DELLA DESCRIZIONE SE ESISTE */}
+                {e.description && (
+                  <div className="pl-4 ml-0.5 border-l border-white/10 mt-1">
+                    <p className="text-[9px] font-mono text-zinc-400 leading-relaxed">
+                      {e.description}
+                    </p>
+                  </div>
+                )}
               </div>
             );
           })}
