@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   Loader2, 
   ArrowRight, 
@@ -37,7 +37,8 @@ export default function HomePage() {
 
   const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
 
-  const pulseGlow = {
+  // Tipizzazione esplicita come Variants per risolvere l'errore di build
+  const pulseGlow: Variants = {
     animate: {
       boxShadow: [
         "0 0 20px 0px rgba(255, 145, 77, 0.2)",
@@ -50,7 +51,7 @@ export default function HomePage() {
         ease: "easeInOut"
       }
     }
-  } as const;
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
@@ -86,21 +87,17 @@ export default function HomePage() {
               <span style={{ color: '#FF914D' }}>Factory</span>
             </h1>
 
-            {/* SEZIONE COS'È - RESTYLING GLASSMORPHISM ARANCIONE */}
+            {/* SEZIONE COS'È - GLASSMORPHISM RESTYLE */}
             <motion.div 
               className="relative p-10 md:p-14 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden border border-[#FF914D]/30 bg-[#FF914D]/10 backdrop-blur-xl shadow-2xl"
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
               variants={pulseGlow}
               animate="animate"
             >
               {/* Grain Texture Overlay */}
               <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-20 mix-blend-soft-light pointer-events-none" />
-              
-              {/* Luce interna soffusa */}
-              <div className="absolute -top-24 -left-24 w-64 h-64 bg-[#FF914D]/20 rounded-full blur-[100px]" />
               
               <div className="relative z-10">
                 <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-8 text-center tracking-tighter text-[#FF914D]">
