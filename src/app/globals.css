@@ -7,7 +7,25 @@
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular;
 }
 
+/* =========================================
+   KEYFRAMES (Animazioni fluide e professionali)
+   ========================================= */
 @layer base {
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(0.98); }
+  }
+
+  @keyframes text-shine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
   body {
     /* Gradiente Radiale Ellittico per l'effetto "Sfumatura dai lati" */
     background-color: #000000;
@@ -24,6 +42,10 @@
   }
 }
 
+/* =========================================
+   UTILITY CLASSES & COMPONENTI
+   ========================================= */
+
 @utility hero-title {
   font-family: var(--font-display);
   font-size: clamp(3rem, 11vw, 8rem);
@@ -38,6 +60,22 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Effetto shine opzionale per testi: aggiungi "animate-shine" nel className html */
+@utility animate-shine {
+  background: linear-gradient(
+    to right, 
+    #ffffff 20%, 
+    #FF914D 50%, 
+    #ffffff 80%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shine 4s linear infinite;
 }
 
 @utility glass-panel {
@@ -46,6 +84,17 @@
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 2.5rem;
+  /* Transizione morbidissima per l'hover */
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
+              border-color 0.4s ease;
+}
+
+.glass-panel:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 
+              0 0 30px rgba(255, 145, 77, 0.15);
+  border-color: rgba(255, 145, 77, 0.3);
 }
 
 @utility nav-tag {
@@ -58,6 +107,15 @@
   padding: 0.6rem 1.5rem;
   border-radius: 9999px;
   background-color: rgba(255, 145, 77, 0.05);
+  /* Transizione reattiva */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-tag:hover {
+  background-color: rgba(255, 145, 77, 0.15);
+  box-shadow: 0 0 15px rgba(255, 145, 77, 0.2);
+  transform: translateY(-2px);
+  color: #ffffff;
 }
 
 @utility btn-urban {
@@ -73,12 +131,26 @@
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-  transition: all 0.3s ease;
+  /* Effetto molla elegante sull'hover */
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-urban:hover {
   background-color: #FF914D;
   color: #ffffff;
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(255, 145, 77, 0.3);
+  box-shadow: 0 15px 30px -5px rgba(255, 145, 77, 0.4);
+}
+
+/* =========================================
+   UTILITY ANIMATIONS (Da usare sui tag HTML)
+   ========================================= */
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@utility animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
 }
