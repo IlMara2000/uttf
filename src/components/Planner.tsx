@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
-  ClipboardList, CheckCircle2, Trash2, AlertTriangle, User, Plus, X
+  ClipboardList, Trash2, AlertTriangle, User, Plus, X
 } from 'lucide-react';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -14,7 +14,6 @@ export default function Planner() {
   const [showForm, setShowForm] = useState(false);
   
   const [title, setTitle] = useState('');
-  // CHANGED: assigneeIds is now an array of strings to handle multiple selections
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]); 
   const [priority, setPriority] = useState('medium');
   const [deadline, setDeadline] = useState('');
@@ -31,14 +30,14 @@ export default function Planner() {
     window.dispatchEvent(new Event('refreshCalendar'));
   };
 
+  // PESCA GLI UTENTI INCLUDENDO SIA USERNAME CHE FULL_NAME
   async function fetchUsers() {
-    const { data, error } = await supabase.from('profiles').select('id, full_name, email'); 
-    if (!error) setUsers(data || []);
+    const { data, error } = await supabase.from('profiles').select('id, email, username, full_name'); 
+    if (error) console.error("Errore fetch users:", error);
+    if (!error && data) setUsers(data);
   }
 
   async function fetchTasks() {
-    // We need to fetch the assigned users data as well if it's stored relationally.
-    // Assuming your tasks table stores an array of UUIDs in a column named `assigned_to`
     const { data, error } = await supabase.from('tasks').select('*').order('status', { ascending: false }).order('created_at', { ascending: false });
     if (error) console.error("Errore fetch tasks:", error);
     setTasks(data || []);
@@ -52,8 +51,6 @@ export default function Planner() {
     setIsAdding(true);
     
     try {
-      // If "CHIUNQUE" (empty value) is in the array, or array is empty, we set it to null or empty array depending on your DB setup. 
-      // Assuming your DB accepts an array of text/uuids for `assigned_to`.
       const finalAssignees = assigneeIds.includes("") || assigneeIds.length === 0 ? null : assigneeIds;
 
       const { error } = await supabase.from('tasks').insert([{ 
@@ -104,28 +101,23 @@ export default function Planner() {
     }
   };
 
-  // Helper to handle multiple select changes
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    
-    // If they select "CHIUNQUE" (value=""), clear other selections
     if (selectedOptions.includes("")) {
         setAssigneeIds([""]);
     } else {
-        // Remove empty string if they previously selected CHIUNQUE but now selected users
         setAssigneeIds(selectedOptions.filter(val => val !== ""));
     }
   };
 
-  // Helper to render assigned names in the table
+  // RENDERIZZA LO USERNAME -> FULL_NAME -> MAIL PREFIX
   const renderAssignedNames = (assignedIds: string[] | null) => {
     if (!assignedIds || assignedIds.length === 0) return 'CHIUNQUE';
     
     const assignedUsers = users.filter(u => assignedIds.includes(u.id));
     if (assignedUsers.length === 0) return 'CHIUNQUE';
 
-    // Return comma-separated names, or emails if name is empty
-    return assignedUsers.map(u => u.full_name || u.email.split('@')[0]).join(', ');
+    return assignedUsers.map(u => u.username || u.full_name || u.email.split('@')[0]).join(', ');
   }
 
   return (
@@ -152,18 +144,19 @@ export default function Planner() {
         >
           <input type="text" placeholder="+ Attività" value={title} onChange={(e) => setTitle(e.target.value)} required className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none h-[34px]" />
           
-          {/* UPDATED: Multiple Select */}
           <div className="flex flex-col gap-1">
              <span className="text-[8px] text-zinc-500 font-mono uppercase">Referenti (Cmd/Ctrl per multiselezione)</span>
              <select 
                multiple
                value={assigneeIds.length === 0 ? [""] : assigneeIds} 
                onChange={handleSelectChange}
-               className="w-40 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px]"
+               className="w-40 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] scrollbar-thin"
              >
                <option value="">CHIUNQUE</option>
                {users.map(u => (
-                 <option key={u.id} value={u.id}>{u.full_name || u.email}</option>
+                 <option key={u.id} value={u.id}>
+                   {u.username || u.full_name || u.email.split('@')[0]}
+                 </option>
                ))}
              </select>
           </div>
