@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
 import NotesManager from '@/components/NotesManager'; 
+import AccountSettings from '@/components/AccountSettings'; // <-- IMPORTATO QUI
 
 export default function Dashboard() {
   const router = useRouter();
@@ -110,9 +111,19 @@ export default function Dashboard() {
             <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest truncate max-w-[150px]">{userEmail}</span>
           </div>
         </div>
-        <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="p-2 text-white hover:text-[#FF914D] transition-colors">
-          <LogOut size={20} />
-        </button>
+        
+        {/* MODIFICATO QUI: Container per allineare l'ingranaggio e il logout */}
+        <div className="flex items-center gap-2">
+          <AccountSettings />
+          
+          <button 
+            onClick={() => supabase.auth.signOut().then(() => router.push('/'))} 
+            className="p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-lg transition-all"
+            title="Esci dall'hub"
+          >
+            <LogOut size={20} />
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 custom-scrollbar">
