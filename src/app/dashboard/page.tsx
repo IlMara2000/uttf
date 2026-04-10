@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   Send, LogOut, Image as ImageIcon, 
-  Layers, Loader2, ChevronRight, Sparkles, FileText 
+  Layers, Loader2, ChevronRight, Sparkles, FileText, ArrowLeft, CalendarDays
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Planner from '@/components/Planner';
@@ -15,6 +15,9 @@ export default function Dashboard() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Nuovo stato per gestire il menu a bottoni pulito
+  const [activeView, setActiveView] = useState<'menu' | 'publish' | 'notes' | 'planner'>('menu');
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -112,7 +115,7 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* MODIFICATO QUI: Container per allineare l'ingranaggio e il logout */}
+        {/* Container per allineare l'ingranaggio e il logout */}
         <div className="flex items-center gap-2">
           <AccountSettings />
           
@@ -126,89 +129,139 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 custom-scrollbar">
-        <div className="max-w-5xl mx-auto flex flex-col gap-8">
-          
-          {/* 1. SEZIONE PLANNER & CALENDARIO (In alto) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-7">
-              <Planner />
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+        {activeView === 'menu' ? (
+          /* SCHERMATA MENU PRINCIPALE A BOTTONI */
+          <div className="max-w-3xl mx-auto flex flex-col gap-4 mt-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">MODULI_<span className="text-[#FF914D]">HUB</span></h2>
+              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">Seleziona un'area di lavoro</p>
             </div>
-            <div className="lg:col-span-5">
-              <CalendarWidget />
-            </div>
-          </div>
 
-          <hr className="border-white/5" />
-
-          {/* 2. SEZIONE TESTI & APPUNTI (Al centro) */}
-          <div className="max-w-3xl mx-auto w-full space-y-4">
+            {/* BOTTONE 1: POST */}
             <button 
-              onClick={() => setShowNotes(!showNotes)}
-              className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+              onClick={() => setActiveView('publish')}
+              className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                  <FileText size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                  <Layers size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-[10px] font-black uppercase italic tracking-widest text-white">NOTE</h3>
-                  <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Gestisci rime, note e allegati</p>
+                  <h3 className="text-sm font-black uppercase italic tracking-widest text-white">GESTIONE POST</h3>
+                  <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Pubblica e gestisci i contenuti</p>
                 </div>
               </div>
-              <div className={`transition-transform duration-300 ${showNotes ? 'rotate-90' : ''}`}>
-                <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D]" />
-              </div>
+              <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
             </button>
 
-            {showNotes && (
-              <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+            {/* BOTTONE 2: NOTE */}
+            <button 
+              onClick={() => setActiveView('notes')}
+              className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+            >
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                  <FileText size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm font-black uppercase italic tracking-widest text-white">NOTE & APPUNTI</h3>
+                  <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Gestisci rime, note e allegati</p>
+                </div>
+              </div>
+              <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+            </button>
+
+            {/* BOTTONE 3: PLANNER */}
+            <button 
+              onClick={() => setActiveView('planner')}
+              className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+            >
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                  <CalendarDays size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm font-black uppercase italic tracking-widest text-white">PLANNER HUB</h3>
+                  <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Organizza eventi e attività</p>
+                </div>
+              </div>
+              <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+            </button>
+
+          </div>
+        ) : (
+          /* SCHERMATA DETTAGLIO MODULO (Con tasto Torna Indietro) */
+          <div className="max-w-5xl mx-auto flex flex-col gap-6">
+            
+            <button 
+              onClick={() => setActiveView('menu')}
+              className="self-start flex items-center gap-2 px-4 py-2.5 bg-zinc-900/40 border border-white/5 rounded-xl text-zinc-400 hover:text-[#FF914D] hover:bg-white/[0.02] transition-all font-mono text-[10px] uppercase tracking-widest group"
+            >
+              <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Torna Indietro
+            </button>
+
+            {/* VISTA 1: PUBBLICAZIONE */}
+            {activeView === 'publish' && (
+              <div className="max-w-3xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
+                <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
+                      <Layers size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-[10px] font-black uppercase italic tracking-widest">POST PUBBLICATI</h3>
+                      <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Visualizza e Cancella i Post sul sito:</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+                </button>
+
+                <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
+                  <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
+                    <Send size={14} /> CREA POST DA PUBBLICARE
+                  </h2>
+                  <form onSubmit={handleCreatePost} className="space-y-4">
+                    <input type="text" placeholder="TITOLO" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40" />
+                    <div className="relative group">
+                      <textarea placeholder="DESCRIZIONE..." value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-black/40 border border-white/5 p-4 pr-12 rounded-xl font-mono text-[10px] min-h-[100px] text-white outline-none resize-none focus:border-[#FF914D]/40" />
+                      <button type="button" onClick={handleAiEnhance} disabled={isAiProcessing || !description} className="absolute right-3 bottom-3 p-2 bg-zinc-800 hover:bg-[#FF914D] text-white rounded-lg transition-all disabled:opacity-30">
+                        {isAiProcessing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                      </button>
+                    </div>
+                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-white/5 rounded-2xl cursor-pointer hover:bg-white/[0.02] relative overflow-hidden group transition-all">
+                      {previewUrl ? <img src={previewUrl} className="h-full w-full object-cover opacity-60" /> : <ImageIcon size={28} className="text-zinc-700 group-hover:text-zinc-400" />}
+                      <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if(f){ setFile(f); setPreviewUrl(URL.createObjectURL(f)); }}} />
+                    </label>
+                    <button type="submit" disabled={uploading} className="w-full py-4 bg-white text-black text-[10px] font-black uppercase italic hover:bg-[#FF914D] transition-all disabled:opacity-50">
+                      {uploading ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'PUSH_TO_FACTORY'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* VISTA 2: NOTE */}
+            {activeView === 'notes' && (
+              <div className="max-w-3xl mx-auto w-full animate-in fade-in duration-300">
                 <NotesManager />
               </div>
             )}
-          </div>
 
-          <hr className="border-white/5" />
-
-          {/* 3. SEZIONE OUTPUT & PUBBLICAZIONE (In basso) */}
-          <div className="max-w-3xl mx-auto w-full space-y-6">
-            <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
-                  <Layers size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
+            {/* VISTA 3: PLANNER E CALENDARIO */}
+            {activeView === 'planner' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
+                <div className="lg:col-span-7">
+                  <Planner />
                 </div>
-                <div className="text-left">
-                  <h3 className="text-[10px] font-black uppercase italic tracking-widest">POST PUBBLICATI</h3>
-                  <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Visualizza e Cancella i Post sul sito:</p>
+                <div className="lg:col-span-5">
+                  <CalendarWidget />
                 </div>
               </div>
-              <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-            </button>
-
-            <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
-              <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
-                <Send size={14} /> CREA POST DA PUBBLICARE
-              </h2>
-              <form onSubmit={handleCreatePost} className="space-y-4">
-                <input type="text" placeholder="TITOLO" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40" />
-                <div className="relative group">
-                  <textarea placeholder="DESCRIZIONE..." value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-black/40 border border-white/5 p-4 pr-12 rounded-xl font-mono text-[10px] min-h-[100px] text-white outline-none resize-none focus:border-[#FF914D]/40" />
-                  <button type="button" onClick={handleAiEnhance} disabled={isAiProcessing || !description} className="absolute right-3 bottom-3 p-2 bg-zinc-800 hover:bg-[#FF914D] text-white rounded-lg transition-all disabled:opacity-30">
-                    {isAiProcessing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                  </button>
-                </div>
-                <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-white/5 rounded-2xl cursor-pointer hover:bg-white/[0.02] relative overflow-hidden group transition-all">
-                  {previewUrl ? <img src={previewUrl} className="h-full w-full object-cover opacity-60" /> : <ImageIcon size={28} className="text-zinc-700 group-hover:text-zinc-400" />}
-                  <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if(f){ setFile(f); setPreviewUrl(URL.createObjectURL(f)); }}} />
-                </label>
-                <button type="submit" disabled={uploading} className="w-full py-4 bg-white text-black text-[10px] font-black uppercase italic hover:bg-[#FF914D] transition-all disabled:opacity-50">
-                  {uploading ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'PUSH_TO_FACTORY'}
-                </button>
-              </form>
-            </div>
+            )}
+            
           </div>
-
-        </div>
+        )}
       </main>
     </div>
   );
