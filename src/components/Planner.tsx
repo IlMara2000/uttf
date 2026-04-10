@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
-  ClipboardList, Trash2, AlertTriangle, User, Plus, X
+  ClipboardList, Trash2, AlertTriangle, User, Plus, X, Clock
 } from 'lucide-react';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -13,11 +13,15 @@ export default function Planner() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
+  // Stati del Form
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState(''); // <-- State per la descrizione aggiunto qui
+  const [description, setDescription] = useState('');
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]); 
   const [priority, setPriority] = useState('medium');
-  const [deadline, setDeadline] = useState('');
+  const [deadline, setDeadline] = useState(''); // Usato come Data di Inizio
+  const [endDate, setEndDate] = useState('');   // Data di Fine
+  const [time, setTime] = useState('');         // Orario
   const [isAdding, setIsAdding] = useState(false);
 
   const today = startOfDay(new Date());
@@ -31,7 +35,6 @@ export default function Planner() {
     window.dispatchEvent(new Event('refreshCalendar'));
   };
 
-  // PESCA GLI UTENTI INCLUDENDO SIA USERNAME CHE FULL_NAME
   async function fetchUsers() {
     const { data, error } = await supabase.from('profiles').select('id, email, username, full_name'); 
     if (error) console.error("Errore fetch users:", error);
@@ -45,7 +48,34 @@ export default function Planner() {
     setLoading(false);
   }
 
-  async function addTask(e: React.FormEvent) {
+  // Reset del form
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle('');
+    setDescription('');
+    setAssigneeIds([]);
+    setDeadline('');
+    setEndDate('');
+    setTime('');
+    setPriority('medium');
+    setShowForm(false);
+  };
+
+  // Funzione per caricare i dati nel form quando si clicca su una riga
+  const handleEditClick = (task: any) => {
+    setEditingId(task.id);
+    setTitle(task.title || '');
+    setDescription(task.description || '');
+    setAssigneeIds(task.assigned_to || []);
+    setDeadline(task.deadline || '');
+    setEndDate(task.end_date || '');
+    setTime(task.time || '');
+    setPriority(task.priority || 'medium');
+    setShowForm(true);
+  };
+
+  // Gestisce sia Inserimento che Aggiornamento
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title) return;
     
@@ -54,43 +84,49 @@ export default function Planner() {
     try {
       const finalAssignees = assigneeIds.includes("") || assigneeIds.length === 0 ? null : assigneeIds;
 
-      const { error } = await supabase.from('tasks').insert([{ 
+      const payload = {
         title: title.toUpperCase(), 
-        description: description, // <-- Salvataggio della descrizione nel DB
+        description: description,
         assigned_to: finalAssignees, 
         priority,
         deadline: deadline || null,
-        status: 'todo'
-      }]);
+        end_date: endDate || null,
+        time: time || null,
+      };
 
-      if (error) throw error;
+      if (editingId) {
+        // Se stiamo modificando un task esistente
+        const { error } = await supabase.from('tasks').update(payload).eq('id', editingId);
+        if (error) throw error;
+      } else {
+        // Se stiamo creando un task nuovo (aggiungiamo lo status iniziale)
+        const { error } = await supabase.from('tasks').insert([{ ...payload, status: 'todo' }]);
+        if (error) throw error;
+      }
 
-      // Resetta i campi del form
-      setTitle(''); 
-      setDescription(''); // <-- Reset della descrizione
-      setAssigneeIds([]); 
-      setDeadline(''); 
-      setShowForm(false); 
+      resetForm();
       fetchTasks(); 
       notifyCalendar();
       
     } catch (err: any) {
       console.error("Errore Supabase:", err);
-      alert("ERRORE: Impossibile aggiungere il task. Verifica i permessi o i dati inseriti.");
+      alert("ERRORE: Impossibile salvare il task. Verifica i permessi o le colonne del database.");
     } finally {
       setIsAdding(false);
     }
   }
 
-  async function updateStatus(id: string, currentStatus: string) {
+  async function updateStatus(id: string, currentStatus: string, e: React.MouseEvent) {
+    e.stopPropagation(); // Evita che si apra l'edit cliccando sullo status
     const newStatus = currentStatus === 'done' ? 'todo' : 'done';
     await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
     fetchTasks();
     notifyCalendar();
   }
 
-  async function deleteTask(id: string) {
-    if(!confirm("ELIMINARE TASK?")) return;
+  async function deleteTask(id: string, e: React.MouseEvent) {
+    e.stopPropagation(); // Evita che si apra l'edit cliccando sul cestino
+    if(!confirm("ELIMINARE TASK DEFINITIVAMENTE?")) return;
     await supabase.from('tasks').delete().eq('id', id);
     fetchTasks();
     notifyCalendar();
@@ -114,13 +150,10 @@ export default function Planner() {
     }
   };
 
-  // RENDERIZZA LO USERNAME -> FULL_NAME -> MAIL PREFIX
   const renderAssignedNames = (assignedIds: string[] | null) => {
     if (!assignedIds || assignedIds.length === 0) return 'CHIUNQUE';
-    
     const assignedUsers = users.filter(u => assignedIds.includes(u.id));
     if (assignedUsers.length === 0) return 'CHIUNQUE';
-
     return assignedUsers.map(u => u.username || u.full_name || u.email.split('@')[0]).join(', ');
   }
 
@@ -132,7 +165,7 @@ export default function Planner() {
           <h2 className="text-sm font-black uppercase italic tracking-widest text-white">Planner:</h2>
         </div>
         <button 
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => showForm ? resetForm() : setShowForm(true)}
           className={`p-1.5 rounded transition-all ${showForm ? 'bg-red-500/10 text-red-500' : 'bg-[#FF914D] text-black hover:scale-105'}`}
         >
           {showForm ? <X size={14} /> : <Plus size={14} />}
@@ -143,14 +176,17 @@ export default function Planner() {
         <motion.form 
           initial={{ opacity: 0, y: -10 }} 
           animate={{ opacity: 1, y: 0 }}
-          onSubmit={addTask} 
-          className="p-4 border-b border-white/5 bg-white/[0.02] flex flex-col gap-3"
+          onSubmit={handleSubmit} 
+          className="p-4 border-b border-white/5 bg-white/[0.02] flex flex-col gap-3 relative"
         >
-          {/* PRIMA RIGA: Titolo, Referenti, Deadline, Priorità e Pulsante */}
-          <div className="flex flex-wrap gap-2 items-start">
+          {editingId && (
+             <span className="absolute top-2 right-4 text-[8px] font-bold text-[#FF914D] animate-pulse">MODIFICA IN CORSO...</span>
+          )}
+
+          <div className="flex flex-wrap gap-2 items-start mt-2">
             <input 
               type="text" 
-              placeholder="+ Attività" 
+              placeholder="+ NOME ATTIVITÀ" 
               value={title} 
               onChange={(e) => setTitle(e.target.value)} 
               required 
@@ -174,39 +210,67 @@ export default function Planner() {
                </select>
             </div>
 
-            <input 
-              type="date" 
-              value={deadline} 
-              onChange={(e) => setDeadline(e.target.value)} 
-              className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4" 
-            />
+            {/* SEZIONE DATE E ORARIO */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[8px] text-zinc-500 font-mono uppercase">Data Inizio</span>
+              <input 
+                type="date" 
+                value={deadline} 
+                onChange={(e) => setDeadline(e.target.value)} 
+                className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]" 
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-[8px] text-zinc-500 font-mono uppercase">Data Fine (Opz)</span>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)} 
+                className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]" 
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-[8px] text-zinc-500 font-mono uppercase">Orario (Opz)</span>
+              <input 
+                type="time" 
+                value={time} 
+                onChange={(e) => setTime(e.target.value)} 
+                className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]" 
+              />
+            </div>
             
-            <select 
-              value={priority} 
-              onChange={(e) => setPriority(e.target.value)} 
-              className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px] mt-4"
-            >
-              <option value="low">LOW</option>
-              <option value="medium">MED</option>
-              <option value="high">HIGH</option>
-            </select>
+            <div className="flex flex-col gap-1">
+              <span className="text-[8px] text-zinc-500 font-mono uppercase">Priorità</span>
+              <select 
+                value={priority} 
+                onChange={(e) => setPriority(e.target.value)} 
+                className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]"
+              >
+                <option value="low">LOW</option>
+                <option value="medium">MED</option>
+                <option value="high">HIGH</option>
+              </select>
+            </div>
             
-            <button 
-              type="submit" 
-              disabled={isAdding} 
-              className="bg-[#FF914D] text-black px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50 h-[34px] mt-4"
-            >
-              {isAdding ? '...' : 'Invia'}
-            </button>
+            <div className="flex flex-col gap-1 mt-4">
+              <button 
+                type="submit" 
+                disabled={isAdding} 
+                className={`px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50 h-[34px] transition-all ${editingId ? 'bg-emerald-500 text-black' : 'bg-[#FF914D] text-black'}`}
+              >
+                {isAdding ? '...' : editingId ? 'AGGIORNA' : 'INVIA'}
+              </button>
+            </div>
           </div>
 
-          {/* SECONDA RIGA: Campo Descrizione */}
           <div className="w-full">
             <textarea 
               placeholder="DESCRIZIONE OPZIONALE E NOTE AGGIUNTIVE..." 
               value={description} 
               onChange={(e) => setDescription(e.target.value)} 
-              className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] resize-none"
+              className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] resize-none mt-2"
             />
           </div>
         </motion.form>
@@ -220,19 +284,23 @@ export default function Planner() {
               <th className="p-3 border-r border-white/5">Nome Task</th>
               <th className="p-3 border-r border-white/5 w-40 text-center">Referente</th>
               <th className="p-3 border-r border-white/5 w-32 text-center">Stato</th>
-              <th className="p-3 border-r border-white/5 w-32 text-center">Priorità</th>
-              <th className="p-3 w-32 text-center">Deadline</th>
-              <th className="p-3 w-10"></th>
+              <th className="p-3 border-r border-white/5 w-24 text-center">Priorità</th>
+              <th className="p-3 border-r border-white/5 w-40 text-center">Date & Time</th>
+              <th className="p-3 w-10 text-center">Delete</th>
             </tr>
           </thead>
           <tbody>
             {tasks.map((task, idx) => {
               const isOverdue = task.deadline && isBefore(new Date(task.deadline), today) && task.status !== 'done';
               return (
-                <tr key={task.id} className="border-b border-white/5 hover:bg-white/[0.02] group">
+                <tr 
+                  key={task.id} 
+                  onClick={() => handleEditClick(task)}
+                  className="border-b border-white/5 hover:bg-white/[0.05] group cursor-pointer transition-colors"
+                  title="Clicca per modificare"
+                >
                   <td className="p-3 pl-6 text-[8px] font-mono text-zinc-800 border-r border-white/5">{idx + 1}</td>
                   
-                  {/* Cella Nome Task aggiornata per mostrare anche la descrizione */}
                   <td className="p-3 border-r border-white/5 flex flex-col justify-center">
                     <span className={`text-[10px] font-bold uppercase italic ${task.status === 'done' ? 'line-through text-zinc-700' : 'text-zinc-200'}`}>
                       {task.title}
@@ -250,20 +318,39 @@ export default function Planner() {
                       <span className="truncate">{renderAssignedNames(task.assigned_to)}</span>
                     </div>
                   </td>
+                  
                   <td className="p-1 border-r border-white/5">
-                    <button onClick={() => updateStatus(task.id, task.status)} className={`w-full py-2.5 rounded-sm text-[9px] font-black uppercase italic transition-all ${task.status === 'done' ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'}`}>{task.status === 'done' ? 'STUCK_OFF' : 'WORKING'}</button>
+                    <button onClick={(e) => updateStatus(task.id, task.status, e)} className={`w-full py-2.5 rounded-sm text-[9px] font-black uppercase italic transition-all ${task.status === 'done' ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'}`}>{task.status === 'done' ? 'STUCK_OFF' : 'WORKING'}</button>
                   </td>
+                  
                   <td className="p-1 border-r border-white/5">
                     <div className={`w-full py-2.5 rounded-sm text-[9px] font-black uppercase text-center italic ${getPriorityStyle(task.priority)}`}>{task.priority}</div>
                   </td>
+                  
                   <td className="p-3 text-center">
-                    <div className={`text-[9px] font-mono flex items-center justify-center gap-1 ${isOverdue ? 'text-red-500 font-bold' : 'text-zinc-600'}`}>
-                      {task.deadline ? format(new Date(task.deadline), 'dd/MM/yy') : '--/--/--'}
-                      {isOverdue && <AlertTriangle size={10} className="animate-pulse" />}
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <div className={`text-[9px] font-mono flex items-center justify-center gap-1 ${isOverdue ? 'text-red-500 font-bold' : 'text-zinc-400'}`}>
+                        {task.deadline ? format(new Date(task.deadline), 'dd/MM/yy') : '--/--/--'}
+                        {task.end_date && ` - ${format(new Date(task.end_date), 'dd/MM/yy')}`}
+                        {isOverdue && <AlertTriangle size={10} className="animate-pulse" />}
+                      </div>
+                      {task.time && (
+                        <div className="text-[8px] font-mono text-[#FF914D] flex items-center gap-1 bg-[#FF914D]/10 px-2 py-0.5 rounded-full">
+                          <Clock size={8} /> {task.time}
+                        </div>
+                      )}
                     </div>
                   </td>
-                  <td className="p-3 text-right">
-                    <button onClick={() => deleteTask(task.id)} className="opacity-0 group-hover:opacity-100 text-zinc-800 hover:text-red-500 transition-all"><Trash2 size={12} /></button>
+
+                  <td className="p-3 text-center">
+                    {/* Cestino modificato: visibile e rosso */}
+                    <button 
+                      onClick={(e) => deleteTask(task.id, e)} 
+                      className="text-red-500/80 hover:text-red-500 hover:scale-110 transition-all p-1 bg-red-500/10 rounded"
+                      title="Elimina"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </td>
                 </tr>
               );
