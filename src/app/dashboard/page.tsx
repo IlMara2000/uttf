@@ -26,8 +26,6 @@ export default function Dashboard() {
   const [uploading, setUploading] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
 
-  const [showNotes, setShowNotes] = useState(false);
-
   useEffect(() => {
     async function init() {
       try {
@@ -131,63 +129,71 @@ export default function Dashboard() {
 
       <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
         {activeView === 'menu' ? (
-          /* SCHERMATA MENU PRINCIPALE A BOTTONI */
-          <div className="max-w-3xl mx-auto flex flex-col gap-4 mt-6">
-            <div className="text-center mb-6">
+          /* SCHERMATA MENU PRINCIPALE A BOTTONI E CALENDARIO */
+          <div className="max-w-3xl mx-auto flex flex-col gap-8 mt-6">
+            
+            {/* CALENDARIO FISSO IN ALTO */}
+            <div className="w-full">
+              <CalendarWidget />
+            </div>
+
+            <div className="text-center">
               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">MODULI_<span className="text-[#FF914D]">HUB</span></h2>
               <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">Seleziona un'area di lavoro</p>
             </div>
 
-            {/* BOTTONE 1: POST */}
-            <button 
-              onClick={() => setActiveView('publish')}
-              className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-            >
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                  <Layers size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+            <div className="flex flex-col gap-4">
+              {/* BOTTONE 1: POST */}
+              <button 
+                onClick={() => setActiveView('publish')}
+                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                    <Layers size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">GESTIONE POST</h3>
+                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Pubblica e gestisci i contenuti</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h3 className="text-sm font-black uppercase italic tracking-widest text-white">GESTIONE POST</h3>
-                  <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Pubblica e gestisci i contenuti</p>
-                </div>
-              </div>
-              <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-            </button>
+                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+              </button>
 
-            {/* BOTTONE 2: NOTE */}
-            <button 
-              onClick={() => setActiveView('notes')}
-              className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-            >
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                  <FileText size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+              {/* BOTTONE 2: NOTE */}
+              <button 
+                onClick={() => setActiveView('notes')}
+                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                    <FileText size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">NOTE & APPUNTI</h3>
+                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Gestisci rime, note e allegati</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h3 className="text-sm font-black uppercase italic tracking-widest text-white">NOTE & APPUNTI</h3>
-                  <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Gestisci rime, note e allegati</p>
-                </div>
-              </div>
-              <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-            </button>
+                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+              </button>
 
-            {/* BOTTONE 3: PLANNER */}
-            <button 
-              onClick={() => setActiveView('planner')}
-              className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-            >
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                  <CalendarDays size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+              {/* BOTTONE 3: PLANNER */}
+              <button 
+                onClick={() => setActiveView('planner')}
+                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                    <CalendarDays size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">PLANNER HUB</h3>
+                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Organizza eventi e attività</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <h3 className="text-sm font-black uppercase italic tracking-widest text-white">PLANNER HUB</h3>
-                  <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Organizza eventi e attività</p>
-                </div>
-              </div>
-              <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-            </button>
+                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+              </button>
+            </div>
 
           </div>
         ) : (
@@ -248,15 +254,10 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* VISTA 3: PLANNER E CALENDARIO */}
+            {/* VISTA 3: PLANNER */}
             {activeView === 'planner' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
-                <div className="lg:col-span-7">
-                  <Planner />
-                </div>
-                <div className="lg:col-span-5">
-                  <CalendarWidget />
-                </div>
+              <div className="w-full animate-in fade-in duration-300">
+                <Planner />
               </div>
             )}
             
