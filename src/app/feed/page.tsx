@@ -250,8 +250,8 @@ export default function FeedPage() {
                 </p>
               </div>
 
-              {/* Form di iscrizione puntato al link randomizzato FormSubmit */}
-              <form action="https://formsubmit.co/el/zadero" method="POST" className="space-y-5">
+              {/* Form di iscrizione puntato a FormSubmit */}
+              <form action="https://formsubmit.co/ass.uttf@gmail.com" method="POST" className="space-y-5">
                 
                 {/* SETTAGGI INVISIBILI PER IL FORM */}
                 <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
@@ -282,7 +282,7 @@ export default function FeedPage() {
                   />
                 </div>
 
-                {/* CAMPO TELEFONO */}
+                {/* NUOVO CAMPO: TELEFONO */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Numero di Cellulare</label>
                   <input 
