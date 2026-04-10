@@ -321,9 +321,9 @@ export default function Planner() {
                   onChange={(e) => setPriority(e.target.value)} 
                   className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]"
                 >
-                  <option value="low">LOW</option>
-                  <option value="medium">MED</option>
-                  <option value="high">HIGH</option>
+                  <option value="low">BASSA</option>
+                  <option value="medium">MEDIA</option>
+                  <option value="high">ALTA</option>
                 </select>
               </div>
               
