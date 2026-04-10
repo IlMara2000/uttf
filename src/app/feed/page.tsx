@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X } from 'lucide-react';
+import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const instagramPosts = [
@@ -70,8 +70,45 @@ const instagramPosts = [
 ];
 
 export default function FeedPage() {
-  // Stato per gestire l'apertura della "mini pagina" Newsletter
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
+  
+  // Stati per la gestione del Form
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Gestione dell'invio manuale con fetch
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/el/zadero", {
+        method: "POST",
+        headers: { 
+            'Accept': 'application/json'
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        setIsSuccess(true);
+        // Chiudi automaticamente la modale dopo 3 secondi
+        setTimeout(() => {
+          setIsNewsletterOpen(false);
+          // Resetta lo stato di successo dopo che la modale si è chiusa
+          setTimeout(() => setIsSuccess(false), 500); 
+        }, 3000);
+      } else {
+        alert("Errore durante l'iscrizione. Riprova più tardi.");
+      }
+    } catch (error) {
+      alert("Errore di connessione. Controlla la rete e riprova.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen text-white flex flex-col items-center overflow-x-hidden pb-40 relative bg-black">
@@ -101,7 +138,7 @@ export default function FeedPage() {
       {/* MAIN */}
       <main className="w-full max-w-7xl px-6 flex flex-col gap-32 relative z-10">
           
-        {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER - LAYOUT AGGIORNATO */}
+        {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER */}
         <section className="flex flex-col items-center gap-8 mb-16 w-full max-w-md mx-auto">
           
           {/* STREAM LINK BUTTON */}
@@ -120,7 +157,6 @@ export default function FeedPage() {
           {/* PULSANTE APERTURA NEWSLETTER */}
           <div className="relative group w-full">
             <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 via-[#FF914D] to-orange-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            
             <button 
               onClick={() => setIsNewsletterOpen(true)}
               className="relative w-full px-8 py-4 bg-[#FF914D]/15 backdrop-blur-xl border-2 border-[#FF914D]/40 rounded-full flex items-center justify-center gap-4 transition-all duration-300 shadow-[0_0_30px_rgba(255,145,77,0.2)] hover:shadow-[0_0_40px_5px_rgba(255,145,77,0.4)] hover:border-[#FF914D]/70 hover:scale-[1.02]"
@@ -209,20 +245,18 @@ export default function FeedPage() {
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
       </footer>
 
-      {/* MINI PAGINA NEWSLETTER (MODAL COMPARES) */}
+      {/* MODALE NEWSLETTER CON STATO DI SUCCESSO */}
       <AnimatePresence>
         {isNewsletterOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
-            {/* Background overlay cliccabile per chiudere */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0"
-              onClick={() => setIsNewsletterOpen(false)}
+              onClick={() => !isSubmitting && setIsNewsletterOpen(false)}
             />
             
-            {/* Contenitore Modale */}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -230,79 +264,110 @@ export default function FeedPage() {
               transition={{ type: "spring", bounce: 0.25, duration: 0.6 }}
               className="relative w-full max-w-md bg-zinc-950/80 backdrop-blur-3xl border border-[#FF914D]/30 rounded-3xl shadow-[0_0_60px_-10px_rgba(255,145,77,0.3)] p-8 z-10 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
-              {/* Pulsante di chiusura X */}
-              <button 
-                onClick={() => setIsNewsletterOpen(false)}
-                className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
+              {!isSuccess && (
+                <button 
+                  onClick={() => setIsNewsletterOpen(false)}
+                  disabled={isSubmitting}
+                  className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-full transition-colors disabled:opacity-50"
+                >
+                  <X size={20} />
+                </button>
+              )}
 
-              <div className="mb-8 mt-2">
-                <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
-                  <Mail className="text-[#FF914D]" size={24} strokeWidth={1.5} />
-                </div>
-                <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
-                  JOIN THE_<span className="text-[#FF914D]">FACTORY</span>
-                </h2>
-                <p className="text-[11px] font-mono text-zinc-400 uppercase tracking-widest mt-3 leading-relaxed">
-                  Iscriviti alla newsletter per non perderti live, drop ed eventi a Rozzano.
-                </p>
-              </div>
+              {/* STATO DI SUCCESSO */}
+              {isSuccess ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center justify-center text-center py-10"
+                >
+                  <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-6">
+                    <CheckCircle2 size={40} className="text-emerald-500" />
+                  </div>
+                  <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white mb-3">
+                    BENVENUTO A_<span className="text-[#FF914D]">BORDO</span>
+                  </h2>
+                  <p className="text-xs font-mono text-zinc-400 uppercase tracking-widest leading-relaxed">
+                    Operazione confermata. Riceverai presto i nostri aggiornamenti.
+                  </p>
+                </motion.div>
+              ) : (
+                /* FORM DI ISCRIZIONE CON GESTIONE FETCH */
+                <>
+                  <div className="mb-8 mt-2">
+                    <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
+                      <Mail className="text-[#FF914D]" size={24} strokeWidth={1.5} />
+                    </div>
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
+                      JOIN THE_<span className="text-[#FF914D]">FACTORY</span>
+                    </h2>
+                    <p className="text-[11px] font-mono text-zinc-400 uppercase tracking-widest mt-3 leading-relaxed">
+                      Iscriviti alla newsletter per non perderti live, drop ed eventi a Rozzano.
+                    </p>
+                  </div>
 
-              {/* Form di iscrizione puntato al link randomizzato FormSubmit */}
-              <form action="https://formsubmit.co/el/zadero" method="POST" className="space-y-5">
-                
-                {/* SETTAGGI INVISIBILI PER IL FORM */}
-                <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
-                <input type="hidden" name="_captcha" value="false" />
-                <input type="hidden" name="_template" value="box" />
-                {/* Pagina di ringraziamento opzionale dopo l'invio */}
-                {/* <input type="hidden" name="_next" value="https://tuosito.com/grazie" /> */}
+                  <form onSubmit={handleNewsletterSubmit} className="space-y-5">
+                    {/* IMPERATIVO: L'attributo _captcha="false" per far funzionare bene l'API */}
+                    <input type="hidden" name="_captcha" value="false" />
+                    <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
+                    <input type="hidden" name="_template" value="box" />
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Il tuo nome</label>
-                  <input 
-                    type="text" 
-                    name="Nome"
-                    required
-                    placeholder="NOME O NICKNAME"
-                    className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Il tuo nome</label>
+                      <input 
+                        type="text" 
+                        name="Nome"
+                        required
+                        disabled={isSubmitting}
+                        placeholder="NOME O NICKNAME"
+                        className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700 disabled:opacity-50"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Indirizzo Email</label>
-                  <input 
-                    type="email" 
-                    name="email"
-                    required
-                    placeholder="EMAIL@DOMINIO.COM"
-                    className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Indirizzo Email</label>
+                      <input 
+                        type="email" 
+                        name="email"
+                        required
+                        disabled={isSubmitting}
+                        placeholder="EMAIL@DOMINIO.COM"
+                        className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700 disabled:opacity-50"
+                      />
+                    </div>
 
-                {/* CAMPO TELEFONO */}
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Numero di Cellulare</label>
-                  <input 
-                    type="tel" 
-                    name="Telefono"
-                    required
-                    placeholder="+39 333 123 4567"
-                    className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Numero di Cellulare</label>
+                      <input 
+                        type="tel" 
+                        name="Telefono"
+                        required
+                        disabled={isSubmitting}
+                        placeholder="+39 333 123 4567"
+                        className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700 disabled:opacity-50"
+                      />
+                    </div>
 
-                <div className="pt-3">
-                  <button 
-                    type="submit" 
-                    className="w-full py-4 bg-[#FF914D] text-black font-black uppercase italic text-[11px] tracking-wider rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-3 shadow-lg shadow-[#FF914D]/10"
-                  >
-                    <Send size={16} /> CONFERMA ISCRIZIONE
-                  </button>
-                </div>
-              </form>
+                    <div className="pt-3">
+                      <button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="w-full py-4 bg-[#FF914D] text-black font-black uppercase italic text-[11px] tracking-wider rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-3 shadow-lg shadow-[#FF914D]/10 disabled:opacity-50 disabled:hover:bg-[#FF914D]"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" /> INVIO IN CORSO...
+                          </>
+                        ) : (
+                          <>
+                            <Send size={16} /> CONFERMA ISCRIZIONE
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
             </motion.div>
           </div>
         )}
