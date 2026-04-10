@@ -74,10 +74,10 @@ export default function FeedPage() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
 
   return (
-    <div className="min-h-screen text-white flex flex-col items-center overflow-x-hidden pb-40 relative">
+    <div className="min-h-screen text-white flex flex-col items-center overflow-x-hidden pb-40 relative bg-black">
       
       {/* HEADER */}
-      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8">
+      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8 relative z-10">
         <div className="w-full flex justify-start">
           <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
             <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
@@ -99,31 +99,37 @@ export default function FeedPage() {
       </header>
 
       {/* MAIN */}
-      <main className="w-full max-w-7xl px-6 flex flex-col gap-32">
+      <main className="w-full max-w-7xl px-6 flex flex-col gap-32 relative z-10">
           
-        {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER */}
-        <section className="flex flex-col items-center gap-8 mb-16">
+        {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER - LAYOUT AGGIORNATO */}
+        <section className="flex flex-col items-center gap-8 mb-16 w-full max-w-md mx-auto">
           
-          {/* STREAM LINK BUTTON */}
-          <Link href="/stream" className="group relative">
+          {/* STREAM LINK BUTTON (Rimasto invariato) */}
+          <Link href="/stream" className="group relative w-full">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D] to-orange-900 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-            <button className="relative px-8 py-4 bg-black border border-white/10 rounded-full flex items-center gap-4 hover:border-[#FF914D]/50 transition-all">
+            <button className="relative w-full px-8 py-4 bg-black border border-white/10 rounded-full flex items-center justify-center gap-4 hover:border-[#FF914D]/50 transition-all shadow-xl shadow-black/50">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF914D] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF914D]"></span>
               </span>
-              <span className="font-mono text-xs tracking-[0.3em] uppercase">Enter_Live_Stream</span>
+              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Enter_Live_Stream</span>
               <ArrowLeft size={16} className="rotate-180 text-zinc-500 group-hover:text-[#FF914D] transition-colors" />
             </button>
           </Link>
 
-          {/* PULSANTE APERTURA NEWSLETTER */}
-          <button 
-            onClick={() => setIsNewsletterOpen(true)}
-            className="flex items-center gap-3 px-6 py-3 border border-white/5 rounded-full text-zinc-400 hover:text-[#FF914D] hover:border-[#FF914D]/30 transition-all text-[10px] font-mono uppercase tracking-[0.3em]"
-          >
-            <Mail size={14} /> Attiva_Newsletter
-          </button>
+          {/* PULSANTE APERTURA NEWSLETTER - NUOVO STILE GLASSMORPHISM ARANCIONE EVIDENTE */}
+          <div className="relative group w-full">
+            {/* Effetto glow esterno arancione */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 via-[#FF914D] to-orange-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            
+            <button 
+              onClick={() => setIsNewsletterOpen(true)}
+              className="relative w-full px-8 py-4 bg-[#FF914D]/15 backdrop-blur-xl border-2 border-[#FF914D]/40 rounded-full flex items-center justify-center gap-4 transition-all duration-300 shadow-[0_0_30px_rgba(255,145,77,0.2)] hover:shadow-[0_0_40px_5px_rgba(255,145,77,0.4)] hover:border-[#FF914D]/70 hover:scale-[1.02]"
+            >
+              <Mail size={18} className="text-white" strokeWidth={2.5} />
+              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Attiva_Newsletter</span>
+            </button>
+          </div>
         </section>
 
         {/* INSTAGRAM SECTION */}
@@ -154,9 +160,9 @@ export default function FeedPage() {
                   href={ig.url} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="glass-panel block border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden group h-full"
+                  className="glass-panel block border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden group h-full bg-black/20"
                 >
-                  <div className="p-4 flex items-center justify-between border-b border-white/5">
+                  <div className="p-4 flex items-center justify-between border-b border-white/5 bg-black/20">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-[1.5px]">
                         <div className="w-full h-full rounded-full bg-black flex items-center justify-center p-0.5">
@@ -200,75 +206,91 @@ export default function FeedPage() {
         </section>
       </main>
 
-      <footer className="py-24 text-center opacity-30">
+      <footer className="py-24 text-center opacity-30 relative z-10">
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
       </footer>
 
       {/* MINI PAGINA NEWSLETTER (MODAL COMPARES) */}
       <AnimatePresence>
         {isNewsletterOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
+            {/* Background overlay cliccabile per chiudere */}
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0"
+              onClick={() => setIsNewsletterOpen(false)}
+            />
+            
+            {/* Contenitore Modale */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl p-8"
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              transition={{ type: "spring", bounce: 0.25, duration: 0.6 }}
+              className="relative w-full max-w-md bg-zinc-950/80 backdrop-blur-3xl border border-[#FF914D]/30 rounded-3xl shadow-[0_0_60px_-10px_rgba(255,145,77,0.3)] p-8 z-10"
             >
+              {/* Pulsante di chiusura X */}
               <button 
                 onClick={() => setIsNewsletterOpen(false)}
-                className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-[#FF914D] bg-black/50 rounded-full transition-colors"
+                className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-full transition-colors"
               >
                 <X size={20} />
               </button>
 
-              <div className="mb-8">
+              <div className="mb-8 mt-2">
                 <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
-                  <Mail className="text-[#FF914D]" size={24} />
+                  <Mail className="text-[#FF914D]" size={24} strokeWidth={1.5} />
                 </div>
                 <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
                   JOIN THE_<span className="text-[#FF914D]">FACTORY</span>
                 </h2>
-                <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mt-3 leading-relaxed">
+                <p className="text-[11px] font-mono text-zinc-400 uppercase tracking-widest mt-3 leading-relaxed">
                   Iscriviti alla newsletter per non perderti live, drop ed eventi a Rozzano.
                 </p>
               </div>
 
-              {/* ACTION punta direttamente al servizio gratuito FormSubmit */}
-              <form action="https://formsubmit.co/ass.uttf@gmail.com" method="POST" className="space-y-4">
+              {/* Form di iscrizione puntato a FormSubmit */}
+              <form action="https://formsubmit.co/ass.uttf@gmail.com" method="POST" className="space-y-5">
                 
                 {/* SETTAGGI INVISIBILI PER IL FORM */}
                 <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
                 <input type="hidden" name="_captcha" value="false" />
                 <input type="hidden" name="_template" value="box" />
+                {/* Pagina di ringraziamento opzionale dopo l'invio */}
+                {/* <input type="hidden" name="_next" value="https://tuosito.com/grazie" /> */}
 
-                <div>
-                  <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Il tuo nome</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Il tuo nome</label>
                   <input 
                     type="text" 
                     name="Nome"
                     required
                     placeholder="NOME O NICKNAME"
-                    className="w-full bg-black border border-white/10 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40 transition-colors"
+                    className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700"
                   />
                 </div>
 
-                <div>
-                  <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Indirizzo Email</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Indirizzo Email</label>
                   <input 
                     type="email" 
                     name="email"
                     required
                     placeholder="EMAIL@DOMINIO.COM"
-                    className="w-full bg-black border border-white/10 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40 transition-colors"
+                    className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700"
                   />
                 </div>
 
-                <button 
-                  type="submit" 
-                  className="w-full mt-2 py-4 bg-[#FF914D] text-black font-black uppercase italic text-[10px] rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-3"
-                >
-                  <Send size={16} /> CONFERMA ISCRIZIONE
-                </button>
+                <div className="pt-3">
+                  <button 
+                    type="submit" 
+                    className="w-full py-4 bg-[#FF914D] text-black font-black uppercase italic text-[11px] tracking-wider rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-3 shadow-lg shadow-[#FF914D]/10"
+                  >
+                    <Send size={16} /> CONFERMA ISCRIZIONE
+                  </button>
+                </div>
               </form>
             </motion.div>
           </div>
