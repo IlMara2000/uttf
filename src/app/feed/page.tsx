@@ -104,7 +104,7 @@ export default function FeedPage() {
         {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER - LAYOUT AGGIORNATO */}
         <section className="flex flex-col items-center gap-8 mb-16 w-full max-w-md mx-auto">
           
-          {/* STREAM LINK BUTTON (Rimasto invariato) */}
+          {/* STREAM LINK BUTTON */}
           <Link href="/stream" className="group relative w-full">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D] to-orange-900 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
             <button className="relative w-full px-8 py-4 bg-black border border-white/10 rounded-full flex items-center justify-center gap-4 hover:border-[#FF914D]/50 transition-all shadow-xl shadow-black/50">
@@ -117,9 +117,8 @@ export default function FeedPage() {
             </button>
           </Link>
 
-          {/* PULSANTE APERTURA NEWSLETTER - NUOVO STILE GLASSMORPHISM ARANCIONE EVIDENTE */}
+          {/* PULSANTE APERTURA NEWSLETTER */}
           <div className="relative group w-full">
-            {/* Effetto glow esterno arancione */}
             <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 via-[#FF914D] to-orange-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
             
             <button 
@@ -229,7 +228,7 @@ export default function FeedPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 30 }}
               transition={{ type: "spring", bounce: 0.25, duration: 0.6 }}
-              className="relative w-full max-w-md bg-zinc-950/80 backdrop-blur-3xl border border-[#FF914D]/30 rounded-3xl shadow-[0_0_60px_-10px_rgba(255,145,77,0.3)] p-8 z-10"
+              className="relative w-full max-w-md bg-zinc-950/80 backdrop-blur-3xl border border-[#FF914D]/30 rounded-3xl shadow-[0_0_60px_-10px_rgba(255,145,77,0.3)] p-8 z-10 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               {/* Pulsante di chiusura X */}
               <button 
@@ -279,6 +278,18 @@ export default function FeedPage() {
                     name="email"
                     required
                     placeholder="EMAIL@DOMINIO.COM"
+                    className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700"
+                  />
+                </div>
+
+                {/* NUOVO CAMPO: TELEFONO */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Numero di Cellulare</label>
+                  <input 
+                    type="tel" 
+                    name="Telefono"
+                    required
+                    placeholder="+39 333 123 4567"
                     className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700"
                   />
                 </div>
