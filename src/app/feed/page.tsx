@@ -1,7 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion';
-import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X } from 'lucide-react';
 import Link from 'next/link';
 
 const instagramPosts = [
@@ -69,20 +70,21 @@ const instagramPosts = [
 ];
 
 export default function FeedPage() {
+  // Stato per gestire l'apertura della "mini pagina" Newsletter
+  const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
+
   return (
-    <div className="min-h-screen text-white flex flex-col items-center overflow-x-hidden pb-40">
+    <div className="min-h-screen text-white flex flex-col items-center overflow-x-hidden pb-40 relative">
       
       {/* HEADER */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8">
         <div className="w-full flex justify-start">
-          {/* TASTO BACK CON TESTO ARANCIONE */}
           <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
             <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
           </Link>
         </div>
         
         <div className="text-center flex flex-col items-center">
-          {/* PALLINO ARANCIONE SOPRA LA SCRITTA */}
           <div className="relative mb-6">
             <div className="absolute inset-0 bg-[#FF914D] blur-xl opacity-20 rounded-full animate-pulse"></div>
             <div className="relative p-4 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-full text-[#FF914D]">
@@ -90,18 +92,19 @@ export default function FeedPage() {
             </div>
           </div>
 
-          {/* TITOLO RIMICCIOLITO */}
           <h1 className="hero-title text-[10vw] md:text-6xl leading-none italic uppercase font-black tracking-tighter">
             UTTF_<span className="text-[#FF914D]">DAY<br /></span>
           </h1>
         </div>
       </header>
 
-      {/* UNICO CONTENITORE MAIN */}
+      {/* MAIN */}
       <main className="w-full max-w-7xl px-6 flex flex-col gap-32">
           
-        {/* STREAM LINK BUTTON */}
-        <section className="flex justify-center mb-16">
+        {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER */}
+        <section className="flex flex-col items-center gap-8 mb-16">
+          
+          {/* STREAM LINK BUTTON */}
           <Link href="/stream" className="group relative">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D] to-orange-900 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
             <button className="relative px-8 py-4 bg-black border border-white/10 rounded-full flex items-center gap-4 hover:border-[#FF914D]/50 transition-all">
@@ -113,6 +116,14 @@ export default function FeedPage() {
               <ArrowLeft size={16} className="rotate-180 text-zinc-500 group-hover:text-[#FF914D] transition-colors" />
             </button>
           </Link>
+
+          {/* PULSANTE APERTURA NEWSLETTER */}
+          <button 
+            onClick={() => setIsNewsletterOpen(true)}
+            className="flex items-center gap-3 px-6 py-3 border border-white/5 rounded-full text-zinc-400 hover:text-[#FF914D] hover:border-[#FF914D]/30 transition-all text-[10px] font-mono uppercase tracking-[0.3em]"
+          >
+            <Mail size={14} /> Attiva_Newsletter
+          </button>
         </section>
 
         {/* INSTAGRAM SECTION */}
@@ -192,6 +203,78 @@ export default function FeedPage() {
       <footer className="py-24 text-center opacity-30">
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
       </footer>
+
+      {/* MINI PAGINA NEWSLETTER (MODAL COMPARES) */}
+      <AnimatePresence>
+        {isNewsletterOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl p-8"
+            >
+              <button 
+                onClick={() => setIsNewsletterOpen(false)}
+                className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-[#FF914D] bg-black/50 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="mb-8">
+                <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
+                  <Mail className="text-[#FF914D]" size={24} />
+                </div>
+                <h2 className="text-3xl font-black italic uppercase tracking-tighter text-white">
+                  JOIN THE_<span className="text-[#FF914D]">FACTORY</span>
+                </h2>
+                <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mt-3 leading-relaxed">
+                  Iscriviti alla newsletter per non perderti live, drop ed eventi a Rozzano.
+                </p>
+              </div>
+
+              {/* ACTION punta direttamente al servizio gratuito FormSubmit */}
+              <form action="https://formsubmit.co/ass.uttf@gmail.com" method="POST" className="space-y-4">
+                
+                {/* SETTAGGI INVISIBILI PER IL FORM */}
+                <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
+                <input type="hidden" name="_captcha" value="false" />
+                <input type="hidden" name="_template" value="box" />
+
+                <div>
+                  <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Il tuo nome</label>
+                  <input 
+                    type="text" 
+                    name="Nome"
+                    required
+                    placeholder="NOME O NICKNAME"
+                    className="w-full bg-black border border-white/10 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Indirizzo Email</label>
+                  <input 
+                    type="email" 
+                    name="email"
+                    required
+                    placeholder="EMAIL@DOMINIO.COM"
+                    className="w-full bg-black border border-white/10 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40 transition-colors"
+                  />
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="w-full mt-2 py-4 bg-[#FF914D] text-black font-black uppercase italic text-[10px] rounded-xl hover:bg-white transition-colors flex items-center justify-center gap-3"
+                >
+                  <Send size={16} /> CONFERMA ISCRIZIONE
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
