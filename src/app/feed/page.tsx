@@ -76,20 +76,23 @@ export default function FeedPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Gestione dell'invio manuale con fetch
+  // Gestione dell'invio manuale con fetch (FormSubmit AJAX in formato JSON)
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
+    // Converte il FormData in un normale oggetto JSON
+    const data = Object.fromEntries(formData.entries());
 
     try {
       const response = await fetch("https://formsubmit.co/ajax/el/zadero", {
         method: "POST",
         headers: { 
+            'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body: formData
+        body: JSON.stringify(data)
       });
 
       if (response.ok) {
@@ -292,7 +295,7 @@ export default function FeedPage() {
                   </p>
                 </motion.div>
               ) : (
-                /* FORM DI ISCRIZIONE CON GESTIONE FETCH */
+                /* FORM DI ISCRIZIONE CON GESTIONE FETCH JSON */
                 <>
                   <div className="mb-8 mt-2">
                     <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
