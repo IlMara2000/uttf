@@ -133,28 +133,9 @@ export default function Dashboard() {
               <CalendarWidget />
             </div>
 
-            {/* SEZIONE LOGO HUB (Sostituisce il testo MODULI_HUB) */}
-            <div className="flex flex-col items-center justify-center">
-               <motion.img 
-                src="/icons/homelogo.png" 
-                alt="UTTF Hub Logo" 
-                className="w-48 md:w-64 aspect-square object-contain rounded-full mb-2" 
-                animate={{
-                  scale: [1, 1.02, 1],
-                  opacity: [0.85, 1, 0.85],
-                  boxShadow: [
-                    "0 0 0px 0px rgba(255, 145, 77, 0)",
-                    "0 0 40px 10px rgba(255, 145, 77, 0.15)",
-                    "0 0 0px 0px rgba(255, 145, 77, 0)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Seleziona un'area di lavoro</p>
+            <div className="text-center">
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">MODULI_<span className="text-[#FF914D]">HUB</span></h2>
+              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">Seleziona un'area di lavoro</p>
             </div>
 
             <div className="flex flex-col gap-4">
@@ -205,6 +186,29 @@ export default function Dashboard() {
                 </div>
                 <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
               </button>
+            </div>
+
+            {/* SEZIONE LOGO HUB SOTTO I BOTTONI */}
+            <div className="flex flex-col items-center justify-center mt-8">
+               <motion.img 
+                src="/icons/homelogo.png" 
+                alt="UTTF Hub Logo" 
+                className="w-48 md:w-64 aspect-square object-contain rounded-full" 
+                animate={{
+                  scale: [1, 1.02, 1],
+                  opacity: [0.85, 1, 0.85],
+                  boxShadow: [
+                    "0 0 0px 0px rgba(255, 145, 77, 0)",
+                    "0 0 40px 10px rgba(255, 145, 77, 0.15)",
+                    "0 0 0px 0px rgba(255, 145, 77, 0)"
+                  ]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
             </div>
 
           </div>

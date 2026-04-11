@@ -148,6 +148,30 @@ export default function HomePage() {
 
         {/* NEWS FEED SECTION */}
         <section className="w-full py-32 mt-10 border-t border-white/5 bg-transparent">
+          
+          {/* IL LOGO QUI SOTTO I 4 BOTTONI */}
+          <div className="flex justify-center mb-16 md:mb-20 px-4">
+            <motion.img 
+              src="/icons/homelogo.png" 
+              alt="UTTF Home Logo" 
+              className="w-full max-w-[300px] sm:max-w-[400px] md:max-w-[600px] aspect-square object-contain rounded-full" 
+              animate={{
+                scale: [1, 1.02, 1],
+                opacity: [0.85, 1, 0.85],
+                boxShadow: [
+                  "0 0 0px 0px rgba(255, 145, 77, 0)",
+                  "0 0 60px 20px rgba(255, 145, 77, 0.15)",
+                  "0 0 0px 0px rgba(255, 145, 77, 0)"
+                ]
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          </div>
+
           <div className="flex flex-col items-center mb-20 text-center">
              <span className="text-[#FF914D] font-mono text-[10px] tracking-[0.6em] uppercase mb-4">QUA SOTTO GLI ULTIMI AGGIORNAMENTI</span>
              <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">UTTF_<span className="text-[#FF914D]">NEWS</span></h2>
