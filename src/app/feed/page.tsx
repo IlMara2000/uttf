@@ -72,45 +72,26 @@ const instagramPosts = [
 export default function FeedPage() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
   
-  // Stati per la gestione del Form
+  // Stati per la gestione grafica del caricamento e successo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Gestione dell'invio manuale con fetch (FormSubmit AJAX in formato JSON)
-  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Gestione dell'invio visuale (l'invio reale è gestito da action e target="hidden_iframe")
+  const handleNewsletterSubmit = () => {
+    // Non blocchiamo l'evento (no e.preventDefault) così il browser invia i dati!
     setIsSubmitting(true);
-
-    const formData = new FormData(e.currentTarget);
-    // Converte il FormData in un normale oggetto JSON
-    const data = Object.fromEntries(formData.entries());
-
-    try {
-      const response = await fetch("https://formsubmit.co/ajax/el/zadero", {
-        method: "POST",
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-
-      if (response.ok) {
-        setIsSuccess(true);
-        // Chiudi automaticamente la modale dopo 3 secondi
-        setTimeout(() => {
-          setIsNewsletterOpen(false);
-          // Resetta lo stato di successo dopo che la modale si è chiusa
-          setTimeout(() => setIsSuccess(false), 500); 
-        }, 3000);
-      } else {
-        alert("Errore durante l'iscrizione. Riprova più tardi.");
-      }
-    } catch (error) {
-      alert("Errore di connessione. Controlla la rete e riprova.");
-    } finally {
+    
+    // Simuliamo un leggero delay per l'animazione di caricamento, poi mostriamo il successo
+    setTimeout(() => {
       setIsSubmitting(false);
-    }
+      setIsSuccess(true);
+      
+      // Dopo 3 secondi di successo, chiudiamo tutto in automatico
+      setTimeout(() => {
+        setIsNewsletterOpen(false);
+        setTimeout(() => setIsSuccess(false), 500); 
+      }, 3000);
+    }, 1200);
   };
 
   return (
@@ -248,6 +229,9 @@ export default function FeedPage() {
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
       </footer>
 
+      {/* IFRAME NASCOSTO PER GESTIRE L'INVIO SILENZIOSO SENZA CAMBIARE PAGINA */}
+      <iframe name="hidden_iframe" id="hidden_iframe" style={{ display: 'none' }}></iframe>
+
       {/* MODALE NEWSLETTER CON STATO DI SUCCESSO */}
       <AnimatePresence>
         {isNewsletterOpen && (
@@ -295,7 +279,7 @@ export default function FeedPage() {
                   </p>
                 </motion.div>
               ) : (
-                /* FORM DI ISCRIZIONE CON GESTIONE FETCH JSON */
+                /* FORM DI ISCRIZIONE INVIATO ALL'IFRAME NASCOSTO */
                 <>
                   <div className="mb-8 mt-2">
                     <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
@@ -309,8 +293,9 @@ export default function FeedPage() {
                     </p>
                   </div>
 
-                  <form onSubmit={handleNewsletterSubmit} className="space-y-5">
-                    {/* IMPERATIVO: L'attributo _captcha="false" per far funzionare bene l'API */}
+                  {/* IL TARGET PUNTA ALL'IFRAME INVISIBILE */}
+                  <form action="https://formsubmit.co/el/zadero" method="POST" target="hidden_iframe" onSubmit={handleNewsletterSubmit} className="space-y-5">
+                    
                     <input type="hidden" name="_captcha" value="false" />
                     <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
                     <input type="hidden" name="_template" value="box" />
