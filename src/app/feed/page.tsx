@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase'; // <-- Import per salvare nel database
 
 const instagramPosts = [
   { 
@@ -76,17 +77,33 @@ export default function FeedPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Gestione dell'invio visuale (l'invio reale è gestito da action e target="hidden_iframe")
-  const handleNewsletterSubmit = () => {
-    // Non blocchiamo l'evento (no e.preventDefault) così il browser invia i dati!
+  // Gestione IBRIDA dell'invio (Database + FormSubmit)
+  const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // IMPORTANTE: NON mettiamo e.preventDefault() così il form nativo di HTML
+    // spedisce tranquillamente l'email tramite FormSubmit e l'iframe nascosto!
     setIsSubmitting(true);
     
-    // Simuliamo un leggero delay per l'animazione di caricamento, poi mostriamo il successo
+    // 1. ESTRAIAMO I DATI PER IL DATABASE
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('Nome') as string;
+    const email = formData.get('email') as string;
+    const phone = formData.get('Telefono') as string;
+
+    // 2. SALVIAMO I DATI SU SUPABASE (per vederli nella Dashboard)
+    try {
+      await supabase
+        .from('newsletter_subscribers')
+        .insert([{ name, email, phone }]);
+    } catch (error) {
+      console.error("Errore salvataggio su Supabase:", error);
+    }
+    
+    // 3. ANIMAZIONE DI SUCCESSO E CHIUSURA MODALE
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
       
-      // Dopo 3 secondi di successo, chiudiamo tutto in automatico
+      // Dopo 3 secondi di successo, chiudiamo la modale in automatico
       setTimeout(() => {
         setIsNewsletterOpen(false);
         setTimeout(() => setIsSuccess(false), 500); 
@@ -125,7 +142,6 @@ export default function FeedPage() {
         {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER */}
         <section className="flex flex-col items-center gap-8 mb-16 w-full max-w-md mx-auto">
           
-          {/* STREAM LINK BUTTON */}
           <Link href="/stream" className="group relative w-full">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#FF914D] to-orange-900 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
             <button className="relative w-full px-8 py-4 bg-black border border-white/10 rounded-full flex items-center justify-center gap-4 hover:border-[#FF914D]/50 transition-all shadow-xl shadow-black/50">
@@ -138,7 +154,6 @@ export default function FeedPage() {
             </button>
           </Link>
 
-          {/* PULSANTE APERTURA NEWSLETTER */}
           <div className="relative group w-full">
             <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 via-[#FF914D] to-orange-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
             <button 
@@ -229,7 +244,7 @@ export default function FeedPage() {
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
       </footer>
 
-      {/* IFRAME NASCOSTO PER GESTIRE L'INVIO SILENZIOSO SENZA CAMBIARE PAGINA */}
+      {/* IFRAME NASCOSTO PER GESTIRE L'INVIO SILENZIOSO DELLA MAIL SENZA CAMBIARE PAGINA */}
       <iframe name="hidden_iframe" id="hidden_iframe" style={{ display: 'none' }}></iframe>
 
       {/* MODALE NEWSLETTER CON STATO DI SUCCESSO */}
@@ -279,7 +294,7 @@ export default function FeedPage() {
                   </p>
                 </motion.div>
               ) : (
-                /* FORM DI ISCRIZIONE INVIATO ALL'IFRAME NASCOSTO */
+                /* FORM DI ISCRIZIONE IBRIDO */
                 <>
                   <div className="mb-8 mt-2">
                     <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
@@ -293,7 +308,7 @@ export default function FeedPage() {
                     </p>
                   </div>
 
-                  {/* IL TARGET PUNTA ALL'IFRAME INVISIBILE */}
+                  {/* IL TARGET PUNTA ALL'IFRAME INVISIBILE E L'ACTION A FORMSUBMIT */}
                   <form action="https://formsubmit.co/el/zadero" method="POST" target="hidden_iframe" onSubmit={handleNewsletterSubmit} className="space-y-5">
                     
                     <input type="hidden" name="_captcha" value="false" />

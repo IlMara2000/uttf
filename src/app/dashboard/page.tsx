@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
   Send, LogOut, Image as ImageIcon, 
-  Layers, Loader2, ChevronRight, Sparkles, FileText, ArrowLeft, CalendarDays
+  Layers, Loader2, ChevronRight, Sparkles, FileText, ArrowLeft, CalendarDays, Users, Download
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion'; // <-- IMPORTATO FRAMER MOTION
+import { motion } from 'framer-motion';
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
 import NotesManager from '@/components/NotesManager'; 
@@ -17,7 +17,8 @@ export default function Dashboard() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [activeView, setActiveView] = useState<'menu' | 'publish' | 'notes' | 'planner'>('menu');
+  // Aggiunto stato 'newsletter'
+  const [activeView, setActiveView] = useState<'menu' | 'publish' | 'notes' | 'planner' | 'newsletter'>('menu');
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -25,6 +26,9 @@ export default function Dashboard() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
+
+  // Stato per salvare gli iscritti recuperati dal DB
+  const [subscribers, setSubscribers] = useState<any[]>([]);
 
   useEffect(() => {
     async function init() {
@@ -43,6 +47,43 @@ export default function Dashboard() {
     }
     init();
   }, [router]);
+
+  // Effetto per caricare gli iscritti quando apro la sezione Newsletter
+  useEffect(() => {
+    async function fetchSubscribers() {
+      const { data, error } = await supabase
+        .from('newsletter_subscribers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        setSubscribers(data);
+      }
+    }
+    if (activeView === 'newsletter') {
+      fetchSubscribers();
+    }
+  }, [activeView]);
+
+  // Funzione per scaricare il file CSV
+  const exportCSV = () => {
+    const headers = ['Data di Iscrizione', 'Nome', 'Email', 'Telefono'];
+    const rows = subscribers.map(sub => [
+      new Date(sub.created_at).toLocaleDateString('it-IT'),
+      `"${sub.name || ''}"`,
+      `"${sub.email || ''}"`,
+      `"${sub.phone || ''}"`
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'iscritti_newsletter_uttf.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   async function handleAiEnhance() {
     if (!description) return;
@@ -186,6 +227,23 @@ export default function Dashboard() {
                 </div>
                 <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
               </button>
+
+              {/* NUOVO PULSANTE NEWSLETTER */}
+              <button 
+                onClick={() => setActiveView('newsletter')}
+                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
+                    <Users size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">ISCRITTI NEWSLETTER</h3>
+                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Visualizza ed esporta i contatti</p>
+                  </div>
+                </div>
+                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+              </button>
             </div>
 
             {/* SEZIONE LOGO HUB SOTTO I BOTTONI */}
@@ -270,6 +328,49 @@ export default function Dashboard() {
             {activeView === 'planner' && (
               <div className="w-full animate-in fade-in duration-300">
                 <Planner />
+              </div>
+            )}
+
+            {/* NUOVA VISTA: LISTA ISCRITTI NEWSLETTER */}
+            {activeView === 'newsletter' && (
+              <div className="max-w-4xl mx-auto w-full animate-in fade-in duration-300 space-y-6">
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
+                  <div>
+                    <h2 className="text-[14px] font-black uppercase italic text-[#FF914D] flex items-center gap-2">
+                      <Users size={16} /> DATABASE ISCRITTI
+                    </h2>
+                    <p className="text-[10px] font-mono text-zinc-500 uppercase mt-1">Totale iscritti: {subscribers.length}</p>
+                  </div>
+                  <button 
+                    onClick={exportCSV}
+                    disabled={subscribers.length === 0}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-[#FF914D] text-black rounded-xl font-black italic text-[10px] uppercase hover:bg-white transition-all disabled:opacity-30"
+                  >
+                    <Download size={14} /> Esporta CSV
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {subscribers.length > 0 ? (
+                    subscribers.map((sub, index) => (
+                      <div key={index} className="glass-panel p-4 border border-white/5 bg-zinc-900/20 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-[#FF914D]/30 transition-all">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold uppercase tracking-wider text-white">{sub.name}</span>
+                          <span className="text-[11px] font-mono text-zinc-400">{sub.email}</span>
+                        </div>
+                        <div className="flex flex-col md:items-end">
+                          <span className="text-[11px] font-mono text-[#FF914D]">{sub.phone}</span>
+                          <span className="text-[9px] font-mono text-zinc-600 uppercase">Iscritto il: {new Date(sub.created_at).toLocaleDateString('it-IT')}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 glass-panel border border-white/5 bg-zinc-900/20 rounded-3xl">
+                      <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest">Nessun iscritto trovato.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             
