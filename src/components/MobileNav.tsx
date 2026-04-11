@@ -26,7 +26,6 @@ export default function MobileNav() {
     : allNavItems;
 
   return (
-    {/* La classe md:hidden si attiva SOLO se NON siamo nella dashboard */}
     <div className={`fixed bottom-8 left-0 right-0 z-[100] flex justify-center px-6 pointer-events-none ${!isDashboard ? 'md:hidden' : ''}`}>
       <motion.nav 
         initial={{ y: 100 }}
