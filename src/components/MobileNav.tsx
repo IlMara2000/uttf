@@ -56,7 +56,7 @@ export default function MobileNav() {
               animate={{ opacity: 1, rotate: 0, scale: 1 }}
               exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
               transition={{ duration: 0.2 }}
-              className="w-14 h-14 flex items-center justify-center text-black rounded-full"
+              className="w-14 h-14 flex items-center justify-center text-white rounded-full"
               aria-label="Apri menu"
             >
               <Menu size={24} strokeWidth={2.5} />
@@ -90,7 +90,6 @@ export default function MobileNav() {
                   <Link 
                     key={item.href} 
                     href={item.href}
-                    onClick={() => setIsOpen(false)} // Chiude automaticamente il menu quando si clicca un link
                     className="relative p-4 rounded-full transition-all flex flex-col items-center justify-center min-w-[64px]"
                   >
                     {/* IL PALLINO ARANCIONE (Appare solo se la rotta è attiva) */}
