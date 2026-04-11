@@ -12,17 +12,17 @@ export default function Planner() {
   const [users, setUsers] = useState<any[]>([]); 
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false); // Stato per mostrare le task completate
+  const [showCompleted, setShowCompleted] = useState(false);
   
   // Stati del Form
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [assigneeIds, setAssigneeIds] = useState<string[]>([]); 
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]); // Array vuoto = CHIUNQUE
   const [priority, setPriority] = useState('medium');
-  const [deadline, setDeadline] = useState(''); // Usato come Data di Inizio
-  const [endDate, setEndDate] = useState('');   // Data di Fine
-  const [time, setTime] = useState('');         // Orario
+  const [deadline, setDeadline] = useState(''); 
+  const [endDate, setEndDate] = useState('');   
+  const [time, setTime] = useState('');         
   const [isAdding, setIsAdding] = useState(false);
 
   const today = startOfDay(new Date());
@@ -49,11 +49,9 @@ export default function Planner() {
     setLoading(false);
   }
 
-  // Dividiamo le task in attive e completate
   const activeTasks = tasks.filter(t => t.status === 'todo');
   const completedTasks = tasks.filter(t => t.status === 'done');
 
-  // Reset del form
   const resetForm = () => {
     setEditingId(null);
     setTitle('');
@@ -66,11 +64,11 @@ export default function Planner() {
     setShowForm(false);
   };
 
-  // Funzione per caricare i dati nel form quando si clicca su una riga
   const handleEditClick = (task: any) => {
     setEditingId(task.id);
     setTitle(task.title || '');
     setDescription(task.description || '');
+    // Se dal db arriva null, impostiamo array vuoto (che equivale a CHIUNQUE)
     setAssigneeIds(task.assigned_to || []);
     setDeadline(task.deadline || '');
     setEndDate(task.end_date || '');
@@ -79,7 +77,6 @@ export default function Planner() {
     setShowForm(true);
   };
 
-  // Gestisce sia Inserimento che Aggiornamento
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title) return;
@@ -87,7 +84,8 @@ export default function Planner() {
     setIsAdding(true);
     
     try {
-      const finalAssignees = assigneeIds.includes("") || assigneeIds.length === 0 ? null : assigneeIds;
+      // Se l'array è vuoto significa che è selezionato "CHIUNQUE", quindi salviamo null nel DB
+      const finalAssignees = assigneeIds.length === 0 ? null : assigneeIds;
 
       const payload = {
         title: title.toUpperCase(), 
@@ -113,7 +111,7 @@ export default function Planner() {
       
     } catch (err: any) {
       console.error("Errore Supabase:", err);
-      alert("ERRORE: Impossibile salvare il task. Verifica i permessi o le colonne del database.");
+      alert("ERRORE: Impossibile salvare il task.");
     } finally {
       setIsAdding(false);
     }
@@ -144,14 +142,23 @@ export default function Planner() {
     }
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    if (selectedOptions.includes("")) {
-        setAssigneeIds([""]);
+  // --- NUOVA LOGICA DI SELEZIONE REFERENTI ---
+  const toggleAssignee = (userId: string) => {
+    if (userId === "") {
+      // Se clicca "CHIUNQUE", svuota tutto l'array
+      setAssigneeIds([]);
     } else {
-        setAssigneeIds(selectedOptions.filter(val => val !== ""));
+      // Se clicca un utente specifico
+      if (assigneeIds.includes(userId)) {
+        // Se c'era già, lo toglie
+        setAssigneeIds(prev => prev.filter(id => id !== userId));
+      } else {
+        // Se non c'era, lo aggiunge all'array
+        setAssigneeIds(prev => [...prev, userId]);
+      }
     }
   };
+  // --------------------------------------------
 
   const renderAssignedNames = (assignedIds: string[] | null) => {
     if (!assignedIds || assignedIds.length === 0) return 'CHIUNQUE';
@@ -160,7 +167,6 @@ export default function Planner() {
     return assignedUsers.map(u => u.username || u.full_name || u.email.split('@')[0]).join(', ');
   }
 
-  // Componente interno per il rendering delle righe della tabella per evitare duplicazioni di codice
   const TaskRow = ({ task, index }: { task: any, index: number }) => {
     const isOverdue = task.deadline && isBefore(new Date(task.deadline), today) && task.status !== 'done';
     return (
@@ -250,47 +256,71 @@ export default function Planner() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             onSubmit={handleSubmit} 
-            className="p-4 border-b border-white/5 bg-white/[0.02] flex flex-col gap-3 relative overflow-hidden"
+            className="p-4 border-b border-white/5 bg-white/[0.02] flex flex-col gap-4 relative overflow-hidden"
           >
             {editingId && (
                <span className="absolute top-2 right-4 text-[8px] font-bold text-[#FF914D] animate-pulse">MODIFICA IN CORSO...</span>
             )}
 
-            <div className="flex flex-wrap gap-2 items-start mt-2">
+            {/* PRIMA RIGA: TITOLO */}
+            <div>
+              <span className="text-[8px] text-zinc-500 font-mono uppercase mb-1 block">Titolo Task</span>
               <input 
                 type="text" 
-                placeholder="+ NOME ATTIVITÀ" 
+                placeholder="ES: PUBBLICARE REEL" 
                 value={title} 
                 onChange={(e) => setTitle(e.target.value)} 
                 required 
-                className="flex-1 min-w-[150px] bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] uppercase text-white outline-none h-[34px]" 
+                className="w-full bg-zinc-900/50 border border-white/5 p-3 rounded-lg font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40" 
               />
-              
-              <div className="flex flex-col gap-1">
-                 <span className="text-[8px] text-zinc-500 font-mono uppercase">Referenti</span>
-                 <select 
-                   multiple
-                   value={assigneeIds.length === 0 ? [""] : assigneeIds} 
-                   onChange={handleSelectChange}
-                   className="w-40 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] scrollbar-thin"
-                 >
-                   <option value="">CHIUNQUE</option>
-                   {users.map(u => (
-                     <option key={u.id} value={u.id}>
-                       {u.username || u.full_name || u.email.split('@')[0]}
-                     </option>
-                   ))}
-                 </select>
-              </div>
+            </div>
+            
+            {/* SECONDA RIGA: REFERENTI (UI A PULSANTI MULTIPLI) */}
+            <div>
+              <span className="text-[8px] text-zinc-500 font-mono uppercase mb-1 block">Referenti</span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleAssignee("")}
+                  className={`px-3 py-1.5 rounded-full text-[9px] font-mono border transition-all ${
+                    assigneeIds.length === 0 
+                      ? 'bg-[#FF914D] border-[#FF914D] text-black font-bold' 
+                      : 'bg-zinc-900 border-white/10 text-zinc-400 hover:border-[#FF914D]/50'
+                  }`}
+                >
+                  CHIUNQUE
+                </button>
 
-              {/* SEZIONE DATE E ORARIO */}
+                {users.map(u => {
+                  const isSelected = assigneeIds.includes(u.id);
+                  const displayName = u.username || u.full_name || u.email.split('@')[0];
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => toggleAssignee(u.id)}
+                      className={`px-3 py-1.5 rounded-full text-[9px] font-mono border transition-all ${
+                        isSelected 
+                          ? 'bg-emerald-500 border-emerald-500 text-black font-bold' 
+                          : 'bg-zinc-900 border-white/10 text-zinc-400 hover:border-emerald-500/50'
+                      }`}
+                    >
+                      {displayName.toUpperCase()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* TERZA RIGA: DATI E PRIORITÀ IN GRIGLIA */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="flex flex-col gap-1">
                 <span className="text-[8px] text-zinc-500 font-mono uppercase">Data Inizio</span>
                 <input 
                   type="date" 
                   value={deadline} 
                   onChange={(e) => setDeadline(e.target.value)} 
-                  className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]" 
+                  className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded-lg font-mono text-[10px] text-zinc-300 outline-none focus:border-[#FF914D]/40" 
                 />
               </div>
 
@@ -300,7 +330,7 @@ export default function Planner() {
                   type="date" 
                   value={endDate} 
                   onChange={(e) => setEndDate(e.target.value)} 
-                  className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]" 
+                  className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded-lg font-mono text-[10px] text-zinc-300 outline-none focus:border-[#FF914D]/40" 
                 />
               </div>
 
@@ -310,7 +340,7 @@ export default function Planner() {
                   type="time" 
                   value={time} 
                   onChange={(e) => setTime(e.target.value)} 
-                  className="w-24 bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]" 
+                  className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded-lg font-mono text-[10px] text-zinc-300 outline-none focus:border-[#FF914D]/40" 
                 />
               </div>
               
@@ -319,33 +349,35 @@ export default function Planner() {
                 <select 
                   value={priority} 
                   onChange={(e) => setPriority(e.target.value)} 
-                  className="bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-zinc-500 h-[34px]"
+                  className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded-lg font-mono text-[10px] text-zinc-300 outline-none focus:border-[#FF914D]/40"
                 >
                   <option value="low">BASSA</option>
                   <option value="medium">MEDIA</option>
                   <option value="high">ALTA</option>
                 </select>
               </div>
-              
-              <div className="flex flex-col gap-1 mt-4">
-                <button 
-                  type="submit" 
-                  disabled={isAdding} 
-                  className={`px-4 py-2 rounded font-black uppercase text-[10px] disabled:opacity-50 h-[34px] transition-all ${editingId ? 'bg-emerald-500 text-black' : 'bg-[#FF914D] text-black'}`}
-                >
-                  {isAdding ? '...' : editingId ? 'AGGIORNA' : 'INVIA'}
-                </button>
-              </div>
             </div>
 
-            <div className="w-full">
+            {/* QUARTA RIGA: DESCRIZIONE */}
+            <div>
+              <span className="text-[8px] text-zinc-500 font-mono uppercase mb-1 block">Descrizione (Opzionale)</span>
               <textarea 
-                placeholder="DESCRIZIONE OPZIONALE E NOTE AGGIUNTIVE..." 
+                placeholder="NOTE AGGIUNTIVE..." 
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)} 
-                className="w-full bg-zinc-900/50 border border-white/5 p-2 rounded font-mono text-[10px] text-white outline-none min-h-[60px] resize-none mt-2"
+                className="w-full bg-zinc-900/50 border border-white/5 p-3 rounded-lg font-mono text-[10px] text-white outline-none min-h-[80px] resize-y focus:border-[#FF914D]/40"
               />
             </div>
+
+            {/* SUBMIT BUTTON */}
+            <button 
+              type="submit" 
+              disabled={isAdding} 
+              className={`w-full py-3 rounded-lg font-black uppercase italic text-xs disabled:opacity-50 transition-all shadow-lg ${editingId ? 'bg-emerald-500 text-black hover:bg-white shadow-emerald-500/20' : 'bg-[#FF914D] text-black hover:bg-white shadow-[#FF914D]/20'}`}
+            >
+              {isAdding ? 'SALVATAGGIO...' : editingId ? 'AGGIORNA TASK' : 'CREA TASK'}
+            </button>
+            
           </motion.form>
         )}
       </AnimatePresence>
