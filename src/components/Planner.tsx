@@ -68,8 +68,8 @@ export default function Planner() {
     setEditingId(task.id);
     setTitle(task.title || '');
     setDescription(task.description || '');
-    // Se dal db arriva null, impostiamo array vuoto (che equivale a CHIUNQUE)
-    setAssigneeIds(task.assigned_to || []);
+    // FIX: Se assigned_to è null o undefined, forziamo array vuoto
+    setAssigneeIds(Array.isArray(task.assigned_to) ? task.assigned_to : []);
     setDeadline(task.deadline || '');
     setEndDate(task.end_date || '');
     setTime(task.time || '');
@@ -84,7 +84,7 @@ export default function Planner() {
     setIsAdding(true);
     
     try {
-      // Se l'array è vuoto significa che è selezionato "CHIUNQUE", quindi salviamo null nel DB
+      // Se l'array è vuoto salviamo null (CHIUNQUE)
       const finalAssignees = assigneeIds.length === 0 ? null : assigneeIds;
 
       const payload = {
@@ -142,26 +142,27 @@ export default function Planner() {
     }
   };
 
-  // --- NUOVA LOGICA DI SELEZIONE REFERENTI ---
+  // --- LOGICA DI SELEZIONE REFERENTI CORRETTA ---
   const toggleAssignee = (userId: string) => {
     if (userId === "") {
-      // Se clicca "CHIUNQUE", svuota tutto l'array
+      // Se clicca "CHIUNQUE", resetta tutto
       setAssigneeIds([]);
     } else {
       // Se clicca un utente specifico
-      if (assigneeIds.includes(userId)) {
-        // Se c'era già, lo toglie
-        setAssigneeIds(prev => prev.filter(id => id !== userId));
-      } else {
-        // Se non c'era, lo aggiunge all'array
-        setAssigneeIds(prev => [...prev, userId]);
-      }
+      setAssigneeIds(prev => {
+        if (prev.includes(userId)) {
+          // Se già presente, lo toglie
+          return prev.filter(id => id !== userId);
+        } else {
+          // Se non presente, lo aggiunge (e toglie l'eventuale stringa vuota di sicurezza)
+          return [...prev.filter(id => id !== ""), userId];
+        }
+      });
     }
   };
-  // --------------------------------------------
 
   const renderAssignedNames = (assignedIds: string[] | null) => {
-    if (!assignedIds || assignedIds.length === 0) return 'CHIUNQUE';
+    if (!assignedIds || !Array.isArray(assignedIds) || assignedIds.length === 0) return 'CHIUNQUE';
     const assignedUsers = users.filter(u => assignedIds.includes(u.id));
     if (assignedUsers.length === 0) return 'CHIUNQUE';
     return assignedUsers.map(u => u.username || u.full_name || u.email.split('@')[0]).join(', ');
@@ -262,7 +263,6 @@ export default function Planner() {
                <span className="absolute top-2 right-4 text-[8px] font-bold text-[#FF914D] animate-pulse">MODIFICA IN CORSO...</span>
             )}
 
-            {/* PRIMA RIGA: TITOLO */}
             <div>
               <span className="text-[8px] text-zinc-500 font-mono uppercase mb-1 block">Titolo Task</span>
               <input 
@@ -275,7 +275,6 @@ export default function Planner() {
               />
             </div>
             
-            {/* SECONDA RIGA: REFERENTI (UI A PULSANTI MULTIPLI) */}
             <div>
               <span className="text-[8px] text-zinc-500 font-mono uppercase mb-1 block">Referenti</span>
               <div className="flex flex-wrap gap-2">
@@ -312,7 +311,6 @@ export default function Planner() {
               </div>
             </div>
 
-            {/* TERZA RIGA: DATI E PRIORITÀ IN GRIGLIA */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="flex flex-col gap-1">
                 <span className="text-[8px] text-zinc-500 font-mono uppercase">Data Inizio</span>
@@ -358,7 +356,6 @@ export default function Planner() {
               </div>
             </div>
 
-            {/* QUARTA RIGA: DESCRIZIONE */}
             <div>
               <span className="text-[8px] text-zinc-500 font-mono uppercase mb-1 block">Descrizione (Opzionale)</span>
               <textarea 
@@ -369,7 +366,6 @@ export default function Planner() {
               />
             </div>
 
-            {/* SUBMIT BUTTON */}
             <button 
               type="submit" 
               disabled={isAdding} 
@@ -411,7 +407,6 @@ export default function Planner() {
         </table>
       </div>
 
-      {/* SEZIONE ATTIVITÀ COMPLETATE */}
       {completedTasks.length > 0 && (
         <div className="border-t border-white/5">
           <button 
