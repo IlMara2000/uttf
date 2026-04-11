@@ -6,17 +6,17 @@ import {
   Layers, Loader2, ChevronRight, Sparkles, FileText, ArrowLeft, CalendarDays
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion'; // <-- IMPORTATO FRAMER MOTION
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
 import NotesManager from '@/components/NotesManager'; 
-import AccountSettings from '@/components/AccountSettings'; // <-- IMPORTATO QUI
+import AccountSettings from '@/components/AccountSettings';
 
 export default function Dashboard() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Nuovo stato per gestire il menu a bottoni pulito
   const [activeView, setActiveView] = useState<'menu' | 'publish' | 'notes' | 'planner'>('menu');
   
   const [title, setTitle] = useState('');
@@ -113,10 +113,8 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Container per allineare l'ingranaggio e il logout */}
         <div className="flex items-center gap-2">
           <AccountSettings />
-          
           <button 
             onClick={() => supabase.auth.signOut().then(() => router.push('/'))} 
             className="p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-lg transition-all"
@@ -129,21 +127,37 @@ export default function Dashboard() {
 
       <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
         {activeView === 'menu' ? (
-          /* SCHERMATA MENU PRINCIPALE A BOTTONI E CALENDARIO */
           <div className="max-w-3xl mx-auto flex flex-col gap-8 mt-6">
             
-            {/* CALENDARIO FISSO IN ALTO */}
             <div className="w-full">
               <CalendarWidget />
             </div>
 
-            <div className="text-center">
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">MODULI_<span className="text-[#FF914D]">HUB</span></h2>
-              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">Seleziona un'area di lavoro</p>
+            {/* SEZIONE LOGO HUB (Sostituisce il testo MODULI_HUB) */}
+            <div className="flex flex-col items-center justify-center">
+               <motion.img 
+                src="/icons/homelogo.png" 
+                alt="UTTF Hub Logo" 
+                className="w-48 md:w-64 aspect-square object-contain rounded-full mb-2" 
+                animate={{
+                  scale: [1, 1.02, 1],
+                  opacity: [0.85, 1, 0.85],
+                  boxShadow: [
+                    "0 0 0px 0px rgba(255, 145, 77, 0)",
+                    "0 0 40px 10px rgba(255, 145, 77, 0.15)",
+                    "0 0 0px 0px rgba(255, 145, 77, 0)"
+                  ]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Seleziona un'area di lavoro</p>
             </div>
 
             <div className="flex flex-col gap-4">
-              {/* BOTTONE 1: POST */}
               <button 
                 onClick={() => setActiveView('publish')}
                 className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
@@ -160,7 +174,6 @@ export default function Dashboard() {
                 <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
               </button>
 
-              {/* BOTTONE 2: NOTE */}
               <button 
                 onClick={() => setActiveView('notes')}
                 className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
@@ -177,7 +190,6 @@ export default function Dashboard() {
                 <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
               </button>
 
-              {/* BOTTONE 3: PLANNER */}
               <button 
                 onClick={() => setActiveView('planner')}
                 className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
@@ -197,7 +209,6 @@ export default function Dashboard() {
 
           </div>
         ) : (
-          /* SCHERMATA DETTAGLIO MODULO (Con tasto Torna Indietro) */
           <div className="max-w-5xl mx-auto flex flex-col gap-6">
             
             <button 
@@ -207,7 +218,6 @@ export default function Dashboard() {
               <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Torna Indietro
             </button>
 
-            {/* VISTA 1: PUBBLICAZIONE */}
             {activeView === 'publish' && (
               <div className="max-w-3xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
                 <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
@@ -247,14 +257,12 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* VISTA 2: NOTE */}
             {activeView === 'notes' && (
               <div className="max-w-3xl mx-auto w-full animate-in fade-in duration-300">
                 <NotesManager />
               </div>
             )}
 
-            {/* VISTA 3: PLANNER */}
             {activeView === 'planner' && (
               <div className="w-full animate-in fade-in duration-300">
                 <Planner />
