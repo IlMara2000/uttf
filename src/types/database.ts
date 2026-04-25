@@ -32,3 +32,11 @@ export interface MediaStorage {
   activity_id: number | null;
   is_social_ready: boolean;
 }
+
+export interface Review {
+  id: number;
+  created_at: string;
+  author_name: string;
+  comment: string;
+  rating: number;
+}

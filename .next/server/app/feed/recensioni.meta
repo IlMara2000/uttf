@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/feed/layout,_N_T_/feed/recensioni/layout,_N_T_/feed/recensioni/page,_N_T_/feed/recensioni"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/feed/recensioni/__PAGE__",
+    "/feed/recensioni",
+    "/feed",
+    "/_index",
+    "/_head"
+  ]
+}

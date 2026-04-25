@@ -1,0 +1,67 @@
+'use client'
+
+import { Star } from 'lucide-react';
+
+type ReviewStarsProps = {
+  rating: number;
+  onChange?: (value: number) => void;
+  size?: number;
+  interactive?: boolean;
+};
+
+export default function ReviewStars({
+  rating,
+  onChange,
+  size = 28,
+  interactive = false,
+}: ReviewStarsProps) {
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: 5 }).map((_, index) => {
+        const fill = Math.max(0, Math.min(1, rating - index));
+
+        return (
+          <div
+            key={index}
+            className={`relative ${interactive ? 'cursor-pointer' : ''}`}
+            style={{ width: size, height: size }}
+          >
+            {interactive && onChange ? (
+              <>
+                <button
+                  type="button"
+                  aria-label={`Assegna ${index * 2 + 1} punti su 10`}
+                  className="absolute left-0 top-0 z-20 h-full w-1/2"
+                  onClick={() => onChange(index + 0.5)}
+                />
+                <button
+                  type="button"
+                  aria-label={`Assegna ${index * 2 + 2} punti su 10`}
+                  className="absolute right-0 top-0 z-20 h-full w-1/2"
+                  onClick={() => onChange(index + 1)}
+                />
+              </>
+            ) : null}
+
+            <Star
+              size={size}
+              className="absolute inset-0 text-zinc-700"
+              strokeWidth={1.8}
+            />
+
+            <div
+              className="absolute inset-0 overflow-hidden"
+              style={{ width: `${fill * 100}%` }}
+            >
+              <Star
+                size={size}
+                className="fill-[#FF914D] text-[#FF914D]"
+                strokeWidth={1.8}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

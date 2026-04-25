@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2 } from 'lucide-react';
+import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import ReviewsSection from '@/components/ReviewsSection';
 
 const instagramPosts = [
   { 
     id: 'ig1', 
     img: '/instagram/post2.jpeg', 
-    url: 'https://www.instagram.com/p/DTJGIJLDFIq/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
+    url: 'https://www.instagram.com/reel/DWjhrlIDCqL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', 
     ratio: 'portrait',
     caption: (
       <>
@@ -181,7 +182,7 @@ export default function FeedPage() {
       {/* MAIN */}
       <main className="w-full max-w-7xl px-6 flex flex-col gap-32 relative z-10">
           
-        {/* BOTTONI PRINCIPALI: STREAM E NEWSLETTER */}
+        {/* BOTTONI PRINCIPALI: STREAM, NEWSLETTER, RECENSIONI */}
         <section className="flex flex-col items-center gap-8 mb-16 w-full max-w-md mx-auto">
           
           <Link href="/stream" className="group relative w-full">
@@ -206,6 +207,14 @@ export default function FeedPage() {
               <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Attiva_Newsletter</span>
             </button>
           </div>
+
+          <Link href="/feed/recensioni" className="relative group w-full">
+            <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 via-[#FF914D] to-orange-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            <div className="relative w-full px-8 py-4 bg-[#FF914D]/15 backdrop-blur-xl border-2 border-[#FF914D]/40 rounded-full flex items-center justify-center gap-4 transition-all duration-300 shadow-[0_0_30px_rgba(255,145,77,0.2)] hover:shadow-[0_0_40px_5px_rgba(255,145,77,0.4)] hover:border-[#FF914D]/70 hover:scale-[1.02]">
+              <Star size={18} className="text-white" strokeWidth={2.5} />
+              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Lascia_Recensione</span>
+            </div>
+          </Link>
         </section>
 
         {/* INSTAGRAM SECTION */}
@@ -280,6 +289,8 @@ export default function FeedPage() {
             ))}
           </div>
         </section>
+
+        <ReviewsSection />
       </main>
 
       <footer className="py-24 text-center opacity-30 relative z-10">
