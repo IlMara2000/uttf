@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 const instagramPosts = [
@@ -73,8 +72,6 @@ const instagramPosts = [
 
 export default function FeedPage() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -82,12 +79,13 @@ export default function FeedPage() {
   const submitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const shouldOpenNewsletter = searchParams.get('newsletter') === 'open';
+    const params = new URLSearchParams(window.location.search);
+    const shouldOpenNewsletter = params.get('newsletter') === 'open';
     if (shouldOpenNewsletter) {
       setIsNewsletterOpen(true);
-      router.replace('/feed', { scroll: false });
+      window.history.replaceState(null, '', window.location.pathname);
     }
-  }, [searchParams, router]);
+  }, []);
 
   useEffect(() => {
     return () => {
