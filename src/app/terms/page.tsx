@@ -23,7 +23,7 @@ const articles = [
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-black text-white p-8 md:p-24 selection:bg-uttf-orange/30">
+    <div className="min-h-screen bg-transparent text-white p-8 md:p-24 selection:bg-uttf-orange/30">
       
       <header className="mb-20">
         <motion.div 

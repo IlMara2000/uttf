@@ -85,14 +85,14 @@ export default function StoragePage() {
   });
 
   if (loading) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono text-[#FF914D] gap-4">
+    <div className="min-h-screen bg-transparent flex flex-col items-center justify-center font-mono text-[#FF914D] gap-4">
       <div className="w-12 h-12 border-2 border-[#FF914D] border-t-transparent rounded-full animate-spin" />
       <span className="text-[10px] uppercase tracking-[0.5em] animate-pulse">Decrypting_Vault_Data...</span>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-6 md:p-12 pb-32">
+    <div className="min-h-screen bg-transparent text-white p-6 md:p-12 pb-32">
       
       {/* HEADER STORAGE STYLE MONDAY/DARK */}
       <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-16 gap-8">

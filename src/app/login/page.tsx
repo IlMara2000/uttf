@@ -54,7 +54,7 @@ export default function LoginPage() {
   // Schermata di caricamento iniziale mentre verifica se sei già loggato
   if (isCheckingSession) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 gap-4">
+      <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6 gap-4">
         <Loader2 className="animate-spin text-[#FF914D]" size={40} />
         <p className="text-zinc-500 font-mono text-[10px] tracking-widest uppercase animate-pulse">
           VERIFICA_AUTORIZZAZIONI_IN_CORSO...
@@ -64,7 +64,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
+    <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-black italic tracking-tighter text-white uppercase">

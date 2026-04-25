@@ -59,7 +59,7 @@ export default function AdminTeamPage() {
   }
 
   return (
-    <div className="p-6 md:p-12 bg-[#050505] min-h-screen text-white font-sans selection:bg-orange-500">
+    <div className="p-6 md:p-12 bg-transparent min-h-screen text-white font-sans selection:bg-orange-500">
       <header className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-orange-500 mb-4">

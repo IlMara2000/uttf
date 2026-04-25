@@ -28,10 +28,10 @@ export default function OutputsPage() {
     fetchPosts();
   }
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center font-mono text-[#FF914D]">FETCHING_DATABASE...</div>;
+  if (loading) return <div className="min-h-screen bg-transparent flex items-center justify-center font-mono text-[#FF914D]">FETCHING_DATABASE...</div>;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8 font-sans">
+    <div className="min-h-screen bg-transparent text-white p-4 md:p-8 font-sans">
       <div className="max-w-4xl mx-auto">
         
         {/* BACK BUTTON & TITLE */}

@@ -54,7 +54,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center overflow-x-hidden pb-40">
+    <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40">
       
       {/* HEADER */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-6">
