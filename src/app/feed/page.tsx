@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase'; // <-- Import per salvare nel database
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 const instagramPosts = [
   { 
@@ -83,6 +84,17 @@ export default function FeedPage() {
     // spedisce tranquillamente l'email tramite FormSubmit e l'iframe nascosto!
     setIsSubmitting(true);
     
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+      const shouldOpenNewsletter = searchParams.get('newsletter') === 'open';
+      if (shouldOpenNewsletter) {
+        setIsNewsletterOpen(true);
+        router.replace('/feed', { scroll: false });
+      }
+    }, [searchParams, router]);
+
     // 1. ESTRAIAMO I DATI PER IL DATABASE
     const formData = new FormData(e.currentTarget);
     const name = formData.get('Nome') as string;
@@ -112,7 +124,7 @@ export default function FeedPage() {
   };
 
   return (
-    <div className="min-h-screen text-white flex flex-col items-center overflow-x-hidden pb-40 relative bg-black">
+    <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40 selection:bg-[#FF914D]/30">
       
       {/* HEADER */}
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8 relative z-10">

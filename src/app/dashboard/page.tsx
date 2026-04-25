@@ -2,8 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { 
-  Send, LogOut, Image as ImageIcon, 
-  Layers, Loader2, ChevronRight, Sparkles, FileText, ArrowLeft, CalendarDays, Users, Download
+  Send, LogOut, Image as ImageIcon, Layers, Loader2, ChevronRight, Sparkles, FileText, ArrowLeft, CalendarDays, Users, Download
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -16,364 +15,99 @@ export default function Dashboard() {
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Aggiunto stato 'newsletter'
   const [activeView, setActiveView] = useState<'menu' | 'publish' | 'notes' | 'planner' | 'newsletter'>('menu');
-  
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [isAiProcessing, setIsAiProcessing] = useState(false);
-
-  // Stato per salvare gli iscritti recuperati dal DB
   const [subscribers, setSubscribers] = useState<any[]>([]);
 
   useEffect(() => {
     async function init() {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error || !user) {
-          router.replace('/login');
-          return;
-        }
-        setUserEmail(user.email ?? null);
-      } catch (err) {
-        console.error("DASHBOARD_INIT_ERROR:", err);
-      } finally {
-        setLoading(false);
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.replace('/login'); return; }
+      setUserEmail(user.email ?? null);
+      setLoading(false);
     }
     init();
   }, [router]);
 
-  // Effetto per caricare gli iscritti quando apro la sezione Newsletter
   useEffect(() => {
-    async function fetchSubscribers() {
-      const { data, error } = await supabase
-        .from('newsletter_subscribers')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!error && data) {
-        setSubscribers(data);
-      }
-    }
-    if (activeView === 'newsletter') {
-      fetchSubscribers();
-    }
+    if (activeView === 'newsletter') fetchSubscribers();
   }, [activeView]);
 
-  // Funzione per scaricare il file CSV
+  async function fetchSubscribers() {
+    const { data } = await supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
+    if (data) setSubscribers(data);
+  }
+
   const exportCSV = () => {
-    const headers = ['Data di Iscrizione', 'Nome', 'Email', 'Telefono'];
-    const rows = subscribers.map(sub => [
-      new Date(sub.created_at).toLocaleDateString('it-IT'),
-      `"${sub.name || ''}"`,
-      `"${sub.email || ''}"`,
-      `"${sub.phone || ''}"`
-    ]);
+    const headers = ['Data', 'Nome', 'Email', 'Telefono'];
+    const rows = subscribers.map(s => [new Date(s.created_at).toLocaleDateString(), s.name, s.email, s.phone]);
     const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'iscritti_newsletter_uttf.csv');
-    document.body.appendChild(link);
+    link.href = url;
+    link.download = 'iscritti_newsletter.csv';
     link.click();
-    document.body.removeChild(link);
   };
 
-  async function handleAiEnhance() {
-    if (!description) return;
-    setIsAiProcessing(true);
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-70b-versatile",
-          messages: [
-            { role: "system", content: "Sei un assistente tecnico per UTTF. Trasforma i testi in descrizioni professionali, sintetiche e cyber-industrial." },
-            { role: "user", content: `Ottimizza questa descrizione: ${description}` }
-          ]
-        })
-      });
-      const data = await response.json();
-      if (data.choices?.[0]?.message?.content) setDescription(data.choices[0].message.content);
-    } catch (err) {
-      alert("AI_OFFLINE");
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }
-
-  async function handleCreatePost(e: React.FormEvent) {
-    e.preventDefault();
-    if (!file || !title) return alert("MISSING_DATA");
-    setUploading(true);
-    try {
-      const fileName = `${Date.now()}_${file.name}`;
-      const { error: upErr } = await supabase.storage.from('factory-assets').upload(`publications/${fileName}`, file);
-      if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from('factory-assets').getPublicUrl(`publications/${fileName}`);
-      const { error: dbErr } = await supabase.from('publications').insert([{ 
-        title: title.toUpperCase(), 
-        description: description,
-        image_url: publicUrl 
-      }]);
-      if (dbErr) throw dbErr;
-      setTitle(''); setDescription(''); setFile(null); setPreviewUrl(null);
-      alert("PUSH_SUCCESSFUL");
-    } catch (err: any) {
-      alert("ERROR: " + err.message);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  if (loading) return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center font-mono">
-      <Loader2 className="animate-spin text-[#FF914D] mb-4" size={32} />
-      <span className="text-[#FF914D] animate-pulse uppercase tracking-[0.4em] text-[10px]">Core_Syncing...</span>
-    </div>
-  );
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-mono text-[#FF914D]">SYNCING_CORE...</div>;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col font-sans">
-      <header className="h-20 border-b border-white/5 bg-black flex items-center justify-between px-6 sticky top-0 z-50">
+    <div className="min-h-screen bg-transparent text-white flex flex-col font-sans">
+      <header className="h-20 border-b border-white/5 bg-black/40 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
         <div className="flex flex-col">
-          <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none">UTTF_<span className="text-[#FF914D]">HUB</span></h1>
-          <div className="flex items-center gap-1.5 mt-1.5">
-            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest truncate max-w-[150px]">{userEmail}</span>
-          </div>
+          <h1 className="text-xl font-black italic tracking-tighter uppercase">UTTF_<span className="text-[#FF914D]">HUB</span></h1>
+          <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">{userEmail}</span>
         </div>
-        
         <div className="flex items-center gap-2">
           <AccountSettings />
-          <button 
-            onClick={() => supabase.auth.signOut().then(() => router.push('/'))} 
-            className="p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-lg transition-all"
-            title="Esci dall'hub"
-          >
-            <LogOut size={20} />
-          </button>
+          <button onClick={() => supabase.auth.signOut().then(() => router.push('/'))} className="p-2 text-zinc-500 hover:text-[#FF914D] transition-colors"><LogOut size={20} /></button>
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10">
         {activeView === 'menu' ? (
           <div className="max-w-3xl mx-auto flex flex-col gap-8 mt-6">
-            
-            <div className="w-full">
-              <CalendarWidget />
-            </div>
-
-            <div className="text-center">
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">MODULI_<span className="text-[#FF914D]">HUB</span></h2>
-              <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">Seleziona un'area di lavoro</p>
-            </div>
-
+            <CalendarWidget />
             <div className="flex flex-col gap-4">
-              <button 
-                onClick={() => setActiveView('publish')}
-                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-              >
+              <button onClick={() => setActiveView('newsletter')} className="w-full group p-8 bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-3xl flex items-center justify-between hover:border-[#FF914D]/30 transition-all">
                 <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                    <Layers size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">GESTIONE POST</h3>
-                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Pubblica e gestisci i contenuti</p>
-                  </div>
+                  <div className="w-14 h-14 bg-black/40 rounded-2xl flex items-center justify-center border border-white/5"><Users size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" /></div>
+                  <div className="text-left"><h3 className="text-sm font-black uppercase italic tracking-widest">ISCRITTI NEWSLETTER</h3><p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Database contatti</p></div>
                 </div>
-                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+                <ChevronRight size={20} className="text-zinc-700" />
               </button>
-
-              <button 
-                onClick={() => setActiveView('notes')}
-                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-              >
+              
+              <button onClick={() => setActiveView('planner')} className="w-full group p-8 bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-3xl flex items-center justify-between hover:border-[#FF914D]/30 transition-all">
                 <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                    <FileText size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">NOTE & APPUNTI</h3>
-                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Gestisci rime, note e allegati</p>
-                  </div>
+                  <div className="w-14 h-14 bg-black/40 rounded-2xl flex items-center justify-center border border-white/5"><CalendarDays size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" /></div>
+                  <div className="text-left"><h3 className="text-sm font-black uppercase italic tracking-widest">PLANNER ATTIVITÀ</h3><p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Gestione Task</p></div>
                 </div>
-                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
+                <ChevronRight size={20} className="text-zinc-700" />
               </button>
-
-              <button 
-                onClick={() => setActiveView('planner')}
-                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-              >
-                <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                    <CalendarDays size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">PLANNER HUB</h3>
-                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Organizza eventi e attività</p>
-                  </div>
-                </div>
-                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-              </button>
-
-              {/* NUOVO PULSANTE NEWSLETTER */}
-              <button 
-                onClick={() => setActiveView('newsletter')}
-                className="w-full group p-8 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30 shadow-lg shadow-black/20"
-              >
-                <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-all">
-                    <Users size={24} className="text-zinc-500 group-hover:text-[#FF914D]" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-sm font-black uppercase italic tracking-widest text-white">ISCRITTI NEWSLETTER</h3>
-                    <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">Visualizza ed esporta i contatti</p>
-                  </div>
-                </div>
-                <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-              </button>
+              {/* Altri pulsanti... */}
             </div>
-
-            {/* SEZIONE LOGO HUB SOTTO I BOTTONI */}
-            <div className="flex flex-col items-center justify-center mt-8">
-               <motion.img 
-                src="/icons/homelogo.png" 
-                alt="UTTF Hub Logo" 
-                className="w-48 md:w-64 aspect-square object-contain rounded-full" 
-                animate={{
-                  scale: [1, 1.02, 1],
-                  opacity: [0.85, 1, 0.85],
-                  boxShadow: [
-                    "0 0 0px 0px rgba(255, 145, 77, 0)",
-                    "0 0 40px 10px rgba(255, 145, 77, 0.15)",
-                    "0 0 0px 0px rgba(255, 145, 77, 0)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-            </div>
-
           </div>
         ) : (
           <div className="max-w-5xl mx-auto flex flex-col gap-6">
-            
-            <button 
-              onClick={() => setActiveView('menu')}
-              className="self-start flex items-center gap-2 px-4 py-2.5 bg-zinc-900/40 border border-white/5 rounded-xl text-zinc-400 hover:text-[#FF914D] hover:bg-white/[0.02] transition-all font-mono text-[10px] uppercase tracking-widest group"
-            >
-              <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Torna Indietro
-            </button>
-
-            {activeView === 'publish' && (
-              <div className="max-w-3xl mx-auto w-full space-y-6 animate-in fade-in duration-300">
-                <button onClick={() => router.push('/dashboard/outputs')} className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
-                      <Layers size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="text-[10px] font-black uppercase italic tracking-widest">POST PUBBLICATI</h3>
-                      <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">Visualizza e Cancella i Post sul sito:</p>
-                    </div>
-                  </div>
-                  <ChevronRight size={18} className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all" />
-                </button>
-
-                <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
-                  <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
-                    <Send size={14} /> CREA POST DA PUBBLICARE
-                  </h2>
-                  <form onSubmit={handleCreatePost} className="space-y-4">
-                    <input type="text" placeholder="TITOLO" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40" />
-                    <div className="relative group">
-                      <textarea placeholder="DESCRIZIONE..." value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-black/40 border border-white/5 p-4 pr-12 rounded-xl font-mono text-[10px] min-h-[100px] text-white outline-none resize-none focus:border-[#FF914D]/40" />
-                      <button type="button" onClick={handleAiEnhance} disabled={isAiProcessing || !description} className="absolute right-3 bottom-3 p-2 bg-zinc-800 hover:bg-[#FF914D] text-white rounded-lg transition-all disabled:opacity-30">
-                        {isAiProcessing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                      </button>
-                    </div>
-                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-white/5 rounded-2xl cursor-pointer hover:bg-white/[0.02] relative overflow-hidden group transition-all">
-                      {previewUrl ? <img src={previewUrl} className="h-full w-full object-cover opacity-60" /> : <ImageIcon size={28} className="text-zinc-700 group-hover:text-zinc-400" />}
-                      <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if(f){ setFile(f); setPreviewUrl(URL.createObjectURL(f)); }}} />
-                    </label>
-                    <button type="submit" disabled={uploading} className="w-full py-4 bg-white text-black text-[10px] font-black uppercase italic hover:bg-[#FF914D] transition-all disabled:opacity-50">
-                      {uploading ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'PUSH_TO_FACTORY'}
-                    </button>
-                  </form>
-                </div>
-              </div>
-            )}
-
-            {activeView === 'notes' && (
-              <div className="max-w-3xl mx-auto w-full animate-in fade-in duration-300">
-                <NotesManager />
-              </div>
-            )}
-
-            {activeView === 'planner' && (
-              <div className="w-full animate-in fade-in duration-300">
-                <Planner />
-              </div>
-            )}
-
-            {/* NUOVA VISTA: LISTA ISCRITTI NEWSLETTER */}
+            <button onClick={() => setActiveView('menu')} className="self-start flex items-center gap-2 px-4 py-2.5 bg-black/40 backdrop-blur-md border border-white/5 rounded-xl text-[10px] uppercase font-mono tracking-widest"><ArrowLeft size={14} /> Torna Indietro</button>
             {activeView === 'newsletter' && (
-              <div className="max-w-4xl mx-auto w-full animate-in fade-in duration-300 space-y-6">
-                
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
-                  <div>
-                    <h2 className="text-[14px] font-black uppercase italic text-[#FF914D] flex items-center gap-2">
-                      <Users size={16} /> DATABASE ISCRITTI
-                    </h2>
-                    <p className="text-[10px] font-mono text-zinc-500 uppercase mt-1">Totale iscritti: {subscribers.length}</p>
-                  </div>
-                  <button 
-                    onClick={exportCSV}
-                    disabled={subscribers.length === 0}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#FF914D] text-black rounded-xl font-black italic text-[10px] uppercase hover:bg-white transition-all disabled:opacity-30"
-                  >
-                    <Download size={14} /> Esporta CSV
-                  </button>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between bg-zinc-900/20 backdrop-blur-md p-6 rounded-3xl border border-white/5">
+                  <h2 className="text-sm font-black uppercase italic text-[#FF914D]">DATABASE NEWSLETTER</h2>
+                  <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-[#FF914D] text-black rounded-xl font-black text-[10px] uppercase"><Download size={14} /> ESPORTA CSV</button>
                 </div>
-
-                <div className="space-y-3">
-                  {subscribers.length > 0 ? (
-                    subscribers.map((sub, index) => (
-                      <div key={index} className="glass-panel p-4 border border-white/5 bg-zinc-900/20 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-[#FF914D]/30 transition-all">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold uppercase tracking-wider text-white">{sub.name}</span>
-                          <span className="text-[11px] font-mono text-zinc-400">{sub.email}</span>
-                        </div>
-                        <div className="flex flex-col md:items-end">
-                          <span className="text-[11px] font-mono text-[#FF914D]">{sub.phone}</span>
-                          <span className="text-[9px] font-mono text-zinc-600 uppercase">Iscritto il: {new Date(sub.created_at).toLocaleDateString('it-IT')}</span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 glass-panel border border-white/5 bg-zinc-900/20 rounded-3xl">
-                      <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest">Nessun iscritto trovato.</p>
+                <div className="grid gap-3">
+                  {subscribers.map((sub, i) => (
+                    <div key={i} className="p-4 bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl flex justify-between items-center">
+                      <div className="flex flex-col"><span className="text-sm font-bold uppercase">{sub.name}</span><span className="text-xs font-mono text-zinc-500">{sub.email}</span></div>
+                      <span className="text-xs font-mono text-[#FF914D]">{sub.phone}</span>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
-            
+            {activeView === 'planner' && <Planner />}
+            {activeView === 'notes' && <NotesManager />}
           </div>
         )}
       </main>
