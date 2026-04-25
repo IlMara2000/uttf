@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -73,27 +73,70 @@ const instagramPosts = [
 
 export default function FeedPage() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
-  
-  // Stati per la gestione grafica del caricamento e successo
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const submitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const shouldOpenNewsletter = searchParams.get('newsletter') === 'open';
+    if (shouldOpenNewsletter) {
+      setIsNewsletterOpen(true);
+      router.replace('/feed', { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    return () => {
+      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+    };
+  }, []);
+
+  const closeNewsletterModal = () => {
+    setIsNewsletterOpen(false);
+    setIsSubmitting(false);
+    setHasSubmitted(false);
+    setSubmitError(null);
+    if (submitTimeoutRef.current) {
+      clearTimeout(submitTimeoutRef.current);
+      submitTimeoutRef.current = null;
+    }
+  };
+
+  const handleIframeLoad = () => {
+    if (!hasSubmitted) return;
+    if (submitTimeoutRef.current) {
+      clearTimeout(submitTimeoutRef.current);
+      submitTimeoutRef.current = null;
+    }
+    setIsSubmitting(false);
+    setIsSuccess(true);
+    setHasSubmitted(false);
+
+    setTimeout(() => {
+      setIsNewsletterOpen(false);
+      setTimeout(() => setIsSuccess(false), 500);
+    }, 3000);
+  };
 
   // Gestione IBRIDA dell'invio (Database + FormSubmit)
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     // IMPORTANTE: NON mettiamo e.preventDefault() così il form nativo di HTML
     // spedisce tranquillamente l'email tramite FormSubmit e l'iframe nascosto!
     setIsSubmitting(true);
-    
-    const router = useRouter();
-    const searchParams = useSearchParams();
+    setHasSubmitted(true);
+    setIsSuccess(false);
+    setSubmitError(null);
 
-    useEffect(() => {
-      const shouldOpenNewsletter = searchParams.get('newsletter') === 'open';
-      if (shouldOpenNewsletter) {
-        setIsNewsletterOpen(true);
-        router.replace('/feed', { scroll: false });
-      }
-    }, [searchParams, router]);
+    if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+    submitTimeoutRef.current = setTimeout(() => {
+      setIsSubmitting(false);
+      setHasSubmitted(false);
+      setSubmitError('Invio non confermato. Riprova tra qualche secondo.');
+    }, 15000);
 
     // 1. ESTRAIAMO I DATI PER IL DATABASE
     const formData = new FormData(e.currentTarget);
@@ -108,19 +151,8 @@ export default function FeedPage() {
         .insert([{ name, email, phone }]);
     } catch (error) {
       console.error("Errore salvataggio su Supabase:", error);
+      setSubmitError('Iscrizione inviata, ma salvataggio dashboard non riuscito.');
     }
-    
-    // 3. ANIMAZIONE DI SUCCESSO E CHIUSURA MODALE
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      
-      // Dopo 3 secondi di successo, chiudiamo la modale in automatico
-      setTimeout(() => {
-        setIsNewsletterOpen(false);
-        setTimeout(() => setIsSuccess(false), 500); 
-      }, 3000);
-    }, 1200);
   };
 
   return (
@@ -257,7 +289,7 @@ export default function FeedPage() {
       </footer>
 
       {/* IFRAME NASCOSTO PER GESTIRE L'INVIO SILENZIOSO DELLA MAIL SENZA CAMBIARE PAGINA */}
-      <iframe name="hidden_iframe" id="hidden_iframe" style={{ display: 'none' }}></iframe>
+      <iframe name="hidden_iframe" id="hidden_iframe" style={{ display: 'none' }} onLoad={handleIframeLoad}></iframe>
 
       {/* MODALE NEWSLETTER CON STATO DI SUCCESSO */}
       <AnimatePresence>
@@ -268,7 +300,7 @@ export default function FeedPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0"
-              onClick={() => !isSubmitting && setIsNewsletterOpen(false)}
+              onClick={() => !isSubmitting && closeNewsletterModal()}
             />
             
             <motion.div 
@@ -280,7 +312,7 @@ export default function FeedPage() {
             >
               {!isSuccess && (
                 <button 
-                  onClick={() => setIsNewsletterOpen(false)}
+                  onClick={closeNewsletterModal}
                   disabled={isSubmitting}
                   className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-full transition-colors disabled:opacity-50"
                 >
@@ -321,7 +353,7 @@ export default function FeedPage() {
                   </div>
 
                   {/* IL TARGET PUNTA ALL'IFRAME INVISIBILE E L'ACTION A FORMSUBMIT */}
-                  <form action="https://formsubmit.co/el/zadero" method="POST" target="hidden_iframe" onSubmit={handleNewsletterSubmit} className="space-y-5">
+                  <form action="https://formsubmit.co/ass.uttf@gmail.com" method="POST" target="hidden_iframe" onSubmit={handleNewsletterSubmit} className="space-y-5">
                     
                     <input type="hidden" name="_captcha" value="false" />
                     <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
@@ -364,6 +396,11 @@ export default function FeedPage() {
                     </div>
 
                     <div className="pt-3">
+                      {submitError && (
+                        <p className="mb-3 text-[10px] font-mono uppercase tracking-wider text-[#FF914D]">
+                          {submitError}
+                        </p>
+                      )}
                       <button 
                         type="submit" 
                         disabled={isSubmitting}
