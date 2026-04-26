@@ -77,6 +77,13 @@ export default function FeedPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const emailSubmissionPendingRef = useRef(false);
+  const [isEmailSubmissionPending, setIsEmailSubmissionPending] = useState(false);
+  const [subscriberName, setSubscriberName] = useState('');
+  const [subscriberEmail, setSubscriberEmail] = useState('');
+  const [subscriberPhone, setSubscriberPhone] = useState('');
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -96,6 +103,8 @@ export default function FeedPage() {
   const closeNewsletterModal = () => {
     setIsNewsletterOpen(false);
     setIsSubmitting(false);
+    emailSubmissionPendingRef.current = false;
+    setIsEmailSubmissionPending(false);
     setSubmitError(null);
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
@@ -103,17 +112,29 @@ export default function FeedPage() {
     }
   };
 
+  const handleNewsletterIframeLoad = () => {
+    if (!emailSubmissionPendingRef.current) return;
+
+    emailSubmissionPendingRef.current = false;
+    setIsEmailSubmissionPending(false);
+    setIsSubmitting(false);
+    setIsSuccess(true);
+    setSubscriberName('');
+    setSubscriberEmail('');
+    setSubscriberPhone('');
+    setPrivacyAccepted(false);
+
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsNewsletterOpen(false);
+      setTimeout(() => setIsSuccess(false), 500);
+    }, 3000);
+  };
+
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setIsSuccess(false);
     setSubmitError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('Nome') as string;
-    const email = formData.get('email') as string;
-    const phone = formData.get('Telefono') as string;
-    const privacyAccepted = formData.get('privacy-consent');
 
     if (!privacyAccepted) {
       setIsSubmitting(false);
@@ -124,17 +145,24 @@ export default function FeedPage() {
     try {
       const { error } = await supabase
         .from('newsletter_subscribers')
-        .insert([{ name, email, phone }]);
+        .insert([{
+          name: subscriberName.trim(),
+          email: subscriberEmail.trim(),
+          phone: subscriberPhone.trim()
+        }]);
 
       if (error) throw error;
-
-      setIsSubmitting(false);
-      setIsSuccess(true);
+      emailSubmissionPendingRef.current = true;
+      setIsEmailSubmissionPending(true);
+      formRef.current?.submit();
 
       closeTimeoutRef.current = setTimeout(() => {
-        setIsNewsletterOpen(false);
-        setTimeout(() => setIsSuccess(false), 500);
-      }, 3000);
+        if (!emailSubmissionPendingRef.current) return;
+        emailSubmissionPendingRef.current = false;
+        setIsEmailSubmissionPending(false);
+        setIsSubmitting(false);
+        setSubmitError('Dati salvati, ma la mail non e stata confermata. Controlla FormSubmit.');
+      }, 15000);
     } catch (error) {
       console.error("Errore salvataggio su Supabase:", error);
       setIsSubmitting(false);
@@ -346,15 +374,31 @@ export default function FeedPage() {
                     </p>
                   </div>
 
-                  <form onSubmit={handleNewsletterSubmit} className="space-y-5">
+                  <form
+                    ref={formRef}
+                    action="https://formsubmit.co/ass.uttf@gmail.com"
+                    method="POST"
+                    target="newsletter_mail_iframe"
+                    onSubmit={handleNewsletterSubmit}
+                    className="space-y-5"
+                  >
+                    <input type="hidden" name="_subject" value="Nuova iscrizione newsletter UTTF" />
+                    <input type="hidden" name="_template" value="table" />
+                    <input type="hidden" name="_captcha" value="false" />
+                    <input type="hidden" name="_next" value="https://uttf.vercel.app/feed" />
+                    <input type="hidden" name="_blacklist" value="http://,https://,www.,พนัน,crypto,loan" />
+                    <input type="hidden" name="_replyto" value={subscriberEmail} />
+
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Il tuo nome</label>
                       <input 
                         type="text" 
-                        name="Nome"
+                        name="name"
                         required
                         disabled={isSubmitting}
                         placeholder="NOME O NICKNAME"
+                        value={subscriberName}
+                        onChange={(e) => setSubscriberName(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700 disabled:opacity-50"
                       />
                     </div>
@@ -367,6 +411,8 @@ export default function FeedPage() {
                         required
                         disabled={isSubmitting}
                         placeholder="EMAIL@DOMINIO.COM"
+                        value={subscriberEmail}
+                        onChange={(e) => setSubscriberEmail(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700 disabled:opacity-50"
                       />
                     </div>
@@ -375,10 +421,12 @@ export default function FeedPage() {
                       <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Numero di Cellulare</label>
                       <input 
                         type="tel" 
-                        name="Telefono"
+                        name="phone"
                         required
                         disabled={isSubmitting}
                         placeholder="+39 333 123 4567"
+                        value={subscriberPhone}
+                        onChange={(e) => setSubscriberPhone(e.target.value)}
                         className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700 disabled:opacity-50"
                       />
                     </div>
@@ -389,6 +437,8 @@ export default function FeedPage() {
                         name="privacy-consent"
                         required
                         disabled={isSubmitting}
+                        checked={privacyAccepted}
+                        onChange={(e) => setPrivacyAccepted(e.target.checked)}
                         className="mt-0.5 h-4 w-4 shrink-0 accent-[#FF914D]"
                       />
                       <span className="leading-relaxed">
@@ -429,6 +479,13 @@ export default function FeedPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <iframe
+        name="newsletter_mail_iframe"
+        title="newsletter-mail"
+        className="hidden"
+        onLoad={handleNewsletterIframeLoad}
+      />
 
     </div>
   );

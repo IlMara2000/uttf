@@ -102,6 +102,12 @@
       "namedRegex": "^/login(?:/)?$"
     },
     {
+      "page": "/privacy",
+      "regex": "^/privacy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy(?:/)?$"
+    },
+    {
       "page": "/storage",
       "regex": "^/storage(?:/)?$",
       "routeKeys": {},

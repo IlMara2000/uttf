@@ -12,6 +12,7 @@
   "/labs/page": "app/labs/page.js",
   "/login/page": "app/login/page.js",
   "/page": "app/page.js",
+  "/privacy/page": "app/privacy/page.js",
   "/storage/page": "app/storage/page.js",
   "/stream/page": "app/stream/page.js",
   "/team/page": "app/team/page.js",
