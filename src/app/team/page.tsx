@@ -50,6 +50,15 @@ const teamMembers = [
     tags: ["PRODUCER", "MUSICIAN", "STYLE"]
   },
   {
+    name: "Geo",
+    role: "Operatrice / Creative Support",
+    icon: <User size={20} />,
+    image: "/team/geo.jpg",
+    description: "Presenza operativa del team con approccio pulito, concreto e attento ai dettagli. Quando serve dare ordine, supporto e continuità al lavoro, Geo resta dentro il flusso e tiene il passo.",
+    skills: ["Team Support", "Creative Coordination", "Operational Flow"],
+    tags: ["OPERATOR", "CREATIVE SUPPORT", "TEAM FLOW"]
+  },
+  {
     name: "Den",
     role: "Fonico / SMM",
     icon: <Settings size={20} />,
