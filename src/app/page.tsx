@@ -145,10 +145,7 @@ export default function HomePage() {
             </div>
           </motion.div>
         </section>
-
-        {/* NEWS FEED SECTION */}
-        <section className="w-full py-32 mt-10 border-t border-white/5 bg-transparent">
-          
+        
           {/* IL LOGO QUI SOTTO I 4 BOTTONI */}
           <div className="flex justify-center mb-16 md:mb-20 px-4">
             <motion.img 
@@ -172,6 +169,9 @@ export default function HomePage() {
             />
           </div>
 
+        {/* NEWS FEED SECTION */}
+        <section className="w-full py-32 mt-10 border-t border-white/5 bg-transparent">
+          
           <div className="flex flex-col items-center mb-20 text-center">
              <span className="text-[#FF914D] font-mono text-[10px] tracking-[0.6em] uppercase mb-4">QUA SOTTO GLI ULTIMI AGGIORNAMENTI</span>
              <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">UTTF_<span className="text-[#FF914D]">NEWS</span></h2>
