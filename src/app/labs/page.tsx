@@ -54,8 +54,8 @@ export default function LabsPage() {
         <div className="w-full flex justify-start">
           
         {/* TASTO BACK CON TESTO ARANCIONE */}
-         <Link href="/feed?newsletter=open" className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-110 hover:shadow-[0_0_20px_rgba(255,145,77,0.4)] transition-all inline-block">
-           ISCRIVITI
+          <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
+            <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
           </Link>
         </div>
         

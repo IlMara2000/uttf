@@ -75,9 +75,8 @@ export default function FeedPage() {
   const [isNewsletterOpen, setIsNewsletterOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const submitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -90,67 +89,56 @@ export default function FeedPage() {
 
   useEffect(() => {
     return () => {
-      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     };
   }, []);
 
   const closeNewsletterModal = () => {
     setIsNewsletterOpen(false);
     setIsSubmitting(false);
-    setHasSubmitted(false);
     setSubmitError(null);
-    if (submitTimeoutRef.current) {
-      clearTimeout(submitTimeoutRef.current);
-      submitTimeoutRef.current = null;
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
     }
   };
 
-  const handleIframeLoad = () => {
-    if (!hasSubmitted) return;
-    if (submitTimeoutRef.current) {
-      clearTimeout(submitTimeoutRef.current);
-      submitTimeoutRef.current = null;
-    }
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    setHasSubmitted(false);
-
-    setTimeout(() => {
-      setIsNewsletterOpen(false);
-      setTimeout(() => setIsSuccess(false), 500);
-    }, 3000);
-  };
-
-  // Gestione IBRIDA dell'invio (Database + FormSubmit)
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    // IMPORTANTE: NON mettiamo e.preventDefault() così il form nativo di HTML
-    // spedisce tranquillamente l'email tramite FormSubmit e l'iframe nascosto!
+    e.preventDefault();
     setIsSubmitting(true);
-    setHasSubmitted(true);
     setIsSuccess(false);
     setSubmitError(null);
 
-    if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
-    submitTimeoutRef.current = setTimeout(() => {
-      setIsSubmitting(false);
-      setHasSubmitted(false);
-      setSubmitError('Invio non confermato. Riprova tra qualche secondo.');
-    }, 15000);
-
-    // 1. ESTRAIAMO I DATI PER IL DATABASE
     const formData = new FormData(e.currentTarget);
     const name = formData.get('Nome') as string;
     const email = formData.get('email') as string;
     const phone = formData.get('Telefono') as string;
+    const privacyAccepted = formData.get('privacy-consent');
 
-    // 2. SALVIAMO I DATI SU SUPABASE (per vederli nella Dashboard)
+    if (!privacyAccepted) {
+      setIsSubmitting(false);
+      setSubmitError('Devi accettare la privacy per iscriverti.');
+      return;
+    }
+
     try {
-      await supabase
+      const { error } = await supabase
         .from('newsletter_subscribers')
         .insert([{ name, email, phone }]);
+
+      if (error) throw error;
+
+      setIsSubmitting(false);
+      setIsSuccess(true);
+
+      closeTimeoutRef.current = setTimeout(() => {
+        setIsNewsletterOpen(false);
+        setTimeout(() => setIsSuccess(false), 500);
+      }, 3000);
     } catch (error) {
       console.error("Errore salvataggio su Supabase:", error);
-      setSubmitError('Iscrizione inviata, ma salvataggio dashboard non riuscito.');
+      setIsSubmitting(false);
+      setSubmitError('Salvataggio non riuscito. Riprova tra qualche secondo.');
     }
   };
 
@@ -297,9 +285,6 @@ export default function FeedPage() {
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
       </footer>
 
-      {/* IFRAME NASCOSTO PER GESTIRE L'INVIO SILENZIOSO DELLA MAIL SENZA CAMBIARE PAGINA */}
-      <iframe name="hidden_iframe" id="hidden_iframe" style={{ display: 'none' }} onLoad={handleIframeLoad}></iframe>
-
       {/* MODALE NEWSLETTER CON STATO DI SUCCESSO */}
       <AnimatePresence>
         {isNewsletterOpen && (
@@ -361,13 +346,7 @@ export default function FeedPage() {
                     </p>
                   </div>
 
-                  {/* IL TARGET PUNTA ALL'IFRAME INVISIBILE E L'ACTION A FORMSUBMIT */}
-                  <form action="https://formsubmit.co/ass.uttf@gmail.com" method="POST" target="hidden_iframe" onSubmit={handleNewsletterSubmit} className="space-y-5">
-                    
-                    <input type="hidden" name="_captcha" value="false" />
-                    <input type="hidden" name="_subject" value="🔥 Nuova iscrizione alla Newsletter UTTF!" />
-                    <input type="hidden" name="_template" value="box" />
-
+                  <form onSubmit={handleNewsletterSubmit} className="space-y-5">
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Il tuo nome</label>
                       <input 
@@ -403,6 +382,23 @@ export default function FeedPage() {
                         className="w-full bg-black/50 border border-white/10 focus:border-[#FF914D]/60 p-4 rounded-xl font-mono text-[11px] uppercase text-white outline-none transition-colors placeholder:text-zinc-700 disabled:opacity-50"
                       />
                     </div>
+
+                    <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/30 p-4 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-400">
+                      <input
+                        type="checkbox"
+                        name="privacy-consent"
+                        required
+                        disabled={isSubmitting}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-[#FF914D]"
+                      />
+                      <span className="leading-relaxed">
+                        Ho letto e accetto la
+                        {' '}
+                        <Link href="/privacy" target="_blank" className="text-[#FF914D] underline underline-offset-4">
+                          Privacy / GDPR
+                        </Link>
+                      </span>
+                    </label>
 
                     <div className="pt-3">
                       {submitError && (

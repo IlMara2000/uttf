@@ -136,17 +136,6 @@ export default function ReviewsPage() {
             />
           </div>
 
-          <div className="rounded-[1.5rem] border border-white/5 bg-black/40 p-5">
-            <p className="text-[10px] font-mono uppercase tracking-[0.35em] text-zinc-500">
-              Google account
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-              Per ora questa versione salva la recensione nel feed del sito. Il
-              collegamento diretto con Google e l&apos;invio di copie automatiche non
-              sono attivi in questa build.
-            </p>
-          </div>
-
           {submitError ? (
             <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
               {submitError}
