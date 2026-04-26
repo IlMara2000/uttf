@@ -5,6 +5,7 @@ import {
   Send, LogOut, Image as ImageIcon, Layers, Loader2, ChevronRight, Sparkles, FileText, ArrowLeft, CalendarDays, Users, Download
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
 import NotesManager from '@/components/NotesManager'; 
