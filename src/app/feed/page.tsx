@@ -205,6 +205,8 @@ export default function FeedPage() {
           </Link>
         </section>
 
+        <ReviewsSection />
+
         {/* INSTAGRAM SECTION */}
         <section>
           <div className="flex flex-col items-center mb-12">
@@ -277,8 +279,6 @@ export default function FeedPage() {
             ))}
           </div>
         </section>
-
-        <ReviewsSection />
       </main>
 
       <footer className="py-24 text-center opacity-30 relative z-10">
