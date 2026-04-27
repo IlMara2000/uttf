@@ -67,7 +67,7 @@ export default function Dashboard() {
     if (!confirm('ELIMINARE_REVIEW?')) return;
     const { error } = await supabase.from('reviews').delete().eq('id', id);
     if (error) {
-      alert('ERRORE_CANCELLAZIONE_REVIEW');
+      alert(`ERRORE_CANCELLAZIONE_REVIEW: ${error.message}`);
       return;
     }
     setReviews((current) => current.filter((review) => review.id !== id));

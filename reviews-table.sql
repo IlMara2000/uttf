@@ -19,3 +19,9 @@ on public.reviews
 for insert
 to public
 with check (true);
+
+create policy "authenticated can delete reviews"
+on public.reviews
+for delete
+to authenticated
+using (true);
