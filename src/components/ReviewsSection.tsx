@@ -94,7 +94,7 @@ export default function ReviewsSection() {
                     </h3>
                   </div>
                   <div className="rounded-full border border-[#FF914D]/20 bg-[#FF914D]/10 px-3 py-1 text-[10px] font-black uppercase text-[#FF914D]">
-                    {review.rating * 2}/10
+                    {Number(review.rating).toFixed(0)}/5
                   </div>
                 </div>
 
@@ -152,7 +152,7 @@ export default function ReviewsSection() {
 
                     <div className="text-left md:text-right">
                       <p className="text-[10px] font-black uppercase text-[#FF914D]">
-                        {review.rating * 2}/10
+                        {Number(review.rating).toFixed(0)}/5
                       </p>
                       <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-600">
                         {new Date(review.created_at).toLocaleDateString('it-IT')}

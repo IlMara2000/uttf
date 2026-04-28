@@ -27,25 +27,17 @@ export default function ReviewStars({
             style={{ width: size, height: size }}
           >
             {interactive && onChange ? (
-              <>
-                <button
-                  type="button"
-                  aria-label={`Assegna ${index * 2 + 1} punti su 10`}
-                  className="absolute left-0 top-0 z-20 h-full w-1/2"
-                  onClick={() => onChange(index + 0.5)}
-                />
-                <button
-                  type="button"
-                  aria-label={`Assegna ${index * 2 + 2} punti su 10`}
-                  className="absolute right-0 top-0 z-20 h-full w-1/2"
-                  onClick={() => onChange(index + 1)}
-                />
-              </>
+              <button
+                type="button"
+                aria-label={`Assegna ${index + 1} stelle su 5`}
+                className="absolute inset-0 z-20 h-full w-full"
+                onClick={() => onChange(index + 1)}
+              />
             ) : null}
 
             <Star
               size={size}
-              className="absolute inset-0 text-zinc-700"
+              className="absolute inset-0 text-zinc-700 transition-transform duration-200"
               strokeWidth={1.8}
             />
 
@@ -55,7 +47,7 @@ export default function ReviewStars({
             >
               <Star
                 size={size}
-                className="fill-[#FF914D] text-[#FF914D]"
+                className="fill-[#FF914D] text-[#FF914D] drop-shadow-[0_0_10px_rgba(255,145,77,0.15)]"
                 strokeWidth={1.8}
               />
             </div>

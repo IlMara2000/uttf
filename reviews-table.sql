@@ -3,7 +3,7 @@ create table if not exists public.reviews (
   created_at timestamptz not null default now(),
   author_name text not null check (char_length(trim(author_name)) > 0),
   comment text not null check (char_length(trim(comment)) > 0),
-  rating numeric(2,1) not null check (rating >= 0.5 and rating <= 5.0)
+  rating numeric(2,1) not null check (rating >= 1.0 and rating <= 5.0 and rating = trunc(rating))
 );
 
 alter table public.reviews enable row level security;

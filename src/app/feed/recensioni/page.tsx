@@ -79,7 +79,7 @@ export default function ReviewsPage() {
             UTTF_<span className="text-[#FF914D]">REVIEWS</span>
           </h1>
           <p className="mt-4 max-w-2xl text-[11px] font-mono uppercase tracking-[0.25em] text-zinc-500">
-            Dai un voto da 1 a 10 usando le mezze stelle e lascia un commento.
+            Dai un voto da 1 a 5 usando le stelle e lascia un commento.
           </p>
         </div>
       </header>
@@ -98,7 +98,7 @@ export default function ReviewsPage() {
             <div className="flex flex-col items-center gap-4 rounded-[2rem] border border-white/5 bg-black/40 p-6">
               <ReviewStars rating={rating} onChange={setRating} interactive size={36} />
               <p className="text-sm font-black uppercase tracking-[0.2em] text-white">
-                {rating === 0 ? 'Seleziona il voto' : `${rating * 2}/10`}
+                {rating === 0 ? 'Seleziona il voto' : `${rating}/5`}
               </p>
             </div>
           </div>
