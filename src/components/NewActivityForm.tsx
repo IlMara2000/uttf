@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getErrorMessage } from '@/lib/errors'
 import { Profile } from '@/types/database'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,7 +21,7 @@ export default function NewActivityForm() {
 
   useEffect(() => {
     async function getProfiles() {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('id, full_name')
         .order('full_name')
@@ -63,8 +64,8 @@ export default function NewActivityForm() {
       
       router.refresh()
       alert("ATTIVITÀ_INSERITA_CORRETTAMENTE")
-    } catch (err: any) {
-      alert("ERRORE_SISTEMA: " + err.message)
+    } catch (err) {
+      alert("ERRORE_SISTEMA: " + getErrorMessage(err))
     } finally {
       setLoading(false)
     }

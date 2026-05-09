@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
 import {
   Send,
   LogOut,
@@ -15,7 +16,6 @@ import {
   CalendarDays,
   Users,
   Download,
-  HardDrive,
   RefreshCw,
   Star,
   BarChart3,
@@ -24,11 +24,11 @@ import {
   Phone,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
 import NotesManager from '@/components/NotesManager';
 import AccountSettings from '@/components/AccountSettings';
+import ManagementBottomLogo from '@/components/ManagementBottomLogo';
 import type { Review } from '@/types/database';
 
 type ActiveView = 'menu' | 'publish' | 'notes' | 'planner' | 'newsletter' | 'reviews';
@@ -85,8 +85,98 @@ export default function Dashboard() {
   const [recentReviews, setRecentReviews] = useState<Review[]>([]);
   const [dashboardRefreshing, setDashboardRefreshing] = useState(false);
   const [newsletterSearch, setNewsletterSearch] = useState('');
+  const [newsletterError, setNewsletterError] = useState<string | null>(null);
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [reviewSearch, setReviewSearch] = useState('');
   const [reviewFilter, setReviewFilter] = useState<'all' | 'high' | 'mid' | 'low'>('all');
+  const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
+
+  const fetchNewsletterSubscribersFromApi = useCallback(async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error('Sessione staff non valida.');
+    }
+
+    const response = await fetch('/api/newsletter', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+    const data = (await response.json().catch(() => ({}))) as {
+      subscribers?: NewsletterSubscriber[];
+      error?: string;
+    };
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Errore lettura newsletter.');
+    }
+
+    return data.subscribers ?? [];
+  }, []);
+
+  const fetchDashboardOverview = useCallback(async () => {
+    setDashboardRefreshing(true);
+    setNewsletterError(null);
+
+    try {
+      const newsletterSubscribersPromise = fetchNewsletterSubscribersFromApi().catch((error) => {
+        setNewsletterError(getErrorMessage(error, 'Errore lettura newsletter.'));
+        return [] as NewsletterSubscriber[];
+      });
+
+      const [publicationsRes, subscribersData, reviewsRes, tasksRes] = await Promise.all([
+        supabase.from('publications').select('id', { count: 'exact' }),
+        newsletterSubscribersPromise,
+        supabase.from('reviews').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(4),
+        supabase.from('tasks').select('id, status'),
+      ]);
+
+      const reviewsData = reviewsRes.data ?? [];
+      const tasksData = tasksRes.data ?? [];
+      const averageRating = reviewsData.length
+        ? reviewsData.reduce((sum, review) => sum + Number(review.rating), 0) / reviewsData.length
+        : 0;
+
+      setRecentSubscribers(subscribersData.slice(0, 3) as NewsletterSubscriber[]);
+      setRecentReviews(reviewsData.slice(0, 3) as Review[]);
+
+      setOverview({
+        publications: publicationsRes.count ?? publicationsRes.data?.length ?? 0,
+        subscribers: subscribersData.length,
+        reviews: reviewsRes.count ?? reviewsData.length,
+        averageRating,
+        tasksOpen: tasksData.filter((task) => task.status !== 'done').length,
+        tasksTotal: tasksData.length,
+      });
+    } finally {
+      setDashboardRefreshing(false);
+    }
+  }, [fetchNewsletterSubscribersFromApi]);
+
+  const fetchSubscribers = useCallback(async () => {
+    setNewsletterLoading(true);
+    setNewsletterError(null);
+
+    try {
+      setSubscribers(await fetchNewsletterSubscribersFromApi());
+    } catch (error) {
+      setNewsletterError(getErrorMessage(error, 'Errore lettura newsletter.'));
+    }
+
+    setNewsletterLoading(false);
+  }, [fetchNewsletterSubscribersFromApi]);
+
+  const fetchReviews = useCallback(async () => {
+    const { data } = await supabase
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (data) setReviews(data as Review[]);
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -105,97 +195,67 @@ export default function Dashboard() {
     }
 
     init();
-  }, [router]);
+  }, [fetchDashboardOverview, router]);
 
   useEffect(() => {
     if (activeView === 'newsletter') fetchSubscribers();
     if (activeView === 'reviews') fetchReviews();
-  }, [activeView]);
-
-  async function fetchDashboardOverview() {
-    setDashboardRefreshing(true);
-
-    try {
-      const [publicationsRes, subscribersRes, reviewsRes, tasksRes] = await Promise.all([
-        supabase.from('publications').select('id', { count: 'exact' }),
-        supabase
-          .from('newsletter_subscribers')
-          .select('*', { count: 'exact' })
-          .order('created_at', { ascending: false })
-          .limit(4),
-        supabase.from('reviews').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(4),
-        supabase.from('tasks').select('id, status'),
-      ]);
-
-      const subscribersData = subscribersRes.data ?? [];
-      const reviewsData = reviewsRes.data ?? [];
-      const tasksData = tasksRes.data ?? [];
-      const averageRating = reviewsData.length
-        ? reviewsData.reduce((sum, review) => sum + Number(review.rating), 0) / reviewsData.length
-        : 0;
-
-      setRecentSubscribers(subscribersData.slice(0, 3) as NewsletterSubscriber[]);
-      setRecentReviews(reviewsData.slice(0, 3) as Review[]);
-
-      setOverview({
-        publications: publicationsRes.count ?? publicationsRes.data?.length ?? 0,
-        subscribers: subscribersRes.count ?? subscribersData.length,
-        reviews: reviewsRes.count ?? reviewsData.length,
-        averageRating,
-        tasksOpen: tasksData.filter((task) => task.status !== 'done').length,
-        tasksTotal: tasksData.length,
-      });
-    } finally {
-      setDashboardRefreshing(false);
-    }
-  }
-
-  async function fetchSubscribers() {
-    const { data } = await supabase
-      .from('newsletter_subscribers')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (data) setSubscribers(data as NewsletterSubscriber[]);
-  }
-
-  async function fetchReviews() {
-    const { data } = await supabase
-      .from('reviews')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (data) setReviews(data as Review[]);
-  }
+  }, [activeView, fetchReviews, fetchSubscribers]);
 
   const exportCSV = () => {
     const headers = ['Data', 'Nome', 'Email', 'Telefono'];
+    const escapeCsvCell = (value: string | number | null | undefined) =>
+      `"${String(value ?? '').replace(/"/g, '""')}"`;
     const rows = subscribers.map((subscriber) => [
       new Date(subscriber.created_at).toLocaleDateString('it-IT'),
       subscriber.name,
       subscriber.email,
       subscriber.phone || '',
     ]);
-    const csvContent = [headers.join(','), ...rows.map((entry) => entry.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map(escapeCsvCell).join(';'))
+      .join('\n');
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = 'iscritti_newsletter.csv';
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   async function handleDeleteReview(id: number) {
     if (!confirm('ELIMINARE_REVIEW?')) return;
 
-    const { error } = await supabase.from('reviews').delete().eq('id', id);
-    if (error) {
-      alert(`ERRORE_CANCELLAZIONE_REVIEW: ${error.message}`);
-      return;
-    }
+    setDeletingReviewId(id);
 
-    setReviews((current) => current.filter((review) => review.id !== id));
-    await fetchDashboardOverview();
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('Sessione staff non valida.');
+      }
+
+      const response = await fetch(`/api/reviews?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Cancellazione recensione non riuscita.');
+      }
+
+      await Promise.all([fetchReviews(), fetchDashboardOverview()]);
+    } catch (error) {
+      alert(`ERRORE_CANCELLAZIONE_REVIEW: ${getErrorMessage(error)}`);
+    } finally {
+      setDeletingReviewId(null);
+    }
   }
 
   async function handleAiEnhance() {
@@ -261,8 +321,8 @@ export default function Dashboard() {
       setPreviewUrl(null);
       await fetchDashboardOverview();
       alert('PUSH_SUCCESSFUL');
-    } catch (err: any) {
-      alert('ERROR: ' + err.message);
+    } catch (err) {
+      alert('ERROR: ' + getErrorMessage(err, 'Upload non riuscito'));
     } finally {
       setUploading(false);
     }
@@ -307,50 +367,52 @@ export default function Dashboard() {
     ? reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviews.length
     : 0;
 
-  const menuCards = [
+  const managementSections = [
     {
-      key: 'publish',
-      title: 'GESTIONE POST',
+      key: 'menu' as ActiveView,
+      title: 'Panoramica',
+      subtitle: 'Numeri, stato operativo e scorciatoie',
+      icon: <BarChart3 size={18} />,
+      action: () => setActiveView('menu'),
+    },
+    {
+      key: 'publish' as ActiveView,
+      title: 'Post',
       subtitle: 'Pubblica e gestisci i contenuti',
-      icon: <Layers size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" />,
+      icon: <Layers size={18} />,
       action: () => setActiveView('publish'),
     },
     {
-      key: 'notes',
-      title: 'NOTE & APPUNTI',
+      key: 'notes' as ActiveView,
+      title: 'Note',
       subtitle: 'Gestisci rime, note e allegati',
-      icon: <FileText size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" />,
+      icon: <FileText size={18} />,
       action: () => setActiveView('notes'),
     },
     {
-      key: 'newsletter',
-      title: 'ISCRITTI NEWSLETTER',
+      key: 'newsletter' as ActiveView,
+      title: 'Newsletter',
       subtitle: 'Database contatti',
-      icon: <Users size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" />,
+      icon: <Users size={18} />,
       action: () => setActiveView('newsletter'),
     },
     {
-      key: 'reviews',
-      title: 'RECENSIONI PUBBLICHE',
+      key: 'reviews' as ActiveView,
+      title: 'Recensioni',
       subtitle: 'Controlla ed elimina le review',
-      icon: <Star size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" />,
+      icon: <Star size={18} />,
       action: () => setActiveView('reviews'),
     },
     {
-      key: 'planner',
-      title: 'PLANNER ATTIVITÀ',
+      key: 'planner' as ActiveView,
+      title: 'Planner',
       subtitle: 'Gestione task',
-      icon: <CalendarDays size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" />,
+      icon: <CalendarDays size={18} />,
       action: () => setActiveView('planner'),
     },
-    {
-      key: 'storage',
-      title: 'FOTO & PLANIMETRIE',
-      subtitle: 'Apri il vault media e asset',
-      icon: <HardDrive size={24} className="text-zinc-500 group-hover:text-[#FF914D] transition-colors" />,
-      action: () => router.push('/storage'),
-    },
   ];
+  const moduleCards = managementSections.filter((section) => section.key !== 'menu');
+  const activeSection = managementSections.find((section) => section.key === activeView) ?? managementSections[0];
 
   if (loading) {
     return (
@@ -362,29 +424,127 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-transparent text-white flex flex-col font-sans">
-      <header className="h-20 border-b border-white/5 bg-black/40 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-black italic tracking-tighter uppercase">
-            UTTF_<span className="text-[#FF914D]">HUB</span>
-          </h1>
-          <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">
-            {userEmail}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <AccountSettings />
-          <button
-            onClick={() => supabase.auth.signOut().then(() => router.push('/'))}
-            className="p-2 text-zinc-500 hover:text-[#FF914D] transition-colors"
-          >
-            <LogOut size={20} />
-          </button>
+      <header className="sticky top-0 z-50 border-b border-white/5 bg-black/70 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+          <div className="min-w-0">
+            <h1 className="text-xl font-black italic tracking-tighter uppercase">
+              UTTF_<span className="text-[#FF914D]">STAFF</span>
+            </h1>
+            <span className="block truncate text-[8px] font-mono text-zinc-500 uppercase tracking-widest">
+              {userEmail}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <AccountSettings />
+            <button
+              onClick={() => supabase.auth.signOut().then(() => router.push('/'))}
+              className="rounded-xl border border-white/5 bg-white/[0.03] p-2 text-zinc-500 transition-colors hover:text-[#FF914D]"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="h-fit rounded-[2rem] border border-white/5 bg-zinc-950/55 p-4 backdrop-blur-xl lg:sticky lg:top-24">
+            <div className="mb-5 rounded-3xl border border-[#FF914D]/10 bg-[#FF914D]/5 p-4">
+              <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
+                Gestionale
+              </p>
+              <h2 className="mt-2 text-lg font-black uppercase italic tracking-tight">
+                Area staff
+              </h2>
+              <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+                Accessi rapidi alle funzioni operative del sito.
+              </p>
+            </div>
+
+            <nav className="grid gap-2">
+              {managementSections.map((section) => {
+                const isActive = activeView === section.key;
+
+                return (
+                  <button
+                    key={section.key}
+                    onClick={section.action}
+                    className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
+                      isActive
+                        ? 'border-[#FF914D]/40 bg-[#FF914D] text-black'
+                        : 'border-white/5 bg-black/30 text-zinc-400 hover:border-[#FF914D]/30 hover:text-white'
+                    }`}
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20">
+                      {section.icon}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[10px] font-black uppercase tracking-[0.18em]">
+                        {section.title}
+                      </span>
+                      <span className={`mt-1 block truncate text-[9px] font-mono uppercase ${isActive ? 'text-black/60' : 'text-zinc-600'}`}>
+                        {section.subtitle}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => router.push('/dashboard/outputs')}
+                className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-black/30 px-4 py-3 text-left text-zinc-400 transition-all hover:border-[#FF914D]/30 hover:text-white"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20">
+                  <Layers size={18} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[10px] font-black uppercase tracking-[0.18em]">
+                    Archivio post
+                  </span>
+                  <span className="mt-1 block truncate text-[9px] font-mono uppercase text-zinc-600">
+                    Gestione contenuti pubblicati
+                  </span>
+                </span>
+              </button>
+            </nav>
+          </aside>
+
+          <section className="min-w-0 space-y-6">
+            <div className="rounded-[2rem] border border-white/5 bg-zinc-950/55 p-5 backdrop-blur-xl md:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-[9px] font-mono uppercase tracking-[0.35em] text-[#FF914D]">
+                    {activeView === 'menu' ? 'Dashboard staff' : 'Modulo operativo'}
+                  </p>
+                  <h2 className="mt-2 text-3xl font-black uppercase italic tracking-tighter md:text-5xl">
+                    {activeSection.title}
+                  </h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-500">
+                    {activeSection.subtitle}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {activeView !== 'menu' ? (
+                    <button
+                      onClick={() => setActiveView('menu')}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white"
+                    >
+                      <ArrowLeft size={14} /> Panoramica
+                    </button>
+                  ) : null}
+                  <button
+                    onClick={fetchDashboardOverview}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-[#FF914D] px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-black"
+                  >
+                    <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
+                    Aggiorna
+                  </button>
+                </div>
+              </div>
+            </div>
+
         {activeView === 'menu' ? (
-          <div className="max-w-6xl mx-auto flex flex-col gap-8 mt-6">
+          <div className="flex flex-col gap-6">
             <CalendarWidget />
 
             <section className="glass-panel p-6 md:p-8 border-white/5 bg-zinc-900/20 rounded-[2rem]">
@@ -396,12 +556,11 @@ export default function Dashboard() {
                   <div>
                     <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter">
                       Dashboard operativa
-                    </h2>
-                    <p className="text-sm text-zinc-400 max-w-2xl mt-3">
-                      La parte pubblica ha un’identità forte e riconoscibile. Il gestionale era già coerente
-                      nel mood, ma più debole nella gerarchia informativa. Qui il punto ora è dare visibilità
-                      immediata a numeri, accessi rapidi e stato operativo.
-                    </p>
+	                    </h2>
+	                    <p className="text-sm text-zinc-400 max-w-2xl mt-3">
+	                      Qui trovi lo stato del sito, le attività aperte, i contatti raccolti e le scorciatoie
+	                      per lavorare sui moduli principali senza cercarli in giro.
+	                    </p>
                   </div>
                 </div>
 
@@ -416,14 +575,7 @@ export default function Dashboard() {
                   >
                     Nuovo Post
                   </button>
-                  <button
-                    onClick={fetchDashboardOverview}
-                    className="px-5 py-3 rounded-2xl bg-black/40 border border-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] inline-flex items-center gap-2"
-                  >
-                    <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
-                    Aggiorna
-                  </button>
-                </div>
+	                </div>
               </div>
 
               <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 mt-8">
@@ -457,7 +609,7 @@ export default function Dashboard() {
 
             <section className="grid xl:grid-cols-[1.4fr_0.9fr] gap-6">
               <div className="grid md:grid-cols-2 gap-4">
-                {menuCards.map((card) => (
+	                {moduleCards.map((card) => (
                   <button
                     key={card.key}
                     onClick={card.action}
@@ -543,37 +695,9 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <div className="flex justify-center mb-16 md:mb-20 px-4">
-              <motion.img
-                src="/icons/homelogo.png"
-                alt="UTTF Home Logo"
-                className="w-full max-w-[300px] sm:max-w-[400px] md:max-w-[600px] aspect-square object-contain rounded-full"
-                animate={{
-                  scale: [1, 1.02, 1],
-                  opacity: [0.85, 1, 0.85],
-                  boxShadow: [
-                    '0 0 0px 0px rgba(255, 145, 77, 0)',
-                    '0 0 60px 20px rgba(255, 145, 77, 0.15)',
-                    '0 0 0px 0px rgba(255, 145, 77, 0)',
-                  ],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-            </div>
           </div>
-        ) : (
-          <div className="max-w-6xl mx-auto flex flex-col gap-6">
-            <button
-              onClick={() => setActiveView('menu')}
-              className="self-start flex items-center gap-2 px-4 py-2.5 bg-black/40 backdrop-blur-md border border-white/5 rounded-xl text-[10px] uppercase font-mono tracking-widest"
-            >
-              <ArrowLeft size={14} /> Torna Indietro
-            </button>
-
+	        ) : (
+	          <div className="flex flex-col gap-6">
             {activeView === 'publish' && (
               <div className="grid xl:grid-cols-[1.25fr_0.75fr] gap-6">
                 <div className="space-y-6">
@@ -634,7 +758,7 @@ export default function Dashboard() {
                       </div>
                       <label className="flex flex-col items-center justify-center h-56 border-2 border-dashed border-white/5 rounded-2xl cursor-pointer hover:bg-white/[0.02] relative overflow-hidden group transition-all">
                         {previewUrl ? (
-                          <img src={previewUrl} className="h-full w-full object-cover opacity-60" />
+                          <img src={previewUrl} alt="Anteprima file selezionato" className="h-full w-full object-cover opacity-60" />
                         ) : (
                           <ImageIcon size={28} className="text-zinc-700 group-hover:text-zinc-400" />
                         )}
@@ -705,12 +829,6 @@ export default function Dashboard() {
                     >
                       Apri Archivio Post
                     </button>
-                    <button
-                      onClick={() => router.push('/storage')}
-                      className="w-full px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] hover:border-[#FF914D]/40 transition-all"
-                    >
-                      Apri Foto & Planimetrie
-                    </button>
                   </div>
                 </aside>
               </div>
@@ -729,12 +847,21 @@ export default function Dashboard() {
                           Ricerca rapida, export e lettura immediata dei contatti raccolti.
                         </p>
                       </div>
-                      <button
-                        onClick={exportCSV}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#FF914D] text-black rounded-xl font-black text-[10px] uppercase w-fit"
-                      >
-                        <Download size={14} /> ESPORTA CSV
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={fetchSubscribers}
+                          disabled={newsletterLoading}
+                          className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 text-white rounded-xl font-black text-[10px] uppercase w-fit disabled:opacity-50"
+                        >
+                          <RefreshCw size={14} className={newsletterLoading ? 'animate-spin' : ''} /> AGGIORNA
+                        </button>
+                        <button
+                          onClick={exportCSV}
+                          className="flex items-center gap-2 px-4 py-2 bg-[#FF914D] text-black rounded-xl font-black text-[10px] uppercase w-fit"
+                        >
+                          <Download size={14} /> ESPORTA CSV
+                        </button>
+                      </div>
                     </div>
 
                     <div className="relative mt-5">
@@ -746,6 +873,12 @@ export default function Dashboard() {
                         className="w-full bg-black/35 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-sm text-white outline-none focus:border-[#FF914D]/40"
                       />
                     </div>
+
+                    {newsletterError && (
+                      <p className="mt-3 rounded-xl border border-[#FF914D]/20 bg-[#FF914D]/10 px-4 py-3 text-[10px] font-mono uppercase tracking-wider text-[#FF914D]">
+                        {newsletterError}
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid sm:grid-cols-3 gap-3">
@@ -771,7 +904,13 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid gap-3">
-                  {filteredSubscribers.length > 0 ? (
+                  {newsletterLoading ? (
+                    <div className="p-5 bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl">
+                      <span className="text-xs font-mono text-zinc-500 uppercase">
+                        Caricamento contatti newsletter...
+                      </span>
+                    </div>
+                  ) : filteredSubscribers.length > 0 ? (
                     filteredSubscribers.map((subscriber, index) => (
                       <div
                         key={`${subscriber.email}-${subscriber.created_at}-${index}`}
@@ -898,9 +1037,10 @@ export default function Dashboard() {
                         </div>
                         <button
                           onClick={() => handleDeleteReview(review.id)}
+                          disabled={deletingReviewId === review.id}
                           className="self-start px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-black uppercase text-red-400 hover:bg-red-500/20 transition-all"
                         >
-                          Elimina
+                          {deletingReviewId === review.id ? 'Elimino...' : 'Elimina'}
                         </button>
                       </div>
                     ))
@@ -918,8 +1058,12 @@ export default function Dashboard() {
             {activeView === 'planner' && <Planner />}
             {activeView === 'notes' && <NotesManager />}
           </div>
-        )}
-      </main>
+	        )}
+
+	        <ManagementBottomLogo className="mt-12" />
+          </section>
+        </div>
+	      </main>
     </div>
   );
 }

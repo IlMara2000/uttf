@@ -1,18 +1,37 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
 import { 
-  ClipboardList, Trash2, AlertTriangle, User, Plus, X, Clock, ChevronDown, ChevronUp, CheckCircle2
+  ClipboardList, Trash2, Plus, X
 } from 'lucide-react';
-import { format, isBefore, startOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
+type PlannerUser = {
+  id: string;
+  email: string;
+  username?: string | null;
+  full_name?: string | null;
+};
+
+type PlannerTask = {
+  id: string;
+  title: string;
+  description?: string | null;
+  assigned_to?: string[] | null;
+  status: string;
+  priority: string;
+  deadline?: string | null;
+  end_date?: string | null;
+  time?: string | null;
+};
+
 export default function Planner() {
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]); 
+  const [tasks, setTasks] = useState<PlannerTask[]>([]);
+  const [users, setUsers] = useState<PlannerUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [showCompleted, setShowCompleted] = useState(false);
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -24,25 +43,47 @@ export default function Planner() {
   const [time, setTime] = useState('');         
   const [isAdding, setIsAdding] = useState(false);
 
-  const today = startOfDay(new Date());
-
   useEffect(() => { fetchTasks(); fetchUsers(); }, []);
 
   const notifyCalendar = () => window.dispatchEvent(new Event('refreshCalendar'));
+  const taskPageSize = 1000;
 
   async function fetchUsers() {
     const { data } = await supabase.from('profiles').select('id, email, username, full_name'); 
-    if (data) setUsers(data);
+    if (data) setUsers(data as PlannerUser[]);
   }
 
   async function fetchTasks() {
-    const { data } = await supabase.from('tasks').select('*').order('created_at', { ascending: false });
-    if (data) setTasks(data);
-    setLoading(false);
-  }
+    setLoading(true);
 
-  const activeTasks = tasks.filter(t => t.status === 'todo');
-  const completedTasks = tasks.filter(t => t.status === 'done');
+    try {
+      const allTasks: PlannerTask[] = [];
+      let from = 0;
+
+      while (true) {
+        const to = from + taskPageSize - 1;
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        if (error) throw error;
+
+        const page = (data || []) as PlannerTask[];
+        allTasks.push(...page);
+
+        if (page.length < taskPageSize) break;
+        from += taskPageSize;
+      }
+
+      setTasks(allTasks);
+    } catch (err) {
+      alert("Errore caricamento task: " + getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const resetForm = () => {
     setEditingId(null); setTitle(''); setDescription(''); setAssigneeIds([]);
@@ -50,11 +91,11 @@ export default function Planner() {
     setShowForm(false);
   };
 
-  const handleEditClick = (task: any) => {
+  const handleEditClick = (task: PlannerTask) => {
     setEditingId(task.id);
     setTitle(task.title || '');
     setDescription(task.description || '');
-    let val = task.assigned_to;
+    const val = task.assigned_to;
     setAssigneeIds(Array.isArray(val) ? val.filter((id: string) => id && id.length > 10) : []);
     setDeadline(task.deadline || '');
     setEndDate(task.end_date || '');
@@ -88,8 +129,8 @@ export default function Planner() {
       resetForm();
       await fetchTasks(); 
       notifyCalendar();
-    } catch (err: any) {
-      alert("Errore: " + err.message);
+    } catch (err) {
+      alert("Errore: " + getErrorMessage(err));
     } finally {
       setIsAdding(false);
     }
@@ -100,7 +141,7 @@ export default function Planner() {
     setAssigneeIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  const renderAssignedNames = (ids: any) => {
+  const renderAssignedNames = (ids: unknown) => {
     if (!ids || !Array.isArray(ids) || ids.length === 0) return 'CHIUNQUE';
     return users.filter(u => ids.includes(u.id)).map(u => u.username || u.email.split('@')[0]).join(', ');
   }
@@ -114,7 +155,7 @@ export default function Planner() {
     }
   };
 
-  const TaskRow = ({ task, index }: { task: any, index: number }) => (
+  const TaskRow = ({ task, index }: { task: PlannerTask, index: number }) => (
     <tr key={task.id} onClick={() => handleEditClick(task)} className="border-b border-white/5 hover:bg-white/[0.05] cursor-pointer">
       <td className="p-3 pl-6 text-[8px] font-mono text-zinc-800 border-r border-white/5">{index + 1}</td>
       <td className="p-3 border-r border-white/5"><div className={`text-[10px] font-bold uppercase italic ${task.status === 'done' ? 'line-through text-zinc-700' : 'text-zinc-200'}`}>{task.title}</div></td>
@@ -162,10 +203,9 @@ export default function Planner() {
       <div className="overflow-x-auto">
         <table className="w-full text-left min-w-[700px]">
           <thead><tr className="text-[8px] font-mono text-zinc-600 uppercase border-b border-white/5 tracking-widest"><th className="p-3 pl-6 w-10">#</th><th className="p-3">Attività</th><th className="p-3 text-center">Referente</th><th className="p-3 text-center">Status</th><th className="p-3 text-center">Prio</th><th className="p-3 text-center">Data</th><th className="p-3 text-center w-10">Del</th></tr></thead>
-          <tbody>{loading ? <tr><td colSpan={7} className="text-center py-8 font-mono text-[10px] text-[#FF914D] animate-pulse">SYNCING_DATA...</td></tr> : activeTasks.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-zinc-600 text-[10px] font-mono uppercase">Nessuna attività in corso</td></tr> : activeTasks.map((task, idx) => <TaskRow key={task.id} task={task} index={idx} />)}</tbody>
+          <tbody>{loading ? <tr><td colSpan={7} className="text-center py-8 font-mono text-[10px] text-[#FF914D] animate-pulse">SYNCING_DATA...</td></tr> : tasks.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-zinc-600 text-[10px] font-mono uppercase">Nessun task presente</td></tr> : tasks.map((task, idx) => <TaskRow key={task.id} task={task} index={idx} />)}</tbody>
         </table>
       </div>
-      {/* ... Sezione completate ... */}
     </div>
   );
 }

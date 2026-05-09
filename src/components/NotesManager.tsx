@@ -1,15 +1,24 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
 import { 
   Plus, Search, Trash2, FileText, ChevronLeft, 
   Paperclip, Loader2, Save 
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+type NoteRecord = {
+  id?: string;
+  title: string;
+  content?: string | null;
+  attachments?: string[];
+  updated_at?: string;
+};
+
 export default function NotesManager() {
-  const [notes, setNotes] = useState<any[]>([]);
-  const [activeNote, setActiveNote] = useState<any>(null);
+  const [notes, setNotes] = useState<NoteRecord[]>([]);
+  const [activeNote, setActiveNote] = useState<NoteRecord | null>(null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -24,7 +33,7 @@ export default function NotesManager() {
       .order('updated_at', { ascending: false });
     
     if (error) console.error("Error fetching:", error);
-    else setNotes(data || []);
+    else setNotes((data || []) as NoteRecord[]);
     setLoading(false);
   }
 
@@ -69,12 +78,12 @@ export default function NotesManager() {
       if (result.error) throw result.error;
 
       if (result.data) {
-        setActiveNote(result.data[0]);
+        setActiveNote(result.data[0] as NoteRecord);
         await fetchNotes();
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Save error:", err);
-      alert("Errore nel salvataggio: " + err.message);
+      alert("Errore nel salvataggio: " + getErrorMessage(err));
     } finally {
       setIsSaving(false);
     }
@@ -118,8 +127,8 @@ export default function NotesManager() {
           .update({ attachments: updatedAttachments })
           .eq('id', activeNote.id);
       }
-    } catch (err: any) {
-      alert("Errore upload: " + err.message);
+    } catch (err) {
+      alert("Errore upload: " + getErrorMessage(err));
     } finally {
       setIsUploading(false);
     }
@@ -165,7 +174,7 @@ export default function NotesManager() {
               <h3 className="text-[11px] font-black uppercase truncate">{note.title}</h3>
               <div className="flex justify-between items-center mt-1">
                 <span className="text-[8px] font-mono text-zinc-600">
-                  {format(new Date(note.updated_at), 'dd/MM/yy')}
+                  {note.updated_at ? format(new Date(note.updated_at), 'dd/MM/yy') : '--/--/--'}
                 </span>
                 <p className="text-[9px] text-zinc-500 truncate ml-2 flex-1">{note.content}</p>
               </div>
@@ -194,7 +203,11 @@ export default function NotesManager() {
                 >
                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 </button>
-                <button onClick={() => handleDelete(activeNote.id)} className="text-zinc-800 hover:text-red-500">
+                <button
+                  onClick={() => activeNote.id && handleDelete(activeNote.id)}
+                  disabled={!activeNote.id}
+                  className="text-zinc-800 hover:text-red-500 disabled:opacity-30"
+                >
                   <Trash2 size={18} />
                 </button>
               </div>
@@ -207,17 +220,17 @@ export default function NotesManager() {
                 className="w-full bg-transparent text-2xl font-black uppercase italic outline-none placeholder:text-zinc-800"
               />
               <textarea 
-                placeholder="Inizia a scrivere..." value={activeNote.content}
+                placeholder="Inizia a scrivere..." value={activeNote.content || ''}
                 onChange={e => setActiveNote({...activeNote, content: e.target.value})}
                 className="w-full bg-transparent flex-1 resize-none outline-none font-mono text-sm leading-relaxed placeholder:text-zinc-900 min-h-[200px]"
               />
               
               {/* ALLEGATI */}
-              {activeNote.attachments?.length > 0 && (
+              {(activeNote.attachments?.length ?? 0) > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4 border-t border-white/5">
-                  {activeNote.attachments.map((url: string, i: number) => (
+                  {activeNote.attachments?.map((url: string, i: number) => (
                     <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-zinc-900">
-                      <img src={url} className="w-full h-32 object-cover opacity-80" />
+                      <img src={url} className="w-full h-32 object-cover opacity-80" alt="Allegato nota" />
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                         <a href={url} target="_blank" rel="noreferrer" className="p-2 bg-white/10 rounded-full hover:bg-white/20">
                           <FileText size={18} />

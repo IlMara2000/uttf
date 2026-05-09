@@ -1,23 +1,34 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { UserPlus, ShieldAlert, Trash2, Zap, Fingerprint, Mail } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { UserPlus, Trash2, Fingerprint } from 'lucide-react'
+import { motion } from 'framer-motion'
+import ManagementBottomLogo from '@/components/ManagementBottomLogo'
+
+type TeamProfile = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: string;
+}
 
 export default function AdminTeamPage() {
-  const [profiles, setProfiles] = useState<any[]>([])
+  const [profiles, setProfiles] = useState<TeamProfile[]>([])
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('') // AGGIUNTO EMAIL
   const [role, setRole] = useState('')
   const [skills, setSkills] = useState('')
 
-  const fetchTeam = async () => {
+  const fetchTeam = useCallback(async () => {
     const { data } = await supabase.from('profiles').select('*').order('full_name')
-    if (data) setProfiles(data)
-  }
+    if (data) setProfiles(data as TeamProfile[])
+  }, [])
 
-  useEffect(() => { fetchTeam() }, [])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTeam()
+  }, [fetchTeam])
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +54,7 @@ export default function AdminTeamPage() {
 
     if (!profileError && !authError) {
       setFullName(''); setEmail(''); setRole(''); setSkills('');
-      fetchTeam()
+      void fetchTeam()
       alert("UNIT_AUTHORIZED: L'utente ora può registrarsi/accedere.");
     } else {
       alert('DATABASE_ERROR: Controlla che le tabelle authorized_users e profiles esistano.');
@@ -55,7 +66,7 @@ export default function AdminTeamPage() {
     if (!confirm('TERMINATE_CONTRACT?')) return
     await supabase.from('profiles').delete().eq('id', id)
     await supabase.from('authorized_users').delete().eq('email', userEmail)
-    fetchTeam()
+    void fetchTeam()
   }
 
   return (
@@ -105,6 +116,8 @@ export default function AdminTeamPage() {
           </div>
         </div>
       </div>
+
+      <ManagementBottomLogo className="mt-16" />
     </div>
   )
 }

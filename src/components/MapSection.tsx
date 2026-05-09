@@ -37,7 +37,7 @@ export default function MapSection({ isOpen, onClose }: MapSectionProps) {
                 UTTF_<span className="text-[#FF914D]">MAP</span>
               </h2>
               <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-[0.3em]">
-                COORDINATE_SEDE_UTTF: 45°23'08.0"N 9°09'02.9"E
+                COORDINATE_SEDE_UTTF: 45°23&apos;08.0&quot;N 9°09&apos;02.9&quot;E
               </p>
             </div>
           </div>

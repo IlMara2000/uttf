@@ -8,15 +8,23 @@ import {
   Loader2,
   Layers,
   Search,
-  HardDrive,
   RefreshCw,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import ManagementBottomLogo from '@/components/ManagementBottomLogo';
+
+type OutputPost = {
+  id: string;
+  created_at: string;
+  title: string;
+  description: string | null;
+  image_url: string;
+};
 
 export default function OutputsPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<OutputPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -31,7 +39,7 @@ export default function OutputsPage() {
       .from('publications')
       .select('*')
       .order('created_at', { ascending: false });
-    if (data) setPosts(data);
+    if (data) setPosts(data as OutputPost[]);
     setLoading(false);
   }
 
@@ -102,13 +110,6 @@ export default function OutputsPage() {
               <RefreshCw size={14} />
               Aggiorna
             </button>
-            <button
-              onClick={() => router.push('/storage')}
-              className="px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] inline-flex items-center gap-2"
-            >
-              <HardDrive size={14} />
-              Foto & Planimetrie
-            </button>
           </div>
         </div>
 
@@ -164,6 +165,7 @@ export default function OutputsPage() {
                   <img
                     src={post.image_url}
                     className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"
+                    alt={post.title}
                   />
                 </div>
                 <div className="space-y-3 px-1">
@@ -198,6 +200,8 @@ export default function OutputsPage() {
             </p>
           </div>
         )}
+
+        <ManagementBottomLogo className="mt-12" />
       </div>
     </div>
   );

@@ -13,10 +13,18 @@ import {
 import Link from 'next/link';
 import MapSection from '@/components/MapSection';
 
+type Publication = {
+  id: string | number;
+  created_at: string;
+  title: string;
+  description: string | null;
+  image_url: string;
+};
+
 export default function HomePage() {
-  const [publications, setPublications] = useState<any[]>([]);
+  const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Publication | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
 
   const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
@@ -29,7 +37,7 @@ export default function HomePage() {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(6);
-      if (!error && data) setPublications(data);
+      if (!error && data) setPublications(data as Publication[]);
       setLoading(false);
     }
     fetchPublications();

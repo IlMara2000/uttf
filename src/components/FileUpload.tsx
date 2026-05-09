@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getErrorMessage } from '@/lib/errors'
 import { useRouter } from 'next/navigation'
 
 export default function FileUpload({ activityId }: { activityId?: number }) {
@@ -47,9 +48,10 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
 
       alert("SYNC_COMPLETED");
       router.refresh()
-    } catch (error: any) {
-      console.error('Upload Error:', error.message)
-      alert('UPLOAD_FAILED: ' + error.message)
+    } catch (error) {
+      const message = getErrorMessage(error, 'Upload non riuscito')
+      console.error('Upload Error:', message)
+      alert('UPLOAD_FAILED: ' + message)
     } finally {
       setUploading(false)
     }

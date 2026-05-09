@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
 import { Settings, X, Save, Loader2, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -105,9 +106,9 @@ export default function AccountSettings() {
       // Aggiorna la pagina o i componenti in ascolto (come il Planner)
       window.dispatchEvent(new Event('refreshCalendar'));
       
-    } catch (err: any) {
+    } catch (err) {
       console.error("Errore salvataggio:", err);
-      alert("ERRORE: " + err.message);
+      alert("ERRORE: " + getErrorMessage(err));
     } finally {
       setLoading(false);
     }

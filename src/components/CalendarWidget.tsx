@@ -8,10 +8,19 @@ import {
 import { it } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 
+type CalendarEvent = {
+  id?: string | number;
+  title?: string;
+  description?: string | null;
+  deadline?: string | null;
+  status?: string | null;
+  eventType: 'task' | 'activity';
+};
+
 export default function CalendarWidget() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
   const fetchEvents = useCallback(async () => {
     const start = startOfMonth(currentMonth).toISOString();
@@ -35,14 +44,15 @@ export default function CalendarWidget() {
     if (activitiesError) console.error("Activities fetch error:", activitiesError);
 
     // Uniamo i due set di dati aggiungendo un flag "eventType" per distinguerli
-    const formattedTasks = (tasks || []).map(t => ({ ...t, eventType: 'task' }));
-    const formattedActivities = (activities || []).map(a => ({ ...a, eventType: 'activity' }));
+    const formattedTasks = (tasks || []).map(t => ({ ...t, eventType: 'task' as const }));
+    const formattedActivities = (activities || []).map(a => ({ ...a, eventType: 'activity' as const }));
 
     setEvents([...formattedTasks, ...formattedActivities]);
   }, [currentMonth]);
 
   useEffect(() => {
-    fetchEvents();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchEvents();
     // Listener per aggiornare in automatico quando Planner o ActivityForm salvano
     window.addEventListener('refreshCalendar', fetchEvents);
     return () => window.removeEventListener('refreshCalendar', fetchEvents);

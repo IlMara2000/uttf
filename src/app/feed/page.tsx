@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import ReviewsSection from '@/components/ReviewsSection';
 
 const instagramPosts = [
@@ -77,9 +76,6 @@ export default function FeedPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const emailSubmissionPendingRef = useRef(false);
-  const [isEmailSubmissionPending, setIsEmailSubmissionPending] = useState(false);
   const [subscriberName, setSubscriberName] = useState('');
   const [subscriberEmail, setSubscriberEmail] = useState('');
   const [subscriberPhone, setSubscriberPhone] = useState('');
@@ -103,31 +99,12 @@ export default function FeedPage() {
   const closeNewsletterModal = () => {
     setIsNewsletterOpen(false);
     setIsSubmitting(false);
-    emailSubmissionPendingRef.current = false;
-    setIsEmailSubmissionPending(false);
+    setIsSuccess(false);
     setSubmitError(null);
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-  };
-
-  const handleNewsletterIframeLoad = () => {
-    if (!emailSubmissionPendingRef.current) return;
-
-    emailSubmissionPendingRef.current = false;
-    setIsEmailSubmissionPending(false);
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    setSubscriberName('');
-    setSubscriberEmail('');
-    setSubscriberPhone('');
-    setPrivacyAccepted(false);
-
-    closeTimeoutRef.current = setTimeout(() => {
-      setIsNewsletterOpen(false);
-      setTimeout(() => setIsSuccess(false), 500);
-    }, 3000);
   };
 
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -143,30 +120,37 @@ export default function FeedPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .insert([{
-          name: subscriberName.trim(),
-          email: subscriberEmail.trim(),
-          phone: subscriberPhone.trim()
-        }]);
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: subscriberName,
+          email: subscriberEmail,
+          phone: subscriberPhone,
+          privacyAccepted,
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
 
-      if (error) throw error;
-      emailSubmissionPendingRef.current = true;
-      setIsEmailSubmissionPending(true);
-      formRef.current?.submit();
+      if (!response.ok) {
+        throw new Error(data.error || 'Salvataggio non riuscito.');
+      }
+
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      setSubscriberName('');
+      setSubscriberEmail('');
+      setSubscriberPhone('');
+      setPrivacyAccepted(false);
 
       closeTimeoutRef.current = setTimeout(() => {
-        if (!emailSubmissionPendingRef.current) return;
-        emailSubmissionPendingRef.current = false;
-        setIsEmailSubmissionPending(false);
-        setIsSubmitting(false);
-        setSubmitError('Dati salvati, ma la mail non e stata confermata. Controlla FormSubmit.');
-      }, 15000);
+        setIsNewsletterOpen(false);
+        setTimeout(() => setIsSuccess(false), 500);
+      }, 3000);
     } catch (error) {
       console.error("Errore salvataggio su Supabase:", error);
       setIsSubmitting(false);
-      setSubmitError('Salvataggio non riuscito. Riprova tra qualche secondo.');
+      setSubmitError(error instanceof Error ? error.message : 'Salvataggio non riuscito. Riprova tra qualche secondo.');
     }
   };
 
@@ -356,11 +340,11 @@ export default function FeedPage() {
                     BENVENUTO A_<span className="text-[#FF914D]">BORDO</span>
                   </h2>
                   <p className="text-xs font-mono text-zinc-400 uppercase tracking-widest leading-relaxed">
-                    Operazione confermata. Riceverai presto i nostri aggiornamenti.
+                    Operazione confermata. Il contatto e stato salvato nel gestionale staff.
                   </p>
                 </motion.div>
               ) : (
-                /* FORM DI ISCRIZIONE IBRIDO */
+                /* FORM DI ISCRIZIONE */
                 <>
                   <div className="mb-8 mt-2">
                     <div className="w-12 h-12 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-2xl flex items-center justify-center mb-6">
@@ -374,21 +358,7 @@ export default function FeedPage() {
                     </p>
                   </div>
 
-                  <form
-                    ref={formRef}
-                    action="https://formsubmit.co/ass.uttf@gmail.com"
-                    method="POST"
-                    target="newsletter_mail_iframe"
-                    onSubmit={handleNewsletterSubmit}
-                    className="space-y-5"
-                  >
-                    <input type="hidden" name="_subject" value="Nuova iscrizione newsletter UTTF" />
-                    <input type="hidden" name="_template" value="table" />
-                    <input type="hidden" name="_captcha" value="false" />
-                    <input type="hidden" name="_next" value="https://uttf.vercel.app/feed" />
-                    <input type="hidden" name="_blacklist" value="http://,https://,www.,พนัน,crypto,loan" />
-                    <input type="hidden" name="_replyto" value={subscriberEmail} />
-
+                  <form onSubmit={handleNewsletterSubmit} className="space-y-5">
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest pl-1 block">Il tuo nome</label>
                       <input 
@@ -479,13 +449,6 @@ export default function FeedPage() {
           </div>
         )}
       </AnimatePresence>
-
-      <iframe
-        name="newsletter_mail_iframe"
-        title="newsletter-mail"
-        className="hidden"
-        onLoad={handleNewsletterIframeLoad}
-      />
 
     </div>
   );

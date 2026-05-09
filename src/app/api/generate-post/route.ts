@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
+import { getErrorMessage } from '@/lib/errors';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let groq: Groq | null = null;
+
+function getGroq() {
+  if (groq) return groq;
+
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('GROQ_API_KEY non configurata');
+
+  groq = new Groq({ apiKey });
+  return groq;
+}
 
 export async function POST(req: Request) {
   try {
     const { title, description } = await req.json();
 
-    const chatCompletion = await groq.chat.completions.create({
+    const chatCompletion = await getGroq().chat.completions.create({
       messages: [
         {
           role: 'system',
@@ -25,7 +34,7 @@ export async function POST(req: Request) {
 
     const content = chatCompletion.choices[0]?.message?.content;
     return NextResponse.json({ post: content });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: getErrorMessage(error, 'Generazione post non riuscita') }, { status: 500 });
   }
 }

@@ -1,31 +1,61 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { MessageSquareQuote, Star, ArrowRight, Loader2 } from 'lucide-react';
+import { MessageSquareQuote, Star, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
 import ReviewStars from '@/components/ReviewStars';
 import type { Review } from '@/types/database';
 
 export default function ReviewsSection() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [staffAccessToken, setStaffAccessToken] = useState<string | null>(null);
+  const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function fetchReviews() {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const fetchReviews = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (!error && data) {
-        setReviews(data);
-      }
-
-      setLoading(false);
+    if (!error && data) {
+      setReviews(data);
     }
 
-    fetchReviews();
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void fetchReviews();
+  }, [fetchReviews]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function syncStaffSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (isMounted) {
+        setStaffAccessToken(session?.access_token ?? null);
+      }
+    }
+
+    void syncStaffSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setStaffAccessToken(session?.access_token ?? null);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const featuredReviews = useMemo(
@@ -40,13 +70,54 @@ export default function ReviewsSection() {
   );
 
   const recentReviews = useMemo(
-    () =>
-      [...reviews].sort(
+    () => {
+      const featuredIds = new Set(featuredReviews.map((review) => review.id));
+
+      return [...reviews]
+        .filter((review) => !featuredIds.has(review.id))
+        .sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ),
-    [reviews]
+        );
+    },
+    [featuredReviews, reviews]
   );
+
+  const handleDeleteReview = async (id: number) => {
+    if (!staffAccessToken) return;
+    if (!confirm('ELIMINARE_REVIEW?')) return;
+
+    setDeletingReviewId(id);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token || staffAccessToken;
+
+      if (!token) {
+        throw new Error('Sessione staff non valida.');
+      }
+
+      const response = await fetch(`/api/reviews?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Cancellazione recensione non riuscita.');
+      }
+
+      await fetchReviews();
+    } catch (error) {
+      alert(`ERRORE_CANCELLAZIONE_REVIEW: ${getErrorMessage(error)}`);
+    } finally {
+      setDeletingReviewId(null);
+    }
+  };
 
   return (
     <section id="recensioni" className="space-y-10">
@@ -104,9 +175,26 @@ export default function ReviewsSection() {
                   {review.comment}
                 </p>
 
-                <p className="mt-auto text-[10px] font-mono uppercase tracking-[0.25em] text-zinc-600">
-                  {new Date(review.created_at).toLocaleDateString('it-IT')}
-                </p>
+                <div className="mt-auto flex items-center justify-between gap-3">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-zinc-600">
+                    {new Date(review.created_at).toLocaleDateString('it-IT')}
+                  </p>
+                  {staffAccessToken ? (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteReview(review.id)}
+                      disabled={deletingReviewId === review.id}
+                      className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.15em] text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                    >
+                      {deletingReviewId === review.id ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={12} />
+                      )}
+                      Elimina
+                    </button>
+                  ) : null}
+                </div>
               </article>
             ))}
           </div>
@@ -137,34 +225,59 @@ export default function ReviewsSection() {
             </div>
 
             <div className="mt-6 max-h-[28rem] overflow-y-auto custom-scrollbar pr-2 space-y-4">
-              {recentReviews.map((review) => (
-                <article
-                  key={review.id}
-                  className="rounded-[1.5rem] border border-white/5 bg-black/40 p-5"
-                >
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-black uppercase tracking-wide">
-                        {review.author_name}
-                      </h4>
-                      <ReviewStars rating={review.rating} size={18} />
+              {recentReviews.length > 0 ? (
+                recentReviews.map((review) => (
+                  <article
+                    key={review.id}
+                    className="rounded-[1.5rem] border border-white/5 bg-black/40 p-5"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-black uppercase tracking-wide">
+                          {review.author_name}
+                        </h4>
+                        <ReviewStars rating={review.rating} size={18} />
+                      </div>
+
+                      <div className="flex flex-col items-start gap-3 md:items-end">
+                        <div className="text-left md:text-right">
+                          <p className="text-[10px] font-black uppercase text-[#FF914D]">
+                            {Number(review.rating).toFixed(0)}/5
+                          </p>
+                          <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-600">
+                            {new Date(review.created_at).toLocaleDateString('it-IT')}
+                          </p>
+                        </div>
+                        {staffAccessToken ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReview(review.id)}
+                            disabled={deletingReviewId === review.id}
+                            className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-2 text-[9px] font-black uppercase tracking-[0.15em] text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                          >
+                            {deletingReviewId === review.id ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                              <Trash2 size={12} />
+                            )}
+                            Elimina
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
 
-                    <div className="text-left md:text-right">
-                      <p className="text-[10px] font-black uppercase text-[#FF914D]">
-                        {Number(review.rating).toFixed(0)}/5
-                      </p>
-                      <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-600">
-                        {new Date(review.created_at).toLocaleDateString('it-IT')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="mt-4 text-sm leading-relaxed text-zinc-300">
-                    {review.comment}
+                    <p className="mt-4 text-sm leading-relaxed text-zinc-300">
+                      {review.comment}
+                    </p>
+                  </article>
+                ))
+              ) : (
+                <div className="rounded-[1.5rem] border border-white/5 bg-black/40 p-5 text-center">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-600">
+                    Nessuna altra recensione da mostrare.
                   </p>
-                </article>
-              ))}
+                </div>
+              )}
             </div>
           </div>
         </>

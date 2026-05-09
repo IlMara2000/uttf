@@ -44,7 +44,7 @@ export default function LoginPage() {
       
       // Accesso consentito
       router.replace('/dashboard');
-    } catch (err: any) {
+    } catch {
       // Se l'account non esiste o la password è errata, finisce qui
       alert("ACCESSO_NEGATO: Verifica le credenziali inserite.");
       setLoading(false);
