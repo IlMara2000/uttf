@@ -758,6 +758,7 @@ export default function Dashboard() {
                       </div>
                       <label className="flex flex-col items-center justify-center h-56 border-2 border-dashed border-white/5 rounded-2xl cursor-pointer hover:bg-white/[0.02] relative overflow-hidden group transition-all">
                         {previewUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- Object URLs from file inputs are not handled reliably by next/image.
                           <img src={previewUrl} alt="Anteprima file selezionato" className="h-full w-full object-cover opacity-60" />
                         ) : (
                           <ImageIcon size={28} className="text-zinc-700 group-hover:text-zinc-400" />

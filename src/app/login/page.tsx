@@ -5,6 +5,16 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Loader2, Shield } from 'lucide-react';
 
+function getSafeNextPath() {
+  const requestedPath = new URLSearchParams(window.location.search).get('next');
+
+  if (requestedPath?.startsWith('/') && !requestedPath.startsWith('//')) {
+    return requestedPath;
+  }
+
+  return '/dashboard';
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +32,7 @@ export default function LoginPage() {
       
       if (session) {
         // L'utente aveva già fatto l'accesso in passato
-        router.replace('/dashboard');
+        router.replace(getSafeNextPath());
       } else {
         // Nessun accesso precedente, mostriamo il form
         setLoading(false);
@@ -43,7 +53,7 @@ export default function LoginPage() {
       if (error) throw error;
       
       // Accesso consentito
-      router.replace('/dashboard');
+      router.replace(getSafeNextPath());
     } catch {
       // Se l'account non esiste o la password è errata, finisce qui
       alert("ACCESSO_NEGATO: Verifica le credenziali inserite.");

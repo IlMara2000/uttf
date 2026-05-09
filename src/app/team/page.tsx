@@ -117,6 +117,7 @@ export default function TeamPage() {
               className="glass-panel group border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden flex flex-col rounded-[2rem]"
             >
               <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
+                {/* eslint-disable-next-line @next/next/no-img-element -- Team cards keep an inline fallback for missing profile photos. */}
                 <img 
                   src={member.image} 
                   alt={member.name}

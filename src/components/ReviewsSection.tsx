@@ -11,6 +11,7 @@ import type { Review } from '@/types/database';
 export default function ReviewsSection() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [staffAccessToken, setStaffAccessToken] = useState<string | null>(null);
   const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
 
@@ -20,7 +21,11 @@ export default function ReviewsSection() {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
+    if (error) {
+      setLoadError('Non riesco a caricare le recensioni in questo momento.');
+      setReviews([]);
+    } else if (data) {
+      setLoadError(null);
       setReviews(data);
     }
 
@@ -140,6 +145,15 @@ export default function ReviewsSection() {
       {loading ? (
         <div className="glass-panel rounded-[2rem] border-white/5 bg-black/30 p-8 flex items-center justify-center">
           <Loader2 size={24} className="animate-spin text-[#FF914D]" />
+        </div>
+      ) : loadError ? (
+        <div className="glass-panel rounded-[2rem] border-red-500/10 bg-red-950/10 p-10 text-center">
+          <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-red-300">
+            RECENSIONI_NON_DISPONIBILI
+          </p>
+          <p className="mt-3 text-xs font-mono uppercase tracking-[0.2em] text-zinc-500">
+            {loadError}
+          </p>
         </div>
       ) : reviews.length === 0 ? (
         <div className="glass-panel rounded-[2rem] border-white/5 bg-black/30 p-10 text-center">

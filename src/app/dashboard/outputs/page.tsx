@@ -162,6 +162,7 @@ export default function OutputsPage() {
                 className="bg-zinc-900/40 border border-white/5 rounded-3xl p-4 hover:border-[#FF914D]/30 transition-all group"
               >
                 <div className="aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Staff archive previews remote Supabase media without forcing optimizer allowlists. */}
                   <img
                     src={post.image_url}
                     className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"

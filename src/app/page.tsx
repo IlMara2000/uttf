@@ -11,6 +11,7 @@ import {
   Maximize2 
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import MapSection from '@/components/MapSection';
 
 type Publication = {
@@ -66,9 +67,12 @@ export default function HomePage() {
       
       {/* HEADER */}
       <header className="pt-24 pb-12 flex flex-col items-center gap-6">
-        <img 
+        <Image
           src="/icons/favicon.svg" 
           alt="UTTF" 
+          width={120}
+          height={120}
+          priority
           className="w-25 h-25 md:w-30 md:h-30 transition-transform hover:scale-110 duration-500" 
           onError={(e) => (e.currentTarget.src = '/favicon.ico')}
         />
@@ -105,7 +109,7 @@ export default function HomePage() {
               animate="animate"
             >
               {/* Grain Texture Overlay */}
-              <div className="absolute inset-0 bg-[url('/images/noise.png')] opacity-20 mix-blend-soft-light pointer-events-none" />
+              <div className="absolute inset-0 bg-[url('/images/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none" />
               
               <div className="relative z-10">
                 <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-8 text-center tracking-tighter text-[#FF914D]">
@@ -218,6 +222,7 @@ export default function HomePage() {
                           <Play className="absolute text-white/50 group-hover:text-[#FF914D] transition-colors" size={40} fill="currentColor" />
                         </div>
                       ) : (
+                        // eslint-disable-next-line @next/next/no-img-element -- Post media can come from Supabase paths outside the static image allowlist.
                         <img src={imageUrl} alt={post.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out" />
                       )}
                     </div>
@@ -247,7 +252,12 @@ export default function HomePage() {
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="relative max-w-4xl w-full bg-zinc-950 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl flex flex-col md:flex-row max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setSelectedPost(null)} className="absolute top-5 right-5 z-10 p-2 bg-black/50 text-white rounded-full hover:text-[#FF914D] transition-all"><X size={24} /></button>
               <div className="w-full md:w-3/5 bg-black flex items-center justify-center">
-                {isVideo(selectedPost.image_url) ? <video src={selectedPost.image_url} controls autoPlay className="w-full max-h-[80vh]" /> : <img src={selectedPost.image_url} className="w-full h-full object-contain" alt="" />}
+                {isVideo(selectedPost.image_url) ? (
+                  <video src={selectedPost.image_url} controls autoPlay className="w-full max-h-[80vh]" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element -- Modal preview preserves exact Supabase media URL and sizing.
+                  <img src={selectedPost.image_url} className="w-full h-full object-contain" alt="" />
+                )}
               </div>
               <div className="w-full md:w-2/5 p-8 flex flex-col bg-zinc-950">
                 <div className="flex items-center gap-3 mb-6">

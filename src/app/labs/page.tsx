@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const labImages = [
   "/labs/foto1.jpeg",
@@ -91,12 +92,13 @@ export default function LabsPage() {
             transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
           >
             {[...labImages, ...labImages, ...labImages].map((img, idx) => (
-              <div key={idx} className="min-w-[300px] md:min-w-[500px] aspect-video rounded-[2rem] overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl">
-                <img 
+              <div key={idx} className="relative min-w-[300px] md:min-w-[500px] aspect-video rounded-[2rem] overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl">
+                <Image
                   src={img} 
                   alt="Lab Session" 
+                  fill
+                  sizes="(min-width: 768px) 500px, 300px"
                   className="w-full h-full object-cover grayscale-[40%] hover:grayscale-0 transition-all duration-700 hover:scale-105" 
-                  onError={(e) => { e.currentTarget.src = "https://placehold.co/600x400/0a0a0a/FF914D?text=CARICARE_FOTO"; }}
                 />
               </div>
             ))}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rss, Instagram, Heart, MessageCircle, Send, Bookmark, ArrowLeft, Mail, X, CheckCircle2, Loader2, Star } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import ReviewsSection from '@/components/ReviewsSection';
 
 const instagramPosts = [
@@ -253,7 +254,7 @@ export default function FeedPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-[1.5px]">
                         <div className="w-full h-full rounded-full bg-black flex items-center justify-center p-0.5">
-                          <img src="/icons/favicon.svg" alt="avatar" className="w-full h-full" />
+                          <Image src="/icons/favicon.svg" alt="avatar" width={28} height={28} className="w-full h-full" />
                         </div>
                       </div>
                       <span className="text-[10px] font-bold tracking-tight text-zinc-200">uttf_factory</span>
@@ -262,9 +263,11 @@ export default function FeedPage() {
                   </div>
 
                   <div className={`relative w-full overflow-hidden ${ig.ratio === 'portrait' ? 'aspect-[4/5]' : 'aspect-square'}`}>
-                    <img 
+                    <Image
                       src={ig.img} 
                       alt="IG Post" 
+                      fill
+                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                       className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" 
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
