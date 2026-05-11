@@ -416,29 +416,34 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-mono text-[#FF914D]">
-        SYNCING_CORE...
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-black/50 px-10 py-9 shadow-[0_0_60px_-20px_rgba(255,145,77,0.25)]">
+          <Loader2 className="h-9 w-9 animate-spin text-[#FF914D]" aria-hidden />
+          <p className="text-sm text-zinc-400">Caricamento dashboard…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-white flex flex-col font-sans">
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-black/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+    <div className="min-h-screen bg-zinc-950/40 text-white flex flex-col font-sans antialiased">
+      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-zinc-950/75 backdrop-blur-xl supports-[backdrop-filter]:bg-zinc-950/55">
+        <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
           <div className="min-w-0">
-            <h1 className="text-xl font-black italic tracking-tighter uppercase">
+            <h1 className="text-lg font-black italic tracking-tight uppercase md:text-xl">
               UTTF_<span className="text-[#FF914D]">STAFF</span>
             </h1>
-            <span className="block truncate text-[8px] font-mono text-zinc-500 uppercase tracking-widest">
+            <span className="mt-0.5 block truncate text-[10px] font-mono text-zinc-500">
               {userEmail}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <AccountSettings />
             <button
+              type="button"
               onClick={() => supabase.auth.signOut().then(() => router.push('/'))}
-              className="rounded-xl border border-white/5 bg-white/[0.03] p-2 text-zinc-500 transition-colors hover:text-[#FF914D]"
+              className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-zinc-400 transition-colors duration-200 hover:border-[#FF914D]/30 hover:text-[#FF914D]"
+              aria-label="Esci"
             >
               <LogOut size={20} />
             </button>
@@ -446,43 +451,52 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative z-10">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="h-fit rounded-[2rem] border border-white/5 bg-zinc-950/55 p-4 backdrop-blur-xl lg:sticky lg:top-24">
-            <div className="mb-5 rounded-3xl border border-[#FF914D]/10 bg-[#FF914D]/5 p-4">
-              <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
+      <main className="flex-1 overflow-y-auto scroll-smooth p-4 pb-10 md:p-6 md:pb-12 custom-scrollbar relative z-10">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[272px_minmax(0,1fr)] lg:gap-8">
+          <aside className="h-fit rounded-2xl border border-white/[0.06] bg-zinc-950/70 p-4 shadow-[0_0_48px_-18px_rgba(0,0,0,0.65)] backdrop-blur-xl lg:sticky lg:top-[5.25rem]">
+            <div className="mb-4 rounded-2xl border border-[#FF914D]/15 bg-gradient-to-br from-[#FF914D]/10 to-transparent p-4">
+              <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-[#FF914D]">
                 Gestionale
               </p>
-              <h2 className="mt-2 text-lg font-black uppercase italic tracking-tight">
+              <h2 className="mt-1.5 text-base font-black uppercase italic tracking-tight text-white">
                 Area staff
               </h2>
-              <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+              <p className="mt-2 text-xs leading-relaxed text-zinc-500">
                 Accessi rapidi alle funzioni operative del sito.
               </p>
             </div>
 
-            <nav className="grid gap-2">
+            <nav className="grid gap-1.5">
               {managementSections.map((section) => {
                 const isActive = activeView === section.key;
 
                 return (
                   <button
                     key={section.key}
+                    type="button"
                     onClick={section.action}
-                    className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
+                    className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-all duration-200 ease-out ${
                       isActive
-                        ? 'border-[#FF914D]/40 bg-[#FF914D] text-black'
-                        : 'border-white/5 bg-black/30 text-zinc-400 hover:border-[#FF914D]/30 hover:text-white'
+                        ? 'border-[#FF914D]/45 bg-[#FF914D] text-black shadow-[0_0_28px_-8px_rgba(255,145,77,0.55)]'
+                        : 'border-transparent bg-white/[0.02] text-zinc-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-zinc-100'
                     }`}
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20">
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${
+                        isActive ? 'bg-black/15 text-black' : 'bg-black/40 text-zinc-500 group-hover:text-[#FF914D]'
+                      }`}
+                    >
                       {section.icon}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[10px] font-black uppercase tracking-[0.18em]">
+                      <span className="block text-[11px] font-bold uppercase tracking-wide">
                         {section.title}
                       </span>
-                      <span className={`mt-1 block truncate text-[9px] font-mono uppercase ${isActive ? 'text-black/60' : 'text-zinc-600'}`}>
+                      <span
+                        className={`mt-0.5 block truncate text-[10px] leading-snug ${
+                          isActive ? 'text-black/55' : 'text-zinc-600 group-hover:text-zinc-500'
+                        }`}
+                      >
                         {section.subtitle}
                       </span>
                     </span>
@@ -491,18 +505,19 @@ export default function Dashboard() {
               })}
 
               <button
+                type="button"
                 onClick={() => router.push('/dashboard/outputs')}
-                className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-black/30 px-4 py-3 text-left text-zinc-400 transition-all hover:border-[#FF914D]/30 hover:text-white"
+                className="mt-1 flex w-full items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-3 text-left text-zinc-400 transition-all duration-200 hover:border-[#FF914D]/25 hover:bg-white/[0.04] hover:text-zinc-100"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/20">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-black/40 text-zinc-500 transition-colors group-hover:text-[#FF914D]">
                   <Layers size={18} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[10px] font-black uppercase tracking-[0.18em]">
+                  <span className="block text-[11px] font-bold uppercase tracking-wide">
                     Archivio post
                   </span>
-                  <span className="mt-1 block truncate text-[9px] font-mono uppercase text-zinc-600">
-                    Gestione contenuti pubblicati
+                  <span className="mt-0.5 block truncate text-[10px] text-zinc-600">
+                    Contenuti già pubblicati
                   </span>
                 </span>
               </button>
@@ -510,194 +525,213 @@ export default function Dashboard() {
           </aside>
 
           <section className="min-w-0 space-y-6">
-            <div className="rounded-[2rem] border border-white/5 bg-zinc-950/55 p-5 backdrop-blur-xl md:p-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <p className="text-[9px] font-mono uppercase tracking-[0.35em] text-[#FF914D]">
-                    {activeView === 'menu' ? 'Dashboard staff' : 'Modulo operativo'}
-                  </p>
-                  <h2 className="mt-2 text-3xl font-black uppercase italic tracking-tighter md:text-5xl">
-                    {activeSection.title}
-                  </h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-500">
-                    {activeSection.subtitle}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {activeView !== 'menu' ? (
+            {activeView !== 'menu' ? (
+              <div className="rounded-2xl border border-white/[0.06] bg-zinc-950/55 p-5 shadow-[0_0_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
+                      Modulo operativo
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black uppercase italic tracking-tighter md:text-4xl">
+                      {activeSection.title}
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
+                      {activeSection.subtitle}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <button
+                      type="button"
                       onClick={() => setActiveView('menu')}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white"
+                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white transition-colors duration-200 hover:border-white/20"
                     >
                       <ArrowLeft size={14} /> Panoramica
                     </button>
-                  ) : null}
-                  <button
-                    onClick={fetchDashboardOverview}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#FF914D] px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-black"
-                  >
-                    <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
-                    Aggiorna
-                  </button>
+                    <button
+                      type="button"
+                      onClick={fetchDashboardOverview}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#FF914D] px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-black shadow-[0_0_24px_-8px_rgba(255,145,77,0.6)] transition-opacity duration-200 hover:opacity-95 disabled:opacity-60"
+                      disabled={dashboardRefreshing}
+                    >
+                      <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
+                      Aggiorna
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
 
         {activeView === 'menu' ? (
           <div className="flex flex-col gap-6">
             <CalendarWidget />
 
-            <section className="glass-panel p-6 md:p-8 border-white/5 bg-zinc-900/20 rounded-[2rem]">
+            <section className="glass-panel rounded-2xl border-white/[0.06] bg-zinc-900/25 p-6 shadow-[0_0_48px_-24px_rgba(0,0,0,0.55)] md:p-8">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                <div className="space-y-3">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.35em] text-[#FF914D]">
-                    Command Center
+                <div className="space-y-2">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
+                    Command center
                   </p>
                   <div>
-                    <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter">
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter md:text-4xl lg:text-5xl">
                       Dashboard operativa
-	                    </h2>
-	                    <p className="text-sm text-zinc-400 max-w-2xl mt-3">
-	                      Qui trovi lo stato del sito, le attività aperte, i contatti raccolti e le scorciatoie
-	                      per lavorare sui moduli principali senza cercarli in giro.
-	                    </p>
+                    </h2>
+                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                      Stato del sito, attività, contatti e accesso rapido ai moduli principali.
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   <button
+                    type="button"
+                    onClick={fetchDashboardOverview}
+                    disabled={dashboardRefreshing}
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/45 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white transition-colors duration-200 hover:border-white/25 disabled:opacity-60"
+                  >
+                    <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
+                    Aggiorna
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       setActiveView('publish');
                       setTitle('');
                       setDescription('');
                     }}
-                    className="px-5 py-3 rounded-2xl bg-[#FF914D] text-black font-black uppercase text-[10px] tracking-[0.2em]"
+                    className="rounded-xl bg-[#FF914D] px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-black shadow-[0_0_24px_-8px_rgba(255,145,77,0.55)] transition-opacity duration-200 hover:opacity-95"
                   >
-                    Nuovo Post
+                    Nuovo post
                   </button>
-	                </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 mt-8">
-                <div className="rounded-3xl border border-white/5 bg-black/30 p-5">
-                  <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-zinc-500">Post</p>
-                  <p className="text-3xl font-black italic mt-2">{overview.publications}</p>
-                </div>
-                <div className="rounded-3xl border border-white/5 bg-black/30 p-5">
-                  <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-zinc-500">Iscritti</p>
-                  <p className="text-3xl font-black italic mt-2">{overview.subscribers}</p>
-                </div>
-                <div className="rounded-3xl border border-white/5 bg-black/30 p-5">
-                  <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-zinc-500">Review</p>
-                  <p className="text-3xl font-black italic mt-2">{overview.reviews}</p>
-                </div>
-                <div className="rounded-3xl border border-white/5 bg-black/30 p-5">
-                  <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-zinc-500">Media voto</p>
-                  <p className="text-3xl font-black italic mt-2">
-                    {overview.averageRating ? overview.averageRating.toFixed(1) : '0.0'}
-                  </p>
-                </div>
-                <div className="rounded-3xl border border-white/5 bg-black/30 p-5">
-                  <p className="text-[9px] font-mono uppercase tracking-[0.25em] text-zinc-500">Task aperti</p>
-                  <p className="text-3xl font-black italic mt-2">
-                    {overview.tasksOpen}
-                    <span className="text-sm text-zinc-500 ml-2">/ {overview.tasksTotal}</span>
-                  </p>
-                </div>
+              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+                {(
+                  [
+                    { label: 'Post', value: overview.publications },
+                    { label: 'Iscritti', value: overview.subscribers },
+                    { label: 'Review', value: overview.reviews },
+                    {
+                      label: 'Media voto',
+                      value: overview.averageRating ? overview.averageRating.toFixed(1) : '0.0',
+                    },
+                    {
+                      label: 'Task aperti',
+                      value: (
+                        <>
+                          {overview.tasksOpen}
+                          <span className="ml-1.5 text-sm font-semibold not-italic text-zinc-500">
+                            / {overview.tasksTotal}
+                          </span>
+                        </>
+                      ),
+                    },
+                  ] as const
+                ).map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl border border-white/[0.06] bg-black/35 p-4 shadow-inner transition-transform duration-200 ease-out hover:-translate-y-0.5 md:p-5"
+                  >
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{stat.label}</p>
+                    <p className="mt-2 text-2xl font-black italic tabular-nums md:text-3xl">{stat.value}</p>
+                  </div>
+                ))}
               </div>
             </section>
 
-            <section className="grid xl:grid-cols-[1.4fr_0.9fr] gap-6">
-              <div className="grid md:grid-cols-2 gap-4">
-	                {moduleCards.map((card) => (
+            <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
+              <div className="grid gap-3 md:grid-cols-2 md:gap-4">
+                {moduleCards.map((card) => (
                   <button
                     key={card.key}
+                    type="button"
                     onClick={card.action}
-                    className="w-full group p-7 bg-zinc-900/20 backdrop-blur-md border border-white/5 rounded-3xl flex items-center justify-between hover:border-[#FF914D]/30 transition-all"
+                    className="group flex w-full items-center justify-between rounded-2xl border border-white/[0.06] bg-zinc-900/30 p-6 text-left shadow-sm backdrop-blur-md transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[#FF914D]/35 hover:bg-zinc-900/45 md:p-7"
                   >
-                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 bg-black/40 rounded-2xl flex items-center justify-center border border-white/5">
+                    <div className="flex min-w-0 items-center gap-4 md:gap-5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-black/50 text-zinc-400 transition-colors duration-200 group-hover:border-[#FF914D]/40 group-hover:text-[#FF914D] md:h-14 md:w-14 md:rounded-2xl">
                         {card.icon}
                       </div>
-                      <div className="text-left">
-                        <h3 className="text-sm font-black uppercase italic tracking-widest">{card.title}</h3>
-                        <p className="text-[10px] font-mono text-zinc-600 uppercase mt-1.5">{card.subtitle}</p>
+                      <div className="min-w-0 text-left">
+                        <h3 className="text-sm font-black uppercase italic tracking-wide">{card.title}</h3>
+                        <p className="mt-1 text-[11px] text-zinc-500">{card.subtitle}</p>
                       </div>
                     </div>
-                    <ChevronRight size={20} className="text-zinc-700 group-hover:text-[#FF914D] transition-colors" />
+                    <ChevronRight
+                      size={20}
+                      className="shrink-0 text-zinc-600 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[#FF914D]"
+                    />
                   </button>
                 ))}
               </div>
 
-              <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-[2rem] flex flex-col gap-6">
-                <div className="flex items-center justify-between">
+              <div className="glass-panel flex flex-col gap-6 rounded-2xl border-white/[0.06] bg-zinc-900/25 p-6 shadow-[0_0_40px_-20px_rgba(0,0,0,0.45)]">
+                <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
-                      Flusso Recente
+                    <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-[#FF914D]">
+                      Flusso recente
                     </p>
-                    <h3 className="text-xl font-black uppercase italic tracking-tight mt-2">
+                    <h3 className="mt-1.5 text-lg font-black uppercase italic tracking-tight text-white md:text-xl">
                       Segnali operativi
                     </h3>
                   </div>
-                  <BarChart3 size={18} className="text-zinc-600" />
+                  <BarChart3 size={18} className="shrink-0 text-zinc-600" />
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
-                    Ultimi iscritti
-                  </p>
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Ultimi iscritti</p>
                   {recentSubscribers.length > 0 ? (
                     recentSubscribers.map((subscriber) => (
                       <div
                         key={`${subscriber.email}-${subscriber.created_at}`}
-                        className="rounded-2xl border border-white/5 bg-black/25 p-4"
+                        className="rounded-xl border border-white/[0.06] bg-black/35 p-4 transition-colors duration-200 hover:border-white/10"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-sm font-black uppercase truncate">{subscriber.name}</p>
-                            <p className="text-[11px] text-zinc-400 truncate">{subscriber.email}</p>
+                            <p className="truncate text-sm font-bold uppercase tracking-tight">{subscriber.name}</p>
+                            <p className="truncate text-xs text-zinc-400">{subscriber.email}</p>
                           </div>
-                          <span className="text-[10px] font-mono uppercase text-zinc-500">
+                          <span className="shrink-0 text-[10px] font-mono text-zinc-500">
                             {formatDate(subscriber.created_at)}
                           </span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-2xl border border-white/5 bg-black/25 p-4 text-[10px] font-mono uppercase text-zinc-600">
+                    <div className="rounded-xl border border-white/[0.06] bg-black/35 p-4 text-xs text-zinc-500">
                       Nessun iscritto recente
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
-                    Ultime review
-                  </p>
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Ultime review</p>
                   {recentReviews.length > 0 ? (
                     recentReviews.map((review) => (
-                      <div key={review.id} className="rounded-2xl border border-white/5 bg-black/25 p-4">
+                      <div
+                        key={review.id}
+                        className="rounded-xl border border-white/[0.06] bg-black/35 p-4 transition-colors duration-200 hover:border-white/10"
+                      >
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-black uppercase truncate">{review.author_name}</p>
-                            <span className="text-[10px] font-mono uppercase text-[#FF914D]">
+                          <p className="truncate text-sm font-bold uppercase tracking-tight">{review.author_name}</p>
+                          <span className="shrink-0 text-[10px] font-mono font-semibold text-[#FF914D]">
                             {Number(review.rating).toFixed(0)}/5
                           </span>
                         </div>
-                        <p className="text-[11px] text-zinc-400 mt-2 line-clamp-2">{review.comment}</p>
+                        <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-zinc-400">{review.comment}</p>
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-2xl border border-white/5 bg-black/25 p-4 text-[10px] font-mono uppercase text-zinc-600">
+                    <div className="rounded-xl border border-white/[0.06] bg-black/35 p-4 text-xs text-zinc-500">
                       Nessuna recensione recente
                     </div>
                   )}
                 </div>
               </div>
             </section>
-
           </div>
-	        ) : (
-	          <div className="flex flex-col gap-6">
+        ) : (
+          <div className="flex flex-col gap-6">
             {activeView === 'publish' && (
               <div className="grid xl:grid-cols-[1.25fr_0.75fr] gap-6">
                 <div className="space-y-6">
