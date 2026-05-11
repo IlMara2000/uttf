@@ -24,6 +24,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
 import NotesManager from '@/components/NotesManager';
@@ -416,33 +417,40 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-black/50 px-10 py-9 shadow-[0_0_60px_-20px_rgba(255,145,77,0.25)]">
-          <Loader2 className="h-9 w-9 animate-spin text-[#FF914D]" aria-hidden />
-          <p className="text-sm text-zinc-400">Caricamento dashboard…</p>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
+        <div className="flex flex-col items-center gap-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 px-12 py-10 shadow-xl shadow-black/40 backdrop-blur-md">
+          <Loader2 className="h-8 w-8 animate-spin text-[#FF914D]" aria-hidden />
+          <div className="text-center">
+            <p className="text-sm font-medium text-zinc-200">Caricamento gestionale</p>
+            <p className="mt-1 text-xs text-zinc-500">Sincronizzazione dati in corso…</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950/40 text-white flex flex-col font-sans antialiased">
-      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-zinc-950/75 backdrop-blur-xl supports-[backdrop-filter]:bg-zinc-950/55">
-        <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+    <div className="relative min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans antialiased">
+      <div
+        className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_100%_60%_at_50%_-15%,rgba(255,145,77,0.09),transparent_55%),radial-gradient(ellipse_70%_50%_at_100%_50%,rgba(255,145,77,0.04),transparent)]"
+        aria-hidden
+      />
+
+      <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-zinc-950/70">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 md:h-16 md:px-6">
           <div className="min-w-0">
-            <h1 className="text-lg font-black italic tracking-tight uppercase md:text-xl">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">Console</p>
+            <h1 className="text-base font-black italic tracking-tight uppercase md:text-lg">
               UTTF_<span className="text-[#FF914D]">STAFF</span>
             </h1>
-            <span className="mt-0.5 block truncate text-[10px] font-mono text-zinc-500">
-              {userEmail}
-            </span>
+            <span className="mt-0.5 block truncate text-xs text-zinc-500">{userEmail}</span>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <AccountSettings />
             <button
               type="button"
               onClick={() => supabase.auth.signOut().then(() => router.push('/'))}
-              className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-zinc-400 transition-colors duration-200 hover:border-[#FF914D]/30 hover:text-[#FF914D]"
+              className="rounded-xl border border-zinc-700/80 bg-zinc-900/50 p-2.5 text-zinc-400 transition-colors duration-200 hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-100"
               aria-label="Esci"
             >
               <LogOut size={20} />
@@ -451,22 +459,18 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto scroll-smooth p-4 pb-10 md:p-6 md:pb-12 custom-scrollbar relative z-10">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[272px_minmax(0,1fr)] lg:gap-8">
-          <aside className="h-fit rounded-2xl border border-white/[0.06] bg-zinc-950/70 p-4 shadow-[0_0_48px_-18px_rgba(0,0,0,0.65)] backdrop-blur-xl lg:sticky lg:top-[5.25rem]">
-            <div className="mb-4 rounded-2xl border border-[#FF914D]/15 bg-gradient-to-br from-[#FF914D]/10 to-transparent p-4">
-              <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-[#FF914D]">
-                Gestionale
-              </p>
-              <h2 className="mt-1.5 text-base font-black uppercase italic tracking-tight text-white">
-                Area staff
-              </h2>
-              <p className="mt-2 text-xs leading-relaxed text-zinc-500">
-                Accessi rapidi alle funzioni operative del sito.
+      <main className="relative z-10 flex-1 overflow-y-auto scroll-smooth p-4 pb-10 md:p-6 md:pb-12">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
+          <aside className="h-fit rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-3 shadow-lg shadow-black/20 backdrop-blur-md lg:sticky lg:top-[4.5rem] lg:self-start">
+            <div className="mb-3 rounded-xl border border-zinc-800/60 bg-zinc-950/50 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Gestionale</p>
+              <h2 className="mt-1 text-sm font-semibold text-white">Area operativa</h2>
+              <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">
+                Navigazione rapida tra i moduli.
               </p>
             </div>
 
-            <nav className="grid gap-1.5">
+            <nav className="grid gap-1">
               {managementSections.map((section) => {
                 const isActive = activeView === section.key;
 
@@ -475,26 +479,26 @@ export default function Dashboard() {
                     key={section.key}
                     type="button"
                     onClick={section.action}
-                    className={`group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-all duration-200 ease-out ${
+                    className={`group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-150 ease-out ${
                       isActive
-                        ? 'border-[#FF914D]/45 bg-[#FF914D] text-black shadow-[0_0_28px_-8px_rgba(255,145,77,0.55)]'
-                        : 'border-transparent bg-white/[0.02] text-zinc-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-zinc-100'
+                        ? 'border-[#FF914D]/35 bg-[#FF914D]/12 text-zinc-100 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
+                        : 'border-transparent bg-transparent text-zinc-500 hover:border-zinc-800 hover:bg-zinc-800/40 hover:text-zinc-200'
                     }`}
                   >
                     <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${
-                        isActive ? 'bg-black/15 text-black' : 'bg-black/40 text-zinc-500 group-hover:text-[#FF914D]'
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-150 ${
+                        isActive
+                          ? 'bg-[#FF914D]/20 text-[#FF914D]'
+                          : 'bg-zinc-800/60 text-zinc-500 group-hover:text-[#FF914D]'
                       }`}
                     >
                       {section.icon}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[11px] font-bold uppercase tracking-wide">
-                        {section.title}
-                      </span>
+                      <span className="block text-xs font-semibold tracking-tight">{section.title}</span>
                       <span
-                        className={`mt-0.5 block truncate text-[10px] leading-snug ${
-                          isActive ? 'text-black/55' : 'text-zinc-600 group-hover:text-zinc-500'
+                        className={`mt-0.5 block truncate text-[11px] leading-snug ${
+                          isActive ? 'text-zinc-400' : 'text-zinc-600 group-hover:text-zinc-500'
                         }`}
                       >
                         {section.subtitle}
@@ -507,54 +511,55 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => router.push('/dashboard/outputs')}
-                className="mt-1 flex w-full items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-3 text-left text-zinc-400 transition-all duration-200 hover:border-[#FF914D]/25 hover:bg-white/[0.04] hover:text-zinc-100"
+                className="mt-1 flex w-full items-center gap-3 rounded-xl border border-zinc-800/60 bg-zinc-950/30 px-3 py-2.5 text-left text-zinc-500 transition-all duration-150 hover:border-zinc-700 hover:bg-zinc-800/30 hover:text-zinc-200"
               >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-black/40 text-zinc-500 transition-colors group-hover:text-[#FF914D]">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-800/60 text-zinc-500">
                   <Layers size={18} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[11px] font-bold uppercase tracking-wide">
-                    Archivio post
-                  </span>
-                  <span className="mt-0.5 block truncate text-[10px] text-zinc-600">
-                    Contenuti già pubblicati
-                  </span>
+                  <span className="block text-xs font-semibold tracking-tight">Archivio post</span>
+                  <span className="mt-0.5 block truncate text-[11px] text-zinc-600">Contenuti pubblicati</span>
                 </span>
               </button>
             </nav>
           </aside>
 
           <section className="min-w-0 space-y-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeView}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                className="space-y-6"
+              >
             {activeView !== 'menu' ? (
-              <div className="rounded-2xl border border-white/[0.06] bg-zinc-950/55 p-5 shadow-[0_0_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-6">
+              <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/25 p-5 shadow-sm shadow-black/20 backdrop-blur-md md:p-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
-                      Modulo operativo
-                    </p>
-                    <h2 className="mt-2 text-2xl font-black uppercase italic tracking-tighter md:text-4xl">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Modulo</p>
+                    <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-white md:text-3xl">
                       {activeSection.title}
                     </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
-                      {activeSection.subtitle}
-                    </p>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">{activeSection.subtitle}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => setActiveView('menu')}
-                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white transition-colors duration-200 hover:border-white/20"
+                      className="inline-flex items-center gap-2 rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-2.5 text-xs font-semibold text-zinc-200 transition-colors duration-150 hover:border-zinc-600 hover:bg-zinc-800/50"
                     >
                       <ArrowLeft size={14} /> Panoramica
                     </button>
                     <button
                       type="button"
                       onClick={fetchDashboardOverview}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#FF914D] px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-black shadow-[0_0_24px_-8px_rgba(255,145,77,0.6)] transition-opacity duration-200 hover:opacity-95 disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#FF914D] px-4 py-2.5 text-xs font-semibold text-zinc-950 shadow-md shadow-[#FF914D]/20 transition-opacity duration-150 hover:opacity-95 disabled:opacity-60"
                       disabled={dashboardRefreshing}
                     >
                       <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
-                      Aggiorna
+                      Aggiorna dati
                     </button>
                   </div>
                 </div>
@@ -565,18 +570,16 @@ export default function Dashboard() {
           <div className="flex flex-col gap-6">
             <CalendarWidget />
 
-            <section className="glass-panel rounded-2xl border-white/[0.06] bg-zinc-900/25 p-6 shadow-[0_0_48px_-24px_rgba(0,0,0,0.55)] md:p-8">
+            <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm shadow-black/25 backdrop-blur-md md:p-8">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div className="space-y-2">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">
-                    Command center
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Panoramica</p>
                   <div>
-                    <h2 className="text-3xl font-black italic uppercase tracking-tighter md:text-4xl lg:text-5xl">
+                    <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl lg:text-4xl">
                       Dashboard operativa
                     </h2>
-                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
-                      Stato del sito, attività, contatti e accesso rapido ai moduli principali.
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
+                      Metriche sintetiche, attività recenti e accesso ai moduli.
                     </p>
                   </div>
                 </div>
@@ -586,7 +589,7 @@ export default function Dashboard() {
                     type="button"
                     onClick={fetchDashboardOverview}
                     disabled={dashboardRefreshing}
-                    className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/45 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white transition-colors duration-200 hover:border-white/25 disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-2.5 text-xs font-semibold text-zinc-200 transition-colors duration-150 hover:border-zinc-600 disabled:opacity-60"
                   >
                     <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
                     Aggiorna
@@ -598,7 +601,7 @@ export default function Dashboard() {
                       setTitle('');
                       setDescription('');
                     }}
-                    className="rounded-xl bg-[#FF914D] px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-black shadow-[0_0_24px_-8px_rgba(255,145,77,0.55)] transition-opacity duration-200 hover:opacity-95"
+                    className="rounded-xl bg-[#FF914D] px-4 py-2.5 text-xs font-semibold text-zinc-950 shadow-md shadow-[#FF914D]/20 transition-opacity duration-150 hover:opacity-95"
                   >
                     Nuovo post
                   </button>
@@ -620,7 +623,7 @@ export default function Dashboard() {
                       value: (
                         <>
                           {overview.tasksOpen}
-                          <span className="ml-1.5 text-sm font-semibold not-italic text-zinc-500">
+                          <span className="ml-1.5 text-sm font-medium not-italic text-zinc-500">
                             / {overview.tasksTotal}
                           </span>
                         </>
@@ -630,10 +633,12 @@ export default function Dashboard() {
                 ).map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-2xl border border-white/[0.06] bg-black/35 p-4 shadow-inner transition-transform duration-200 ease-out hover:-translate-y-0.5 md:p-5"
+                    className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 transition-all duration-150 ease-out hover:border-zinc-700/80 hover:bg-zinc-900/50 md:p-5"
                   >
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{stat.label}</p>
-                    <p className="mt-2 text-2xl font-black italic tabular-nums md:text-3xl">{stat.value}</p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">{stat.label}</p>
+                    <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-white md:text-3xl">
+                      {stat.value}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -646,45 +651,43 @@ export default function Dashboard() {
                     key={card.key}
                     type="button"
                     onClick={card.action}
-                    className="group flex w-full items-center justify-between rounded-2xl border border-white/[0.06] bg-zinc-900/30 p-6 text-left shadow-sm backdrop-blur-md transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[#FF914D]/35 hover:bg-zinc-900/45 md:p-7"
+                    className="group flex w-full items-center justify-between rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 text-left shadow-sm backdrop-blur-md transition-all duration-150 ease-out hover:border-[#FF914D]/25 hover:bg-zinc-900/35 md:p-6"
                   >
                     <div className="flex min-w-0 items-center gap-4 md:gap-5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-black/50 text-zinc-400 transition-colors duration-200 group-hover:border-[#FF914D]/40 group-hover:text-[#FF914D] md:h-14 md:w-14 md:rounded-2xl">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-800/80 bg-zinc-950/50 text-zinc-500 transition-colors duration-150 group-hover:border-[#FF914D]/35 group-hover:text-[#FF914D] md:h-12 md:w-12">
                         {card.icon}
                       </div>
                       <div className="min-w-0 text-left">
-                        <h3 className="text-sm font-black uppercase italic tracking-wide">{card.title}</h3>
-                        <p className="mt-1 text-[11px] text-zinc-500">{card.subtitle}</p>
+                        <h3 className="text-sm font-semibold tracking-tight text-white">{card.title}</h3>
+                        <p className="mt-0.5 text-xs text-zinc-500">{card.subtitle}</p>
                       </div>
                     </div>
                     <ChevronRight
-                      size={20}
-                      className="shrink-0 text-zinc-600 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[#FF914D]"
+                      size={18}
+                      className="shrink-0 text-zinc-600 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-[#FF914D]"
                     />
                   </button>
                 ))}
               </div>
 
-              <div className="glass-panel flex flex-col gap-6 rounded-2xl border-white/[0.06] bg-zinc-900/25 p-6 shadow-[0_0_40px_-20px_rgba(0,0,0,0.45)]">
+              <div className="flex flex-col gap-6 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-[#FF914D]">
-                      Flusso recente
-                    </p>
-                    <h3 className="mt-1.5 text-lg font-black uppercase italic tracking-tight text-white md:text-xl">
-                      Segnali operativi
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Attività</p>
+                    <h3 className="mt-1 text-base font-semibold tracking-tight text-white md:text-lg">
+                      Ultimi movimenti
                     </h3>
                   </div>
                   <BarChart3 size={18} className="shrink-0 text-zinc-600" />
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Ultimi iscritti</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Iscritti newsletter</p>
                   {recentSubscribers.length > 0 ? (
                     recentSubscribers.map((subscriber) => (
                       <div
                         key={`${subscriber.email}-${subscriber.created_at}`}
-                        className="rounded-xl border border-white/[0.06] bg-black/35 p-4 transition-colors duration-200 hover:border-white/10"
+                        className="rounded-xl border border-zinc-800/60 bg-zinc-950/40 p-3.5 transition-colors duration-150 hover:border-zinc-700"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
@@ -698,19 +701,19 @@ export default function Dashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-xl border border-white/[0.06] bg-black/35 p-4 text-xs text-zinc-500">
+                    <div className="rounded-xl border border-zinc-800/60 bg-zinc-950/30 p-4 text-xs text-zinc-500">
                       Nessun iscritto recente
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Ultime review</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Recensioni</p>
                   {recentReviews.length > 0 ? (
                     recentReviews.map((review) => (
                       <div
                         key={review.id}
-                        className="rounded-xl border border-white/[0.06] bg-black/35 p-4 transition-colors duration-200 hover:border-white/10"
+                        className="rounded-xl border border-zinc-800/60 bg-zinc-950/40 p-3.5 transition-colors duration-150 hover:border-zinc-700"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <p className="truncate text-sm font-bold uppercase tracking-tight">{review.author_name}</p>
@@ -722,7 +725,7 @@ export default function Dashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-xl border border-white/[0.06] bg-black/35 p-4 text-xs text-zinc-500">
+                    <div className="rounded-xl border border-zinc-800/60 bg-zinc-950/30 p-4 text-xs text-zinc-500">
                       Nessuna recensione recente
                     </div>
                   )}
@@ -733,55 +736,53 @@ export default function Dashboard() {
         ) : (
           <div className="flex flex-col gap-6">
             {activeView === 'publish' && (
-              <div className="grid xl:grid-cols-[1.25fr_0.75fr] gap-6">
+              <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
                 <div className="space-y-6">
                   <button
+                    type="button"
                     onClick={() => router.push('/dashboard/outputs')}
-                    className="w-full group p-6 bg-zinc-900/20 border border-white/5 rounded-3xl flex items-center justify-between hover:bg-white/[0.02] transition-all hover:border-[#FF914D]/30"
+                    className="group flex w-full items-center justify-between rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 text-left transition-all duration-150 hover:border-[#FF914D]/25 hover:bg-zinc-900/35"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 group-hover:border-[#FF914D]/50 transition-colors">
-                        <Layers size={20} className="text-zinc-500 group-hover:text-[#FF914D]" />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-800/80 bg-zinc-950/50 transition-colors group-hover:border-[#FF914D]/35">
+                        <Layers size={20} className="text-zinc-500 transition-colors group-hover:text-[#FF914D]" />
                       </div>
                       <div className="text-left">
-                        <h3 className="text-[10px] font-black uppercase italic tracking-widest">
-                          POST PUBBLICATI
-                        </h3>
-                        <p className="text-[8px] font-mono text-zinc-600 uppercase mt-1">
-                          Visualizza e cancella i post sul sito
-                        </p>
+                        <h3 className="text-sm font-semibold text-white">Archivio post</h3>
+                        <p className="mt-0.5 text-xs text-zinc-500">Modifica o rimuovi contenuti già online</p>
                       </div>
                     </div>
                     <ChevronRight
                       size={18}
-                      className="text-zinc-800 group-hover:text-[#FF914D] group-hover:translate-x-1 transition-all"
+                      className="text-zinc-600 transition-all group-hover:translate-x-0.5 group-hover:text-[#FF914D]"
                     />
                   </button>
 
-                  <div className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl">
-                    <h2 className="text-[10px] font-black uppercase italic mb-6 text-[#FF914D] flex items-center gap-2">
-                      <Send size={14} /> CREA POST DA PUBBLICARE
+                  <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
+                    <h2 className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#FF914D]">
+                      <Send size={14} aria-hidden /> Nuovo post
                     </h2>
                     <form onSubmit={handleCreatePost} className="space-y-4">
                       <input
                         type="text"
-                        placeholder="TITOLO"
+                        placeholder="Titolo"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full bg-black/40 border border-white/5 p-4 rounded-xl font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40"
+                        className="w-full rounded-xl border border-zinc-800/80 bg-zinc-950/50 px-4 py-3 text-sm text-white placeholder:text-zinc-600 outline-none transition-colors focus:border-[#FF914D]/45"
                       />
-                      <div className="relative group">
+                      <div className="relative">
                         <textarea
-                          placeholder="DESCRIZIONE..."
+                          placeholder="Descrizione…"
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
-                          className="w-full bg-black/40 border border-white/5 p-4 pr-12 rounded-xl font-mono text-[10px] min-h-[140px] text-white outline-none resize-none focus:border-[#FF914D]/40"
+                          className="min-h-[140px] w-full resize-none rounded-xl border border-zinc-800/80 bg-zinc-950/50 px-4 py-3 pr-14 text-sm text-white placeholder:text-zinc-600 outline-none transition-colors focus:border-[#FF914D]/45"
                         />
                         <button
                           type="button"
                           onClick={handleAiEnhance}
                           disabled={isAiProcessing || !description}
-                          className="absolute right-3 bottom-3 p-2 bg-zinc-800 hover:bg-[#FF914D] text-white rounded-lg transition-all disabled:opacity-30"
+                          className="absolute bottom-3 right-3 rounded-lg border border-zinc-700/80 bg-zinc-800 p-2 text-zinc-200 transition-colors hover:border-[#FF914D]/40 hover:bg-[#FF914D]/15 hover:text-[#FF914D] disabled:opacity-30"
+                          aria-label="Migliora con AI"
                         >
                           {isAiProcessing ? (
                             <Loader2 size={16} className="animate-spin" />
@@ -790,12 +791,12 @@ export default function Dashboard() {
                           )}
                         </button>
                       </div>
-                      <label className="flex flex-col items-center justify-center h-56 border-2 border-dashed border-white/5 rounded-2xl cursor-pointer hover:bg-white/[0.02] relative overflow-hidden group transition-all">
+                      <label className="group relative flex h-56 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-800/80 bg-zinc-950/30 transition-colors hover:border-zinc-700 hover:bg-zinc-900/30">
                         {previewUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element -- Object URLs from file inputs are not handled reliably by next/image.
-                          <img src={previewUrl} alt="Anteprima file selezionato" className="h-full w-full object-cover opacity-60" />
+                          <img src={previewUrl} alt="Anteprima file selezionato" className="h-full w-full object-cover opacity-70" />
                         ) : (
-                          <ImageIcon size={28} className="text-zinc-700 group-hover:text-zinc-400" />
+                          <ImageIcon size={28} className="text-zinc-600 transition-colors group-hover:text-zinc-400" />
                         )}
                         <input
                           type="file"
@@ -812,144 +813,137 @@ export default function Dashboard() {
                       <button
                         type="submit"
                         disabled={uploading}
-                        className="w-full py-4 bg-white text-black text-[10px] font-black uppercase italic hover:bg-[#FF914D] transition-all disabled:opacity-50"
+                        className="w-full rounded-xl bg-[#FF914D] py-3.5 text-sm font-semibold text-zinc-950 shadow-md shadow-[#FF914D]/20 transition-opacity hover:opacity-95 disabled:opacity-50"
                       >
                         {uploading ? (
-                          <Loader2 className="animate-spin mx-auto" size={16} />
+                          <Loader2 className="mx-auto animate-spin" size={16} />
                         ) : (
-                          'PUSH_TO_FACTORY'
+                          'Pubblica'
                         )}
                       </button>
                     </form>
                   </div>
                 </div>
 
-                <aside className="glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-3xl flex flex-col gap-5 h-fit">
+                <aside className="flex h-fit flex-col gap-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#FF914D]">
-                      Publishing Snapshot
-                    </p>
-                    <h3 className="text-xl font-black uppercase italic mt-2">Controllo rapido</h3>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Anteprima</p>
+                    <h3 className="mt-1 text-lg font-semibold text-white">Controllo rapido</h3>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-white/5 bg-black/25 p-4">
-                      <p className="text-[9px] font-mono uppercase text-zinc-500">Caratteri titolo</p>
-                      <p className="text-2xl font-black mt-2">{title.length}</p>
+                    <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Titolo</p>
+                      <p className="mt-1 text-2xl font-bold tabular-nums text-white">{title.length}</p>
+                      <p className="mt-0.5 text-[10px] text-zinc-600">caratteri</p>
                     </div>
-                    <div className="rounded-2xl border border-white/5 bg-black/25 p-4">
-                      <p className="text-[9px] font-mono uppercase text-zinc-500">Caratteri descr.</p>
-                      <p className="text-2xl font-black mt-2">{description.length}</p>
+                    <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Descrizione</p>
+                      <p className="mt-1 text-2xl font-bold tabular-nums text-white">{description.length}</p>
+                      <p className="mt-0.5 text-[10px] text-zinc-600">caratteri</p>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-white/5 bg-black/25 p-4 space-y-2">
-                    <p className="text-[9px] font-mono uppercase text-zinc-500">Asset selezionato</p>
+                  <div className="space-y-2 rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Immagine</p>
                     {file ? (
                       <>
-                        <p className="text-sm font-black uppercase break-words">{file.name}</p>
-                        <p className="text-[11px] text-zinc-400">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                        <p className="break-words text-sm font-medium text-white">{file.name}</p>
+                        <p className="text-xs text-zinc-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                       </>
                     ) : (
-                      <p className="text-[11px] text-zinc-500">Nessun file caricato.</p>
+                      <p className="text-xs text-zinc-500">Nessun file selezionato.</p>
                     )}
                   </div>
 
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => router.push('/dashboard/outputs')}
-                      className="w-full px-4 py-3 rounded-2xl bg-black/40 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] hover:border-[#FF914D]/40 transition-all"
-                    >
-                      Apri Archivio Post
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/dashboard/outputs')}
+                    className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-3 text-xs font-semibold text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800/40"
+                  >
+                    Apri archivio post
+                  </button>
                 </aside>
               </div>
             )}
 
             {activeView === 'newsletter' && (
               <div className="space-y-6">
-                <div className="grid xl:grid-cols-[1.1fr_0.9fr] gap-4">
-                  <div className="bg-zinc-900/20 backdrop-blur-md p-6 rounded-3xl border border-white/5">
+                <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+                  <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div>
-                        <h2 className="text-sm font-black uppercase italic text-[#FF914D]">
-                          DATABASE NEWSLETTER
-                        </h2>
-                        <p className="text-[11px] text-zinc-500 mt-2">
-                          Ricerca rapida, export e lettura immediata dei contatti raccolti.
+                        <h2 className="text-sm font-semibold text-[#FF914D]">Newsletter</h2>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          Ricerca, export CSV e lettura contatti.
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <button
+                          type="button"
                           onClick={fetchSubscribers}
                           disabled={newsletterLoading}
-                          className="flex items-center gap-2 px-4 py-2 bg-black/40 border border-white/10 text-white rounded-xl font-black text-[10px] uppercase w-fit disabled:opacity-50"
+                          className="inline-flex w-fit items-center gap-2 rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-50"
                         >
-                          <RefreshCw size={14} className={newsletterLoading ? 'animate-spin' : ''} /> AGGIORNA
+                          <RefreshCw size={14} className={newsletterLoading ? 'animate-spin' : ''} /> Aggiorna
                         </button>
                         <button
+                          type="button"
                           onClick={exportCSV}
-                          className="flex items-center gap-2 px-4 py-2 bg-[#FF914D] text-black rounded-xl font-black text-[10px] uppercase w-fit"
+                          className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#FF914D] px-4 py-2 text-xs font-semibold text-zinc-950 shadow-sm shadow-[#FF914D]/20"
                         >
-                          <Download size={14} /> ESPORTA CSV
+                          <Download size={14} /> Esporta CSV
                         </button>
                       </div>
                     </div>
 
                     <div className="relative mt-5">
-                      <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" />
+                      <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                       <input
                         value={newsletterSearch}
                         onChange={(e) => setNewsletterSearch(e.target.value)}
                         placeholder="Cerca per nome, email o telefono"
-                        className="w-full bg-black/35 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-sm text-white outline-none focus:border-[#FF914D]/40"
+                        className="w-full rounded-xl border border-zinc-800/80 bg-zinc-950/50 py-3 pl-11 pr-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-colors focus:border-[#FF914D]/45"
                       />
                     </div>
 
                     {newsletterError && (
-                      <p className="mt-3 rounded-xl border border-[#FF914D]/20 bg-[#FF914D]/10 px-4 py-3 text-[10px] font-mono uppercase tracking-wider text-[#FF914D]">
+                      <p className="mt-3 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs text-red-300">
                         {newsletterError}
                       </p>
                     )}
                   </div>
 
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    <div className="rounded-3xl border border-white/5 bg-zinc-900/20 p-5">
-                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-500">Totale</p>
-                      <p className="text-3xl font-black italic mt-2">{subscribers.length}</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Totale</p>
+                      <p className="mt-1 text-3xl font-bold tabular-nums text-white">{subscribers.length}</p>
                     </div>
-                    <div className="rounded-3xl border border-white/5 bg-zinc-900/20 p-5">
-                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
                         Con telefono
                       </p>
-                      <p className="text-3xl font-black italic mt-2">{subscribersWithPhone}</p>
+                      <p className="mt-1 text-3xl font-bold tabular-nums text-white">{subscribersWithPhone}</p>
                     </div>
-                    <div className="rounded-3xl border border-white/5 bg-zinc-900/20 p-5">
-                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
                         Ultimo ingresso
                       </p>
-                      <p className="text-lg font-black italic mt-3">
-                        {formatDate(subscribers[0]?.created_at)}
-                      </p>
+                      <p className="mt-2 text-lg font-semibold text-white">{formatDate(subscribers[0]?.created_at)}</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid gap-3">
                   {newsletterLoading ? (
-                    <div className="p-5 bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl">
-                      <span className="text-xs font-mono text-zinc-500 uppercase">
-                        Caricamento contatti newsletter...
-                      </span>
+                    <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-5">
+                      <span className="text-sm text-zinc-500">Caricamento contatti…</span>
                     </div>
                   ) : filteredSubscribers.length > 0 ? (
                     filteredSubscribers.map((subscriber, index) => (
                       <div
                         key={`${subscriber.email}-${subscriber.created_at}-${index}`}
-                        className="p-4 bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl grid md:grid-cols-[1.4fr_1fr_0.8fr_0.6fr] gap-4 items-center"
+                        className="grid items-center gap-4 rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 md:grid-cols-[1.4fr_1fr_0.8fr_0.6fr]"
                       >
                         <div className="min-w-0">
                           <span className="text-sm font-bold uppercase block truncate">{subscriber.name}</span>
@@ -965,16 +959,14 @@ export default function Dashboard() {
                           <Phone size={14} className="text-zinc-600 shrink-0" />
                           <span className="text-xs text-[#FF914D] truncate">{subscriber.phone || '--'}</span>
                         </div>
-                        <span className="text-[10px] font-mono uppercase text-zinc-600">
-                          Lead {index + 1}
+                        <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-600">
+                          #{index + 1}
                         </span>
                       </div>
                     ))
                   ) : (
-                    <div className="p-5 bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl">
-                      <span className="text-xs font-mono text-zinc-500 uppercase">
-                        Nessun contatto trovato con questo filtro.
-                      </span>
+                    <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-5">
+                      <span className="text-sm text-zinc-500">Nessun contatto con questo filtro.</span>
                     </div>
                   )}
                 </div>
@@ -983,29 +975,25 @@ export default function Dashboard() {
 
             {activeView === 'reviews' && (
               <div className="space-y-6">
-                <div className="grid xl:grid-cols-[1.1fr_0.9fr] gap-4">
-                  <div className="bg-zinc-900/20 backdrop-blur-md p-6 rounded-3xl border border-white/5 space-y-5">
+                <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+                  <div className="space-y-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <h2 className="text-sm font-black uppercase italic text-[#FF914D]">
-                          DATABASE RECENSIONI
-                        </h2>
-                        <p className="text-[11px] text-zinc-500 mt-2">
-                          Moderazione staff con filtro per testo e fascia di voto.
-                        </p>
+                        <h2 className="text-sm font-semibold text-[#FF914D]">Recensioni</h2>
+                        <p className="mt-1 text-xs text-zinc-500">Ricerca e filtri per fascia di voto.</p>
                       </div>
-                      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
-                        {reviews.length} review
+                      <span className="rounded-lg border border-zinc-800/80 bg-zinc-950/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-zinc-400">
+                        {reviews.length} totali
                       </span>
                     </div>
 
                     <div className="relative">
-                      <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" />
+                      <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                       <input
                         value={reviewSearch}
                         onChange={(e) => setReviewSearch(e.target.value)}
                         placeholder="Cerca per autore o contenuto"
-                        className="w-full bg-black/35 border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-sm text-white outline-none focus:border-[#FF914D]/40"
+                        className="w-full rounded-xl border border-zinc-800/80 bg-zinc-950/50 py-3 pl-11 pr-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-colors focus:border-[#FF914D]/45"
                       />
                     </div>
 
@@ -1017,12 +1005,13 @@ export default function Dashboard() {
                         ['low', 'Basse'],
                       ].map(([value, label]) => (
                         <button
+                          type="button"
                           key={value}
                           onClick={() => setReviewFilter(value as 'all' | 'high' | 'mid' | 'low')}
-                          className={`px-4 py-2 rounded-full text-[10px] font-black uppercase transition-all ${
+                          className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                             reviewFilter === value
-                              ? 'bg-[#FF914D] text-black'
-                              : 'bg-black/35 border border-white/10 text-zinc-400'
+                              ? 'bg-[#FF914D] text-zinc-950'
+                              : 'border border-zinc-800/80 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                           }`}
                         >
                           {label}
@@ -1031,20 +1020,20 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    <div className="rounded-3xl border border-white/5 bg-zinc-900/20 p-5">
-                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-500">Totale</p>
-                      <p className="text-3xl font-black italic mt-2">{reviews.length}</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Totale</p>
+                      <p className="mt-1 text-3xl font-bold tabular-nums text-white">{reviews.length}</p>
                     </div>
-                    <div className="rounded-3xl border border-white/5 bg-zinc-900/20 p-5">
-                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-500">Media</p>
-                      <p className="text-3xl font-black italic mt-2">
+                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Media</p>
+                      <p className="mt-1 text-3xl font-bold tabular-nums text-white">
                         {reviewsAverage ? reviewsAverage.toFixed(1) : '0.0'}
                       </p>
                     </div>
-                    <div className="rounded-3xl border border-white/5 bg-zinc-900/20 p-5">
-                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-500">Eccellenti</p>
-                      <p className="text-3xl font-black italic mt-2">
+                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Eccellenti</p>
+                      <p className="mt-1 text-3xl font-bold tabular-nums text-white">
                         {reviews.filter((review) => Number(review.rating) >= 4.5).length}
                       </p>
                     </div>
@@ -1056,7 +1045,7 @@ export default function Dashboard() {
                     filteredReviews.map((review) => (
                       <div
                         key={review.id}
-                        className="p-5 bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+                        className="flex flex-col gap-4 rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-5 md:flex-row md:items-start md:justify-between"
                       >
                         <div className="flex flex-col gap-2 min-w-0">
                           <div className="flex flex-wrap items-center gap-3">
@@ -1071,19 +1060,18 @@ export default function Dashboard() {
                           <p className="text-sm text-zinc-300 leading-relaxed">{review.comment}</p>
                         </div>
                         <button
+                          type="button"
                           onClick={() => handleDeleteReview(review.id)}
                           disabled={deletingReviewId === review.id}
-                          className="self-start px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-black uppercase text-red-400 hover:bg-red-500/20 transition-all"
+                          className="self-start rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20"
                         >
                           {deletingReviewId === review.id ? 'Elimino...' : 'Elimina'}
                         </button>
                       </div>
                     ))
                   ) : (
-                    <div className="p-5 bg-black/40 backdrop-blur-sm border border-white/5 rounded-2xl">
-                      <span className="text-xs font-mono text-zinc-500 uppercase">
-                        Nessuna recensione presente con questo filtro.
-                      </span>
+                    <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-5">
+                      <span className="text-sm text-zinc-500">Nessuna recensione con questo filtro.</span>
                     </div>
                   )}
                 </div>
@@ -1093,12 +1081,14 @@ export default function Dashboard() {
             {activeView === 'planner' && <Planner />}
             {activeView === 'notes' && <NotesManager />}
           </div>
-	        )}
+        )}
+              </motion.div>
+            </AnimatePresence>
 
-	        <ManagementBottomLogo className="mt-12" />
+            <ManagementBottomLogo className="mt-12" />
           </section>
         </div>
-	      </main>
+      </main>
     </div>
   );
 }
