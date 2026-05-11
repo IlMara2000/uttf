@@ -139,18 +139,20 @@ export default function NotesManager() {
   );
 
   return (
-    <div className="glass-panel border-white/5 bg-zinc-950/60 rounded-3xl overflow-hidden flex h-[600px] text-white">
+    <div className="flex h-[70vh] max-h-[880px] min-h-[320px] min-w-0 max-w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/25 text-white shadow-sm backdrop-blur-md">
       
       {/* SIDEBAR LISTA */}
-      <div className={`w-full md:w-80 border-r border-white/5 flex flex-col ${activeNote ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-black italic uppercase tracking-tighter">Testi</h2>
-            <button 
-              onClick={() => setActiveNote({ title: '', content: '', attachments: [] })} 
-              className="text-[#FF914D] hover:bg-[#FF914D]/10 p-2 rounded-full transition-all"
+      <div className={`flex w-full min-w-0 flex-col border-r border-zinc-800/80 md:w-80 ${activeNote ? 'hidden md:flex' : 'flex'}`}>
+        <div className="space-y-4 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="min-w-0 truncate text-lg font-semibold tracking-tight">Note</h2>
+            <button
+              type="button"
+              onClick={() => setActiveNote({ title: '', content: '', attachments: [] })}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-[#FF914D] transition-colors hover:bg-[#FF914D]/10"
+              aria-label="Nuova nota"
             >
-              <Plus size={20} />
+              <Plus size={18} />
             </button>
           </div>
           <div className="relative">
@@ -166,10 +168,11 @@ export default function NotesManager() {
           {loading ? (
             <div className="p-4 text-center"><Loader2 className="animate-spin inline text-zinc-600" /></div>
           ) : filteredNotes.map(note => (
-            <button 
-              key={note.id} 
+            <button
+              type="button"
+              key={note.id}
               onClick={() => setActiveNote(note)}
-              className={`w-full text-left p-4 border-b border-white/5 transition-all ${activeNote?.id === note.id ? 'bg-[#FF914D]/10' : 'hover:bg-white/[0.02]'}`}
+              className={`w-full border-b border-zinc-800/60 p-4 text-left transition-colors ${activeNote?.id === note.id ? 'bg-[#FF914D]/10' : 'hover:bg-zinc-900/40'}`}
             >
               <h3 className="text-[11px] font-black uppercase truncate">{note.title}</h3>
               <div className="flex justify-between items-center mt-1">
@@ -187,26 +190,36 @@ export default function NotesManager() {
       <div className={`flex-1 flex flex-col bg-black/20 ${!activeNote ? 'hidden md:flex' : 'flex'}`}>
         {activeNote ? (
           <>
-            <div className="p-4 border-b border-white/5 flex justify-between items-center">
-              <button onClick={() => { setActiveNote(null); }} className="md:hidden text-[#FF914D] flex items-center gap-1 text-[10px] font-black">
-                <ChevronLeft size={16} /> NOTE
+            <div className="flex items-center justify-between gap-2 border-b border-zinc-800/80 p-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveNote(null);
+                }}
+                className="inline-flex h-10 shrink-0 items-center gap-1 rounded-lg border border-zinc-700/80 bg-zinc-900/50 px-3 text-xs font-semibold text-[#FF914D] md:hidden"
+              >
+                <ChevronLeft size={16} /> Elenco
               </button>
-              <div className="flex items-center gap-4 ml-auto">
-                <label className="cursor-pointer text-zinc-500 hover:text-white transition-colors">
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <label className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-zinc-400 transition-colors hover:text-white">
                   {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
                   <input type="file" className="hidden" onChange={uploadFile} />
                 </label>
-                <button 
-                  onClick={handleSave} 
+                <button
+                  type="button"
+                  onClick={handleSave}
                   disabled={isSaving}
-                  className="text-[#FF914D] hover:scale-110 transition-transform disabled:opacity-50"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-[#FF914D] transition-colors hover:bg-[#FF914D]/10 disabled:opacity-50"
+                  aria-label="Salva"
                 >
                   {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                 </button>
                 <button
+                  type="button"
                   onClick={() => activeNote.id && handleDelete(activeNote.id)}
                   disabled={!activeNote.id}
-                  className="text-zinc-800 hover:text-red-500 disabled:opacity-30"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-zinc-500 transition-colors hover:border-red-500/40 hover:text-red-400 disabled:opacity-30"
+                  aria-label="Elimina nota"
                 >
                   <Trash2 size={18} />
                 </button>

@@ -9,7 +9,6 @@ import {
   Image as ImageIcon,
   Layers,
   Loader2,
-  ChevronRight,
   Sparkles,
   FileText,
   ArrowLeft,
@@ -67,6 +66,16 @@ function formatDate(value?: string | null) {
     year: 'numeric',
   });
 }
+
+/** Bottoni a altezza fissa: evita schiacciamenti con zoom / flex-wrap del browser */
+const BTN_ROW =
+  'inline-flex h-10 min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold leading-none transition-colors';
+const BTN_PRIMARY = `${BTN_ROW} bg-[#FF914D] text-zinc-950 shadow-sm shadow-[#FF914D]/15 hover:opacity-95 disabled:pointer-events-none disabled:opacity-50`;
+const BTN_SECONDARY = `${BTN_ROW} border border-zinc-700/80 bg-zinc-950/50 text-zinc-200 hover:border-zinc-600 hover:bg-zinc-800/50 disabled:pointer-events-none disabled:opacity-60`;
+const BTN_DANGER = `${BTN_ROW} border border-red-500/35 bg-red-500/10 text-red-300 hover:bg-red-500/20 disabled:opacity-50`;
+const BTN_ICON = 'inline-flex h-10 w-10 min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-100';
+const NAV_ITEM =
+  'group flex min-h-[3.25rem] w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition-colors duration-150';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -412,7 +421,6 @@ export default function Dashboard() {
       action: () => setActiveView('planner'),
     },
   ];
-  const moduleCards = managementSections.filter((section) => section.key !== 'menu');
   const activeSection = managementSections.find((section) => section.key === activeView) ?? managementSections[0];
 
   if (loading) {
@@ -430,7 +438,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans antialiased">
+    <div className="relative flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-zinc-950 font-sans text-zinc-100 antialiased">
       <div
         className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_100%_60%_at_50%_-15%,rgba(255,145,77,0.09),transparent_55%),radial-gradient(ellipse_70%_50%_at_100%_50%,rgba(255,145,77,0.04),transparent)]"
         aria-hidden
@@ -450,17 +458,17 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => supabase.auth.signOut().then(() => router.push('/'))}
-              className="rounded-xl border border-zinc-700/80 bg-zinc-900/50 p-2.5 text-zinc-400 transition-colors duration-200 hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-100"
+              className={BTN_ICON}
               aria-label="Esci"
             >
-              <LogOut size={20} />
+              <LogOut size={18} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 overflow-y-auto scroll-smooth p-4 pb-10 md:p-6 md:pb-12">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
+      <main className="relative z-10 min-w-0 flex-1 overflow-x-hidden overflow-y-auto scroll-smooth p-4 pb-10 md:p-6 md:pb-12">
+        <div className="mx-auto grid min-w-0 max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
           <aside className="h-fit rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-3 shadow-lg shadow-black/20 backdrop-blur-md lg:sticky lg:top-[4.5rem] lg:self-start">
             <div className="mb-3 rounded-xl border border-zinc-800/60 bg-zinc-950/50 p-4">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Gestionale</p>
@@ -479,7 +487,7 @@ export default function Dashboard() {
                     key={section.key}
                     type="button"
                     onClick={section.action}
-                    className={`group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-150 ease-out ${
+                    className={`${NAV_ITEM} ease-out ${
                       isActive
                         ? 'border-[#FF914D]/35 bg-[#FF914D]/12 text-zinc-100 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
                         : 'border-transparent bg-transparent text-zinc-500 hover:border-zinc-800 hover:bg-zinc-800/40 hover:text-zinc-200'
@@ -511,7 +519,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => router.push('/dashboard/outputs')}
-                className="mt-1 flex w-full items-center gap-3 rounded-xl border border-zinc-800/60 bg-zinc-950/30 px-3 py-2.5 text-left text-zinc-500 transition-all duration-150 hover:border-zinc-700 hover:bg-zinc-800/30 hover:text-zinc-200"
+                className={`${NAV_ITEM} mt-1 border-zinc-800/60 bg-zinc-950/30 text-zinc-500 hover:border-zinc-700 hover:bg-zinc-800/30 hover:text-zinc-200`}
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-800/60 text-zinc-500">
                   <Layers size={18} />
@@ -532,7 +540,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                className="space-y-6"
+                className="min-w-0 space-y-6"
               >
             {activeView !== 'menu' ? (
               <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/25 p-5 shadow-sm shadow-black/20 backdrop-blur-md md:p-6">
@@ -542,24 +550,19 @@ export default function Dashboard() {
                     <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-white md:text-3xl">
                       {activeSection.title}
                     </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">{activeSection.subtitle}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveView('menu')}
-                      className="inline-flex items-center gap-2 rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-2.5 text-xs font-semibold text-zinc-200 transition-colors duration-150 hover:border-zinc-600 hover:bg-zinc-800/50"
-                    >
-                      <ArrowLeft size={14} /> Panoramica
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => setActiveView('menu')} className={BTN_SECONDARY}>
+                      <ArrowLeft size={16} className="shrink-0" /> Panoramica
                     </button>
                     <button
                       type="button"
                       onClick={fetchDashboardOverview}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#FF914D] px-4 py-2.5 text-xs font-semibold text-zinc-950 shadow-md shadow-[#FF914D]/20 transition-opacity duration-150 hover:opacity-95 disabled:opacity-60"
+                      className={BTN_PRIMARY}
                       disabled={dashboardRefreshing}
                     >
-                      <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
-                      Aggiorna dati
+                      <RefreshCw size={16} className={dashboardRefreshing ? 'shrink-0 animate-spin' : 'shrink-0'} />
+                      Aggiorna
                     </button>
                   </div>
                 </div>
@@ -584,14 +587,14 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={fetchDashboardOverview}
                     disabled={dashboardRefreshing}
-                    className="inline-flex items-center gap-2 rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-2.5 text-xs font-semibold text-zinc-200 transition-colors duration-150 hover:border-zinc-600 disabled:opacity-60"
+                    className={BTN_SECONDARY}
                   >
-                    <RefreshCw size={14} className={dashboardRefreshing ? 'animate-spin' : ''} />
+                    <RefreshCw size={16} className={dashboardRefreshing ? 'shrink-0 animate-spin' : 'shrink-0'} />
                     Aggiorna
                   </button>
                   <button
@@ -601,14 +604,14 @@ export default function Dashboard() {
                       setTitle('');
                       setDescription('');
                     }}
-                    className="rounded-xl bg-[#FF914D] px-4 py-2.5 text-xs font-semibold text-zinc-950 shadow-md shadow-[#FF914D]/20 transition-opacity duration-150 hover:opacity-95"
+                    className={BTN_PRIMARY}
                   >
                     Nuovo post
                   </button>
                 </div>
               </div>
 
-              <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              <div className="mt-8 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
                 {(
                   [
                     { label: 'Post', value: overview.publications },
@@ -633,7 +636,7 @@ export default function Dashboard() {
                 ).map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 transition-all duration-150 ease-out hover:border-zinc-700/80 hover:bg-zinc-900/50 md:p-5"
+                    className="min-w-0 rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4 transition-all duration-150 ease-out hover:border-zinc-700/80 hover:bg-zinc-900/50 md:p-5"
                   >
                     <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">{stat.label}</p>
                     <p className="mt-2 text-2xl font-bold tabular-nums tracking-tight text-white md:text-3xl">
@@ -644,32 +647,7 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-              <div className="grid gap-3 md:grid-cols-2 md:gap-4">
-                {moduleCards.map((card) => (
-                  <button
-                    key={card.key}
-                    type="button"
-                    onClick={card.action}
-                    className="group flex w-full items-center justify-between rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 text-left shadow-sm backdrop-blur-md transition-all duration-150 ease-out hover:border-[#FF914D]/25 hover:bg-zinc-900/35 md:p-6"
-                  >
-                    <div className="flex min-w-0 items-center gap-4 md:gap-5">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-800/80 bg-zinc-950/50 text-zinc-500 transition-colors duration-150 group-hover:border-[#FF914D]/35 group-hover:text-[#FF914D] md:h-12 md:w-12">
-                        {card.icon}
-                      </div>
-                      <div className="min-w-0 text-left">
-                        <h3 className="text-sm font-semibold tracking-tight text-white">{card.title}</h3>
-                        <p className="mt-0.5 text-xs text-zinc-500">{card.subtitle}</p>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      size={18}
-                      className="shrink-0 text-zinc-600 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-[#FF914D]"
-                    />
-                  </button>
-                ))}
-              </div>
-
+            <section className="min-w-0">
               <div className="flex flex-col gap-6 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -736,28 +714,8 @@ export default function Dashboard() {
         ) : (
           <div className="flex flex-col gap-6">
             {activeView === 'publish' && (
-              <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-                <div className="space-y-6">
-                  <button
-                    type="button"
-                    onClick={() => router.push('/dashboard/outputs')}
-                    className="group flex w-full items-center justify-between rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 text-left transition-all duration-150 hover:border-[#FF914D]/25 hover:bg-zinc-900/35"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-800/80 bg-zinc-950/50 transition-colors group-hover:border-[#FF914D]/35">
-                        <Layers size={20} className="text-zinc-500 transition-colors group-hover:text-[#FF914D]" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-sm font-semibold text-white">Archivio post</h3>
-                        <p className="mt-0.5 text-xs text-zinc-500">Modifica o rimuovi contenuti già online</p>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      size={18}
-                      className="text-zinc-600 transition-all group-hover:translate-x-0.5 group-hover:text-[#FF914D]"
-                    />
-                  </button>
-
+              <div className="grid min-w-0 gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+                <div className="min-w-0 space-y-6">
                   <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
                     <h2 className="mb-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#FF914D]">
                       <Send size={14} aria-hidden /> Nuovo post
@@ -781,7 +739,7 @@ export default function Dashboard() {
                           type="button"
                           onClick={handleAiEnhance}
                           disabled={isAiProcessing || !description}
-                          className="absolute bottom-3 right-3 rounded-lg border border-zinc-700/80 bg-zinc-800 p-2 text-zinc-200 transition-colors hover:border-[#FF914D]/40 hover:bg-[#FF914D]/15 hover:text-[#FF914D] disabled:opacity-30"
+                          className="absolute bottom-3 right-3 inline-flex h-9 w-9 min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-800 text-zinc-200 transition-colors hover:border-[#FF914D]/40 hover:bg-[#FF914D]/15 hover:text-[#FF914D] disabled:opacity-30"
                           aria-label="Migliora con AI"
                         >
                           {isAiProcessing ? (
@@ -791,7 +749,7 @@ export default function Dashboard() {
                           )}
                         </button>
                       </div>
-                      <label className="group relative flex h-56 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-800/80 bg-zinc-950/30 transition-colors hover:border-zinc-700 hover:bg-zinc-900/30">
+                      <label className="group relative flex min-h-[12rem] max-h-[16rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-800/80 bg-zinc-950/30 transition-colors hover:border-zinc-700 hover:bg-zinc-900/30 sm:min-h-[14rem]">
                         {previewUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element -- Object URLs from file inputs are not handled reliably by next/image.
                           <img src={previewUrl} alt="Anteprima file selezionato" className="h-full w-full object-cover opacity-70" />
@@ -810,11 +768,7 @@ export default function Dashboard() {
                           }}
                         />
                       </label>
-                      <button
-                        type="submit"
-                        disabled={uploading}
-                        className="w-full rounded-xl bg-[#FF914D] py-3.5 text-sm font-semibold text-zinc-950 shadow-md shadow-[#FF914D]/20 transition-opacity hover:opacity-95 disabled:opacity-50"
-                      >
+                      <button type="submit" disabled={uploading} className={`${BTN_PRIMARY} w-full max-w-full`}>
                         {uploading ? (
                           <Loader2 className="mx-auto animate-spin" size={16} />
                         ) : (
@@ -825,19 +779,19 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <aside className="flex h-fit flex-col gap-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
+                <aside className="flex h-fit min-w-0 flex-col gap-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Anteprima</p>
                     <h3 className="mt-1 text-lg font-semibold text-white">Controllo rapido</h3>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
+                  <div className="grid min-w-0 grid-cols-2 gap-3">
+                    <div className="min-w-0 rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Titolo</p>
                       <p className="mt-1 text-2xl font-bold tabular-nums text-white">{title.length}</p>
                       <p className="mt-0.5 text-[10px] text-zinc-600">caratteri</p>
                     </div>
-                    <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
+                    <div className="min-w-0 rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Descrizione</p>
                       <p className="mt-1 text-2xl font-bold tabular-nums text-white">{description.length}</p>
                       <p className="mt-0.5 text-[10px] text-zinc-600">caratteri</p>
@@ -859,7 +813,7 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={() => router.push('/dashboard/outputs')}
-                    className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-3 text-xs font-semibold text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800/40"
+                    className={`${BTN_SECONDARY} w-full max-w-full`}
                   >
                     Apri archivio post
                   </button>
@@ -878,21 +832,18 @@ export default function Dashboard() {
                           Ricerca, export CSV e lettura contatti.
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <button
                           type="button"
                           onClick={fetchSubscribers}
                           disabled={newsletterLoading}
-                          className="inline-flex w-fit items-center gap-2 rounded-xl border border-zinc-700/80 bg-zinc-950/50 px-4 py-2 text-xs font-semibold text-zinc-200 disabled:opacity-50"
+                          className={BTN_SECONDARY}
                         >
-                          <RefreshCw size={14} className={newsletterLoading ? 'animate-spin' : ''} /> Aggiorna
+                          <RefreshCw size={16} className={newsletterLoading ? 'shrink-0 animate-spin' : 'shrink-0'} />
+                          Aggiorna
                         </button>
-                        <button
-                          type="button"
-                          onClick={exportCSV}
-                          className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#FF914D] px-4 py-2 text-xs font-semibold text-zinc-950 shadow-sm shadow-[#FF914D]/20"
-                        >
-                          <Download size={14} /> Esporta CSV
+                        <button type="button" onClick={exportCSV} className={BTN_PRIMARY}>
+                          <Download size={16} className="shrink-0" /> Esporta CSV
                         </button>
                       </div>
                     </div>
@@ -914,18 +865,18 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                  <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+                    <div className="min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Totale</p>
                       <p className="mt-1 text-3xl font-bold tabular-nums text-white">{subscribers.length}</p>
                     </div>
-                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
                         Con telefono
                       </p>
                       <p className="mt-1 text-3xl font-bold tabular-nums text-white">{subscribersWithPhone}</p>
                     </div>
-                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
                         Ultimo ingresso
                       </p>
@@ -943,7 +894,7 @@ export default function Dashboard() {
                     filteredSubscribers.map((subscriber, index) => (
                       <div
                         key={`${subscriber.email}-${subscriber.created_at}-${index}`}
-                        className="grid items-center gap-4 rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 md:grid-cols-[1.4fr_1fr_0.8fr_0.6fr]"
+                        className="flex flex-col gap-3 rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 sm:grid sm:min-w-0 sm:grid-cols-2 sm:items-start sm:gap-x-4 sm:gap-y-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,1fr)_auto] lg:items-center"
                       >
                         <div className="min-w-0">
                           <span className="text-sm font-bold uppercase block truncate">{subscriber.name}</span>
@@ -1008,7 +959,7 @@ export default function Dashboard() {
                           type="button"
                           key={value}
                           onClick={() => setReviewFilter(value as 'all' | 'high' | 'mid' | 'low')}
-                          className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                          className={`inline-flex h-10 min-h-10 shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold transition-colors ${
                             reviewFilter === value
                               ? 'bg-[#FF914D] text-zinc-950'
                               : 'border border-zinc-800/80 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
@@ -1020,18 +971,18 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                  <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+                    <div className="min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Totale</p>
                       <p className="mt-1 text-3xl font-bold tabular-nums text-white">{reviews.length}</p>
                     </div>
-                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Media</p>
                       <p className="mt-1 text-3xl font-bold tabular-nums text-white">
                         {reviewsAverage ? reviewsAverage.toFixed(1) : '0.0'}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
+                    <div className="min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Eccellenti</p>
                       <p className="mt-1 text-3xl font-bold tabular-nums text-white">
                         {reviews.filter((review) => Number(review.rating) >= 4.5).length}
@@ -1063,7 +1014,7 @@ export default function Dashboard() {
                           type="button"
                           onClick={() => handleDeleteReview(review.id)}
                           disabled={deletingReviewId === review.id}
-                          className="self-start rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20"
+                          className={`${BTN_DANGER} self-start`}
                         >
                           {deletingReviewId === review.id ? 'Elimino...' : 'Elimina'}
                         </button>

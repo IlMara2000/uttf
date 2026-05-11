@@ -160,7 +160,18 @@ export default function Planner() {
       <td className="p-3 pl-6 text-[8px] font-mono text-zinc-800 border-r border-white/5">{index + 1}</td>
       <td className="p-3 border-r border-white/5"><div className={`text-[10px] font-bold uppercase italic ${task.status === 'done' ? 'line-through text-zinc-700' : 'text-zinc-200'}`}>{task.title}</div></td>
       <td className="p-3 border-r border-white/5 text-[9px] font-mono text-center uppercase tracking-tighter">{renderAssignedNames(task.assigned_to)}</td>
-      <td className="p-1 border-r border-white/5"><button onClick={(e) => { e.stopPropagation(); updateStatus(task.id, task.status); }} className={`w-full py-2.5 rounded-sm text-[9px] font-black uppercase transition-all ${task.status === 'done' ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-500'}`}>{task.status === 'done' ? 'COMPLETATO' : 'IN CORSO'}</button></td>
+      <td className="border-r border-white/5 p-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            updateStatus(task.id, task.status);
+          }}
+          className={`inline-flex h-10 min-h-10 w-full max-w-full items-center justify-center rounded-md text-[10px] font-semibold uppercase transition-colors ${task.status === 'done' ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-400'}`}
+        >
+          {task.status === 'done' ? 'Fatto' : 'In corso'}
+        </button>
+      </td>
       <td className="p-1 border-r border-white/5"><div className={`w-full py-2.5 rounded-sm text-[9px] font-black text-center italic ${getPriorityStyle(task.priority)}`}>{task.priority}</div></td>
       <td className="p-3 text-center border-r border-white/5"><div className="text-[9px] font-mono text-zinc-400">{task.deadline ? format(new Date(task.deadline), 'dd/MM') : '--/--'}</div></td>
       <td className="p-3 text-center"><button onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }} className="text-red-500 hover:scale-110 transition-all"><Trash2 size={14} /></button></td>
@@ -178,10 +189,22 @@ export default function Planner() {
   }
 
   return (
-    <div className="glass-panel border-white/5 bg-black/20 backdrop-blur-md rounded-xl overflow-hidden">
-      <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
-        <div className="flex items-center gap-3"><ClipboardList className="text-[#FF914D]" size={18} /><h2 className="text-sm font-black uppercase italic tracking-widest text-white">Planner Hub:</h2></div>
-        <button onClick={() => showForm ? resetForm() : setShowForm(true)} className={`p-1.5 rounded transition-all ${showForm ? 'bg-red-500/10 text-red-500' : 'bg-[#FF914D] text-black hover:scale-105'}`}>{showForm ? <X size={14} /> : <Plus size={14} />}</button>
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/20 shadow-sm backdrop-blur-md">
+      <div className="flex items-center justify-between gap-3 border-b border-zinc-800/80 bg-zinc-950/30 p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <ClipboardList className="shrink-0 text-[#FF914D]" size={18} />
+          <h2 className="truncate text-sm font-semibold tracking-tight text-white">Planner</h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => (showForm ? resetForm() : setShowForm(true))}
+          className={`inline-flex h-10 w-10 min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
+            showForm ? 'border border-red-500/30 bg-red-500/10 text-red-400' : 'bg-[#FF914D] text-zinc-950 hover:opacity-95'
+          }`}
+          aria-label={showForm ? 'Chiudi form' : 'Nuova attività'}
+        >
+          {showForm ? <X size={18} /> : <Plus size={18} />}
+        </button>
       </div>
 
       <AnimatePresence>
@@ -195,7 +218,13 @@ export default function Planner() {
               ))}
             </div>
             {/* ... Resto del form ... */}
-            <button type="submit" disabled={isAdding} className="w-full py-3 rounded-lg font-black uppercase italic text-xs bg-[#FF914D] text-black shadow-lg shadow-[#FF914D]/10">{isAdding ? 'SYNCING...' : editingId ? 'UPDATE_TASK' : 'PUSH_TASK'}</button>
+            <button
+              type="submit"
+              disabled={isAdding}
+              className="inline-flex h-10 min-h-10 w-full max-w-full items-center justify-center rounded-lg bg-[#FF914D] text-sm font-semibold text-zinc-950 shadow-sm shadow-[#FF914D]/15 disabled:opacity-50"
+            >
+              {isAdding ? 'Salvataggio…' : editingId ? 'Aggiorna task' : 'Crea task'}
+            </button>
           </motion.form>
         )}
       </AnimatePresence>

@@ -64,21 +64,35 @@ export default function CalendarWidget() {
   });
 
   return (
-    <div className="glass-panel border-white/5 bg-zinc-950/40 overflow-hidden rounded-3xl">
-      <div className="p-6 border-b border-white/5 flex justify-between items-center bg-zinc-900/20">
-        <div className="flex items-center gap-3">
-          <CalendarIcon className="text-[#FF914D]" size={18} />
-          <h2 className="text-[10px] font-black uppercase italic text-white tracking-widest">
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/20 shadow-sm backdrop-blur-md">
+      <div className="flex items-center justify-between gap-3 border-b border-zinc-800/80 bg-zinc-950/30 p-4 md:p-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <CalendarIcon className="shrink-0 text-[#FF914D]" size={18} />
+          <h2 className="truncate text-xs font-semibold capitalize tracking-tight text-white sm:text-sm">
             {format(currentMonth, 'MMMM yyyy', { locale: it })}
           </h2>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-white/5 rounded-xl border border-white/5 transition-all text-white"><ChevronLeft size={16} /></button>
-          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-white/5 rounded-xl border border-white/5 transition-all text-white"><ChevronRight size={16} /></button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-white transition-colors hover:bg-zinc-800"
+            aria-label="Mese precedente"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-white transition-colors hover:bg-zinc-800"
+            aria-label="Mese successivo"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-white/5">
+      <div className="grid min-w-0 grid-cols-7 gap-px bg-zinc-800/50">
         {['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'].map(d => (
           <div key={d} className="text-center text-[7px] font-mono text-zinc-600 uppercase py-3 bg-black">{d}</div>
         ))}
@@ -91,7 +105,7 @@ export default function CalendarWidget() {
             <div
               key={i}
               onClick={() => setSelectedDate(day)}
-              className={`min-h-[70px] p-2 transition-all cursor-pointer relative bg-black hover:bg-zinc-900/50
+              className={`relative min-h-[64px] min-w-0 cursor-pointer bg-zinc-950 p-1.5 transition-colors hover:bg-zinc-900/80 sm:min-h-[70px] sm:p-2
                 ${!isCurrentMonth ? 'opacity-20' : ''}
                 ${isSelected ? 'bg-zinc-900 ring-1 ring-inset ring-[#FF914D]/30' : ''}
               `}
@@ -113,7 +127,7 @@ export default function CalendarWidget() {
         })}
       </div>
 
-      <div className="p-6 bg-zinc-900/40 border-t border-white/5">
+      <div className="border-t border-zinc-800/80 bg-zinc-950/40 p-4 md:p-5">
         <p className="text-[8px] font-mono text-zinc-600 uppercase mb-3">Focus_Day: {format(selectedDate, 'dd/MM')}</p>
         <div className="space-y-3">
           {events.filter(e => e.deadline && isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => {
