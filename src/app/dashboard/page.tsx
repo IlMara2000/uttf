@@ -549,8 +549,24 @@ export default function Dashboard() {
                       <RefreshCw size={16} className={dashboardRefreshing ? 'shrink-0 animate-spin' : 'shrink-0'} />
                       Aggiorna
                     </button>
+                    {activeView === 'newsletter' && (
+                      <button type="button" onClick={exportCSV} className={BTN_PRIMARY}>
+                        <Download size={16} className="shrink-0" /> Esporta CSV
+                      </button>
+                    )}
                   </div>
                 </div>
+                {activeView === 'newsletter' && (
+                  <div className="relative mt-5">
+                    <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <input
+                      value={newsletterSearch}
+                      onChange={(e) => setNewsletterSearch(e.target.value)}
+                      placeholder="Cerca per nome, email o telefono"
+                      className="w-full rounded-xl border border-zinc-800/80 bg-zinc-950/50 py-3 pl-11 pr-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-colors focus:border-[#FF914D]/45"
+                    />
+                  </div>
+                )}
               </div>
             ) : null}
 
@@ -769,15 +785,15 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => router.push('/dashboard/outputs')}
-                  className="group flex min-h-[14rem] h-fit min-w-0 flex-col justify-between rounded-2xl border border-[#FF914D]/35 bg-[#FF914D] p-6 text-left text-zinc-950 shadow-lg shadow-[#FF914D]/15 transition-all hover:-translate-y-0.5 hover:shadow-[#FF914D]/25"
+                  className="group flex min-h-[14rem] h-fit min-w-0 flex-col justify-between rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 text-left text-white shadow-sm backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-[#FF914D]/30 hover:bg-zinc-900/35"
                 >
-                  <span className="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-950/60">
+                  <span className="text-[10px] font-black uppercase tracking-[0.35em] text-[#FF914D]">
                     Archivio
                   </span>
-                  <span className="text-3xl font-black uppercase italic leading-none tracking-tighter">
+                  <span className="text-3xl font-black uppercase italic leading-none tracking-tighter text-white">
                     Apri archivio post
                   </span>
-                  <span className="text-sm font-semibold text-zinc-950/70">
+                  <span className="text-sm font-semibold text-zinc-500 group-hover:text-zinc-300">
                     Controlla e gestisci i contenuti pubblicati
                   </span>
                 </button>
@@ -786,49 +802,13 @@ export default function Dashboard() {
 
             {activeView === 'newsletter' && (
               <div className="space-y-6">
-                <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                  <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                      <div>
-                        <h2 className="text-sm font-semibold text-[#FF914D]">Newsletter</h2>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          Ricerca, export CSV e lettura contatti.
-                        </p>
-                      </div>
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={fetchSubscribers}
-                          disabled={newsletterLoading}
-                          className={BTN_SECONDARY}
-                        >
-                          <RefreshCw size={16} className={newsletterLoading ? 'shrink-0 animate-spin' : 'shrink-0'} />
-                          Aggiorna
-                        </button>
-                        <button type="button" onClick={exportCSV} className={BTN_PRIMARY}>
-                          <Download size={16} className="shrink-0" /> Esporta CSV
-                        </button>
-                      </div>
-                    </div>
+                {newsletterError && (
+                  <p className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+                    {newsletterError}
+                  </p>
+                )}
 
-                    <div className="relative mt-5">
-                      <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
-                      <input
-                        value={newsletterSearch}
-                        onChange={(e) => setNewsletterSearch(e.target.value)}
-                        placeholder="Cerca per nome, email o telefono"
-                        className="w-full rounded-xl border border-zinc-800/80 bg-zinc-950/50 py-3 pl-11 pr-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-colors focus:border-[#FF914D]/45"
-                      />
-                    </div>
-
-                    {newsletterError && (
-                      <p className="mt-3 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-xs text-red-300">
-                        {newsletterError}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-3">
                     <div className="min-w-0 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-5 shadow-sm">
                       <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Totale</p>
                       <p className="mt-1 text-3xl font-bold tabular-nums text-white">{subscribers.length}</p>
@@ -845,7 +825,6 @@ export default function Dashboard() {
                       </p>
                       <p className="mt-2 text-lg font-semibold text-white">{formatDate(subscribers[0]?.created_at)}</p>
                     </div>
-                  </div>
                 </div>
 
                 <div className="grid gap-3">
