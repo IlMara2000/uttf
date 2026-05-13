@@ -1,13 +1,15 @@
 'use client'
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Brush,
-  ExternalLink,
   ImageIcon,
   MapPin,
+  Mail,
   Palette,
+  Send,
   Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
@@ -70,6 +72,15 @@ const artworks = [
 ];
 
 export default function GalleryPage() {
+  const [showProposalForm, setShowProposalForm] = useState(false);
+  const [proposalEmail, setProposalEmail] = useState('');
+  const [proposalSubject, setProposalSubject] = useState('');
+  const [proposalBody, setProposalBody] = useState('');
+
+  const proposalHref = `mailto:ass.uttf@gmail.com?subject=${encodeURIComponent(proposalSubject)}&body=${encodeURIComponent(
+    `Mail utente: ${proposalEmail}\n\n${proposalBody}`
+  )}`;
+
   return (
     <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40">
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-start gap-12">
@@ -172,21 +183,63 @@ export default function GalleryPage() {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FF914D]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
           <h2 className="text-2xl font-black uppercase italic mb-6 tracking-tighter">
-            Vuoi proporre un <span className="text-[#FF914D]">pezzo</span>?
+            Vuoi proporre un <span className="text-[#FF914D]">progetto o un&apos;idea</span>?
           </h2>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8">
             La galleria cresce con artisti, idee e contributi del territorio.
           </p>
 
-          <a
-            href="https://docs.google.com/forms/d/e/1FAIpQLSerjf1xGTrj08wmLSJhbrqwDV2Czc5Kd6OatIyvdlSwJsRNrw/viewform"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => setShowProposalForm((current) => !current)}
             className="nav-tag inline-flex items-center gap-2 px-10 py-4 border-[#FF914D]/20 text-[#FF914D] hover:bg-[#FF914D] hover:text-black transition-all font-black uppercase tracking-widest text-xs cursor-pointer group/btn"
           >
-            PROPONI IL TUO LAVORO
-            <ExternalLink size={14} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
-          </a>
+            PROPONICI LE TUE IDEE QUI
+            <Mail size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+          </button>
+
+          {showProposalForm && (
+            <motion.form
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 grid gap-3 text-left"
+              onSubmit={(event) => {
+                event.preventDefault();
+                window.location.href = proposalHref;
+              }}
+            >
+              <input
+                type="email"
+                required
+                value={proposalEmail}
+                onChange={(event) => setProposalEmail(event.target.value)}
+                placeholder="LA TUA MAIL"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xs uppercase text-white outline-none placeholder:text-zinc-600 focus:border-[#FF914D]/60"
+              />
+              <input
+                type="text"
+                required
+                value={proposalSubject}
+                onChange={(event) => setProposalSubject(event.target.value)}
+                placeholder="OGGETTO"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xs uppercase text-white outline-none placeholder:text-zinc-600 focus:border-[#FF914D]/60"
+              />
+              <textarea
+                required
+                value={proposalBody}
+                onChange={(event) => setProposalBody(event.target.value)}
+                placeholder="TESTO MAIL"
+                className="min-h-36 w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xs uppercase text-white outline-none placeholder:text-zinc-600 focus:border-[#FF914D]/60"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF914D] px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-white"
+              >
+                <Send size={14} />
+                Genera mail
+              </button>
+            </motion.form>
+          )}
         </div>
 
         <p className="mt-20 text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">

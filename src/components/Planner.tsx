@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/errors';
 import { 
-  ClipboardList, Trash2, Plus, X
+  ChevronDown, ClipboardList, Trash2, Plus, X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,6 +32,7 @@ export default function Planner() {
   const [users, setUsers] = useState<PlannerUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
   
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -155,6 +156,9 @@ export default function Planner() {
     }
   };
 
+  const activeTasks = tasks.filter((task) => task.status !== 'done');
+  const completedTasks = tasks.filter((task) => task.status === 'done');
+
   const TaskRow = ({ task, index }: { task: PlannerTask, index: number }) => (
     <tr key={task.id} onClick={() => handleEditClick(task)} className="border-b border-white/5 hover:bg-white/[0.05] cursor-pointer">
       <td className="p-3 pl-6 text-[8px] font-mono text-zinc-800 border-r border-white/5">{index + 1}</td>
@@ -276,9 +280,38 @@ export default function Planner() {
       <div className="overflow-x-auto">
         <table className="w-full text-left min-w-[700px]">
           <thead><tr className="text-[8px] font-mono text-zinc-600 uppercase border-b border-white/5 tracking-widest"><th className="p-3 pl-6 w-10">#</th><th className="p-3">Attività</th><th className="p-3 text-center">Referente</th><th className="p-3 text-center">Status</th><th className="p-3 text-center">Prio</th><th className="p-3 text-center">Data</th><th className="p-3 text-center w-10">Del</th></tr></thead>
-          <tbody>{loading ? <tr><td colSpan={7} className="text-center py-8 font-mono text-[10px] text-[#FF914D] animate-pulse">SYNCING_DATA...</td></tr> : tasks.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-zinc-600 text-[10px] font-mono uppercase">Nessun task presente</td></tr> : tasks.map((task, idx) => <TaskRow key={task.id} task={task} index={idx} />)}</tbody>
+          <tbody>{loading ? <tr><td colSpan={7} className="text-center py-8 font-mono text-[10px] text-[#FF914D] animate-pulse">SYNCING_DATA...</td></tr> : activeTasks.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-zinc-600 text-[10px] font-mono uppercase">Nessun task attivo</td></tr> : activeTasks.map((task, idx) => <TaskRow key={task.id} task={task} index={idx} />)}</tbody>
         </table>
       </div>
+
+      {!loading && completedTasks.length > 0 && (
+        <div className="border-t border-white/5 bg-black/20">
+          <button
+            type="button"
+            onClick={() => setShowCompleted((current) => !current)}
+            className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-white/[0.03]"
+          >
+            <div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-[#FF914D]">Archivio completate</p>
+              <p className="mt-1 text-xs font-semibold text-zinc-400">{completedTasks.length} task completate</p>
+            </div>
+            <ChevronDown size={18} className={`shrink-0 text-zinc-500 transition-transform ${showCompleted ? 'rotate-180' : ''}`} />
+          </button>
+
+          <AnimatePresence>
+            {showCompleted && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                <div className="overflow-x-auto border-t border-white/5">
+                  <table className="w-full text-left min-w-[700px]">
+                    <thead><tr className="text-[8px] font-mono text-zinc-700 uppercase border-b border-white/5 tracking-widest"><th className="p-3 pl-6 w-10">#</th><th className="p-3">Attivita</th><th className="p-3 text-center">Referente</th><th className="p-3 text-center">Status</th><th className="p-3 text-center">Prio</th><th className="p-3 text-center">Data</th><th className="p-3 text-center w-10">Del</th></tr></thead>
+                    <tbody>{completedTasks.map((task, idx) => <TaskRow key={task.id} task={task} index={idx} />)}</tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
