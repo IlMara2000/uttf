@@ -40,21 +40,6 @@ const instagramPosts = [
     )
   },
   { 
-    id: 'ig3', 
-    img: '/instagram/post3.jpeg', 
-    url: 'https://www.instagram.com/reel/DS2iuPKjLIc/', 
-    ratio: 'portrait',
-    caption: (
-      <>
-        <span className="font-bold mr-2">uttf_factory</span>
-        🎄 WAAAASSUUUP PEOPLE 🎄<br/><br/>
-        Ecco un breve recap della @rapfcktory Jam organizzata da noi al @barrioslive! Grazie a tutti i partecipanti per aver portato sul palco la loro musica.🎶<br/><br/>
-        Menzione speciale per @bleach_wears e @dant.hor: due realtà fighissime!🎨🖌️<br/><br/>
-        Ricordiamo che il 12 GENNAIO ricominceranno i laboratori! Training Rap su misura. DM per info. ✍🏻🎼
-      </>
-    )
-  },
-  { 
     id: 'ig4', 
     img: '/instagram/post4.jpeg', 
     url: 'https://www.instagram.com/reel/DLnEnkMsQpe/', 

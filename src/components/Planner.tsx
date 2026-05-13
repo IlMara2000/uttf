@@ -181,11 +181,16 @@ export default function Planner() {
   async function updateStatus(id: string, s: string) {
     const newStatus = s === 'done' ? 'todo' : 'done';
     await supabase.from('tasks').update({ status: newStatus }).eq('id', id);
-    fetchTasks();
+    await fetchTasks();
+    notifyCalendar();
   }
 
   async function deleteTask(id: string) {
-    if(confirm("ELIMINARE?")) { await supabase.from('tasks').delete().eq('id', id); fetchTasks(); }
+    if(confirm("ELIMINARE?")) {
+      await supabase.from('tasks').delete().eq('id', id);
+      await fetchTasks();
+      notifyCalendar();
+    }
   }
 
   return (
@@ -217,7 +222,46 @@ export default function Planner() {
                 <button key={u.id} type="button" onClick={() => toggleAssignee(u.id)} className={`px-3 py-1.5 rounded-full text-[9px] font-mono border transition-all ${assigneeIds.includes(u.id) ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-900 border-white/10 text-zinc-400'}`}>{(u.username || u.email.split('@')[0]).toUpperCase()}</button>
               ))}
             </div>
-            {/* ... Resto del form ... */}
+            <textarea
+              placeholder="DESCRIZIONE ATTIVITÀ"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="min-h-[96px] w-full resize-none rounded-lg border border-white/5 bg-black/40 p-3 font-mono text-[10px] uppercase text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-[#FF914D]/40"
+            />
+            <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr]">
+              <input
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full rounded-lg border border-white/5 bg-black/40 p-3 font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40"
+              />
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full rounded-lg border border-white/5 bg-black/40 p-3 font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40"
+              />
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full rounded-lg border border-white/5 bg-black/40 p-3 font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {['low', 'medium', 'high'].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPriority(value)}
+                  className={`px-3 py-1.5 rounded-full text-[9px] font-mono uppercase border transition-all ${
+                    priority === value ? getPriorityStyle(value) : 'bg-zinc-900 border-white/10 text-zinc-400'
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
             <button
               type="submit"
               disabled={isAdding}

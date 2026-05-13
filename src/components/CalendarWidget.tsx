@@ -13,14 +13,23 @@ type CalendarEvent = {
   title?: string;
   description?: string | null;
   deadline?: string | null;
+  assigned_to?: string[] | null;
   status?: string | null;
   eventType: 'task' | 'activity';
 };
+
+type CalendarProfile = {
+  id: string;
+  account_color?: string | null;
+};
+
+const fallbackColors = ['#FF914D', '#00C2FF', '#00D084', '#FF3B5C', '#B877FF', '#FFD166'];
 
 export default function CalendarWidget() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [profiles, setProfiles] = useState<CalendarProfile[]>([]);
 
   const fetchEvents = useCallback(async () => {
     const start = startOfMonth(currentMonth).toISOString();
@@ -39,15 +48,21 @@ export default function CalendarWidget() {
       .select('*')
       .gte('deadline', start)
       .lte('deadline', end);
+
+    const { data: profileData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, account_color');
     
     if (tasksError) console.error("Tasks fetch error:", tasksError);
     if (activitiesError) console.error("Activities fetch error:", activitiesError);
+    if (profilesError) console.error("Profiles fetch error:", profilesError);
 
     // Uniamo i due set di dati aggiungendo un flag "eventType" per distinguerli
     const formattedTasks = (tasks || []).map(t => ({ ...t, eventType: 'task' as const }));
     const formattedActivities = (activities || []).map(a => ({ ...a, eventType: 'activity' as const }));
 
     setEvents([...formattedTasks, ...formattedActivities]);
+    if (profileData) setProfiles(profileData as CalendarProfile[]);
   }, [currentMonth]);
 
   useEffect(() => {
@@ -62,6 +77,24 @@ export default function CalendarWidget() {
     start: startOfWeek(startOfMonth(currentMonth)), 
     end: endOfWeek(endOfMonth(currentMonth)) 
   });
+
+  const getFallbackColor = (seed?: string | number) => {
+    const value = String(seed ?? '');
+    const total = value.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    return fallbackColors[total % fallbackColors.length];
+  };
+
+  const getEventColors = (event: CalendarEvent) => {
+    if (event.eventType === 'activity') return ['#FFFFFF'];
+
+    const assignedIds = Array.isArray(event.assigned_to) ? event.assigned_to : [];
+    if (assignedIds.length === 0) return ['#FF914D'];
+
+    return assignedIds.map((id) => {
+      const profile = profiles.find((item) => item.id === id);
+      return profile?.account_color || getFallbackColor(id);
+    });
+  };
 
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/20 shadow-sm backdrop-blur-md">
@@ -113,13 +146,21 @@ export default function CalendarWidget() {
               <span className={`text-[9px] font-mono ${isSameDay(day, new Date()) ? 'text-[#FF914D] font-bold underline' : 'text-zinc-500'}`}>
                 {format(day, 'd')}
               </span>
-              <div className="mt-1 flex flex-wrap gap-0.5">
+              <div className="mt-1 flex max-w-full flex-col gap-0.5 overflow-hidden">
                 {dayEvents.map((e, idx) => {
-                  let dotClass = 'bg-[#FF914D]'; 
-                  if (e.eventType === 'task' && e.status === 'done') dotClass = 'bg-emerald-500';
-                  if (e.eventType === 'activity') dotClass = 'bg-white';
+                  const colors = getEventColors(e);
 
-                  return <div key={idx} className={`w-1 h-1 rounded-full ${dotClass}`} title={e.title} />;
+                  return (
+                    <div key={idx} className="flex h-1.5 w-full max-w-[54px] overflow-hidden rounded-full" title={e.title}>
+                      {colors.slice(0, 4).map((color, colorIndex) => (
+                        <span
+                          key={`${color}-${colorIndex}`}
+                          className="min-w-2 flex-1"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  );
                 })}
               </div>
             </div>
@@ -131,14 +172,20 @@ export default function CalendarWidget() {
         <p className="text-[8px] font-mono text-zinc-600 uppercase mb-3">Focus_Day: {format(selectedDate, 'dd/MM')}</p>
         <div className="space-y-3">
           {events.filter(e => e.deadline && isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => {
-            let barClass = 'bg-[#FF914D]'; 
-            if (e.eventType === 'task' && e.status === 'done') barClass = 'bg-emerald-500';
-            if (e.eventType === 'activity') barClass = 'bg-white';
+            const colors = getEventColors(e);
 
             return (
               <div key={idx} className="flex flex-col gap-2 p-3 bg-black/40 rounded-xl border border-white/5">
                 <div className="flex items-center gap-3">
-                  <div className={`w-1 h-4 rounded-full ${barClass}`} />
+                  <div className="flex h-4 w-1 flex-col overflow-hidden rounded-full">
+                    {colors.slice(0, 4).map((color, colorIndex) => (
+                      <span
+                        key={`${color}-${colorIndex}`}
+                        className="min-h-1 flex-1"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
                   <div className="flex flex-col">
                     <span className={`text-[10px] font-black uppercase italic ${e.eventType === 'activity' ? 'text-white' : 'text-zinc-300'}`}>
                       {e.title}

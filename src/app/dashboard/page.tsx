@@ -75,7 +75,7 @@ const BTN_SECONDARY = `${BTN_ROW} border border-zinc-700/80 bg-zinc-950/50 text-
 const BTN_DANGER = `${BTN_ROW} border border-red-500/35 bg-red-500/10 text-red-300 hover:bg-red-500/20 disabled:opacity-50`;
 const BTN_ICON = 'inline-flex h-10 w-10 min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-900/50 text-zinc-400 transition-colors hover:border-zinc-600 hover:bg-zinc-800 hover:text-zinc-100';
 const NAV_ITEM =
-  'group flex min-h-[3.25rem] w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition-colors duration-150';
+  'group flex min-h-[3.25rem] w-full max-w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border px-3 py-2 text-left text-sm transition-colors duration-150';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -447,7 +447,6 @@ export default function Dashboard() {
       <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-zinc-950/70">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 md:h-16 md:px-6">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-500">Console</p>
             <h1 className="text-base font-black italic tracking-tight uppercase md:text-lg">
               UTTF_<span className="text-[#FF914D]">STAFF</span>
             </h1>
@@ -469,7 +468,7 @@ export default function Dashboard() {
 
       <main className="relative z-10 min-w-0 flex-1 overflow-x-hidden overflow-y-auto scroll-smooth p-4 pb-10 md:p-6 md:pb-12">
         <div className="mx-auto grid min-w-0 max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
-          <aside className="h-fit rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-3 shadow-lg shadow-black/20 backdrop-blur-md lg:sticky lg:top-[4.5rem] lg:self-start">
+          <aside className="h-fit min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-3 shadow-lg shadow-black/20 backdrop-blur-md lg:sticky lg:top-[4.5rem] lg:self-start">
             <div className="mb-3 rounded-xl border border-zinc-800/60 bg-zinc-950/50 p-4">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Gestionale</p>
               <h2 className="mt-1 text-sm font-semibold text-white">Area operativa</h2>
@@ -502,7 +501,7 @@ export default function Dashboard() {
                     >
                       {section.icon}
                     </span>
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1 overflow-hidden">
                       <span className="block text-xs font-semibold tracking-tight">{section.title}</span>
                       <span
                         className={`mt-0.5 block truncate text-[11px] leading-snug ${
@@ -515,20 +514,6 @@ export default function Dashboard() {
                   </button>
                 );
               })}
-
-              <button
-                type="button"
-                onClick={() => router.push('/dashboard/outputs')}
-                className={`${NAV_ITEM} mt-1 border-zinc-800/60 bg-zinc-950/30 text-zinc-500 hover:border-zinc-700 hover:bg-zinc-800/30 hover:text-zinc-200`}
-              >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-800/60 text-zinc-500">
-                  <Layers size={18} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-xs font-semibold tracking-tight">Archivio post</span>
-                  <span className="mt-0.5 block truncate text-[11px] text-zinc-600">Contenuti pubblicati</span>
-                </span>
-              </button>
             </nav>
           </aside>
 
@@ -571,7 +556,7 @@ export default function Dashboard() {
 
         {activeView === 'menu' ? (
           <div className="flex flex-col gap-6">
-            <CalendarWidget />
+
 
             <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm shadow-black/25 backdrop-blur-md md:p-8">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -710,6 +695,8 @@ export default function Dashboard() {
                 </div>
               </div>
             </section>
+
+            <CalendarWidget />
           </div>
         ) : (
           <div className="flex flex-col gap-6">
@@ -779,45 +766,21 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <aside className="flex h-fit min-w-0 flex-col gap-5 rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm backdrop-blur-md">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Anteprima</p>
-                    <h3 className="mt-1 text-lg font-semibold text-white">Controllo rapido</h3>
-                  </div>
-
-                  <div className="grid min-w-0 grid-cols-2 gap-3">
-                    <div className="min-w-0 rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
-                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Titolo</p>
-                      <p className="mt-1 text-2xl font-bold tabular-nums text-white">{title.length}</p>
-                      <p className="mt-0.5 text-[10px] text-zinc-600">caratteri</p>
-                    </div>
-                    <div className="min-w-0 rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
-                      <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Descrizione</p>
-                      <p className="mt-1 text-2xl font-bold tabular-nums text-white">{description.length}</p>
-                      <p className="mt-0.5 text-[10px] text-zinc-600">caratteri</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 rounded-xl border border-zinc-800/70 bg-zinc-950/40 p-4">
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">Immagine</p>
-                    {file ? (
-                      <>
-                        <p className="break-words text-sm font-medium text-white">{file.name}</p>
-                        <p className="text-xs text-zinc-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                      </>
-                    ) : (
-                      <p className="text-xs text-zinc-500">Nessun file selezionato.</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => router.push('/dashboard/outputs')}
-                    className={`${BTN_SECONDARY} w-full max-w-full`}
-                  >
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard/outputs')}
+                  className="group flex min-h-[14rem] h-fit min-w-0 flex-col justify-between rounded-2xl border border-[#FF914D]/35 bg-[#FF914D] p-6 text-left text-zinc-950 shadow-lg shadow-[#FF914D]/15 transition-all hover:-translate-y-0.5 hover:shadow-[#FF914D]/25"
+                >
+                  <span className="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-950/60">
+                    Archivio
+                  </span>
+                  <span className="text-3xl font-black uppercase italic leading-none tracking-tighter">
                     Apri archivio post
-                  </button>
-                </aside>
+                  </span>
+                  <span className="text-sm font-semibold text-zinc-950/70">
+                    Controlla e gestisci i contenuti pubblicati
+                  </span>
+                </button>
               </div>
             )}
 

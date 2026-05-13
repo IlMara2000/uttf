@@ -5,6 +5,8 @@ import { getErrorMessage } from '@/lib/errors';
 import { Settings, X, Save, Loader2, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const accountColors = ['#FF914D', '#00C2FF', '#00D084', '#FF3B5C', '#B877FF', '#FFD166'];
+
 export default function AccountSettings() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -13,6 +15,7 @@ export default function AccountSettings() {
   const [userId, setUserId] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [accountColor, setAccountColor] = useState(accountColors[0]);
   
   // Nuovi stati per la gestione della password
   const [newPassword, setNewPassword] = useState('');
@@ -38,12 +41,13 @@ export default function AccountSettings() {
       // Pesca lo username dalla tabella profiles
       const { data, error } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, account_color')
         .eq('id', session.user.id)
         .single();
         
       if (data) {
         setUsername(data.username || '');
+        setAccountColor(data.account_color || accountColors[0]);
       } else if (error && error.code !== 'PGRST116') { // Ignora l'errore "nessuna riga trovata" nel caso in cui il profilo non esista ancora
           console.error("Errore recupero profilo:", error);
       }
@@ -71,7 +75,7 @@ export default function AccountSettings() {
       // Utilizziamo upsert nel caso il record non esista ancora (es. utente appena registrato)
       const { error: profileError } = await supabase
         .from('profiles')
-        .upsert({ id: userId, username: username }, { onConflict: 'id' });
+        .upsert({ id: userId, email, username: username, account_color: accountColor }, { onConflict: 'id' });
         
       if (profileError) throw profileError;
 
@@ -128,12 +132,12 @@ export default function AccountSettings() {
       {/* MODAL IMPOSTAZIONI */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 p-4 pt-20 backdrop-blur-sm md:pt-28">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto custom-scrollbar"
+              className="relative w-full max-w-md bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl p-6 max-h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar"
             >
               <button 
                 onClick={() => setIsOpen(false)}
@@ -180,6 +184,24 @@ export default function AccountSettings() {
                         required
                         className="w-full bg-zinc-900 border border-white/5 p-3 rounded-lg font-mono text-xs text-white outline-none focus:border-[#FF914D]/40 transition-colors"
                       />
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Colore account</label>
+                      <div className="grid grid-cols-6 gap-2">
+                        {accountColors.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setAccountColor(color)}
+                            className={`h-10 rounded-lg border transition-all ${
+                              accountColor === color ? 'border-white ring-2 ring-white/30' : 'border-white/10'
+                            }`}
+                            style={{ backgroundColor: color }}
+                            aria-label={`Scegli colore ${color}`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
 

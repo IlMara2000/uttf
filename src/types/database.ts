@@ -1,10 +1,13 @@
 export type ActivityStatus = 'draft' | 'in_progress' | 'done';
 
 export interface Profile {
-  id: number; 
+  id: number | string;
   created_at?: string;
+  email?: string;
+  username?: string;
   full_name: string;
   role: string;
+  account_color?: string;
   skills?: string[];
   avatar_url?: string;
 }

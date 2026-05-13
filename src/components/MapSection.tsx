@@ -10,8 +10,9 @@ interface MapSectionProps {
 export default function MapSection({ isOpen, onClose }: MapSectionProps) {
   if (!isOpen) return null;
 
-  // URL con gestureHandling=greedy per permettere il movimento con un solo dito
-  const mapUrl = "https://www.google.com/maps/d/u/0/embed?mid=1gPVgjenNgn7fVWT7-BX3lFQ1JJ_ASYE&ehbc=2E312F";
+  // Embed classico “luogo” (niente UI My Maps): mappa + percorso come da vecchio link
+  const mapUrl =
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2802.48206105437!2d9.14821617674218!3d45.38550393802996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4786e3955e840703%3A0xcf953330dfde366f!2sVia%20dei%20Biancospini%2C%204%2C%2020089%20Rozzano%20MI!5e0!3m2!1sit!2sit!4v1710000000000!5m2!1sit!2sit&gestureHandling=greedy";
 
   return (
     <motion.div 
