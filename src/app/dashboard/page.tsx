@@ -791,7 +791,7 @@ export default function Dashboard() {
                     Archivio
                   </span>
                   <span className="text-3xl font-black uppercase italic leading-none tracking-tighter text-white">
-                    Apri archivio post
+                    Clicca per aprire l&apos;archivio post
                   </span>
                   <span className="text-sm font-semibold text-zinc-500 group-hover:text-zinc-300">
                     Controlla e gestisci i contenuti pubblicati
