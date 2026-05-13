@@ -132,21 +132,23 @@ export default function AccountSettings() {
       {/* MODAL IMPOSTAZIONI */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/80 p-4 pt-20 backdrop-blur-sm md:pt-28">
+          <div className="fixed inset-0 z-[120] flex min-h-dvh items-center justify-center overflow-hidden bg-black/85 p-4 backdrop-blur-md">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-zinc-950 border border-white/10 rounded-2xl shadow-2xl p-6 max-h-[calc(100vh-7rem)] overflow-y-auto custom-scrollbar"
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.96 }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              className="relative flex max-h-[min(92dvh,760px)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60"
             >
               <button 
                 onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+                className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-zinc-900/80 text-zinc-500 transition-colors hover:text-white"
+                aria-label="Chiudi impostazioni account"
               >
                 <X size={20} />
               </button>
 
-              <div className="mb-6">
+              <div className="shrink-0 border-b border-white/5 p-6 pr-16">
                 <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
                   ACCOUNT_<span className="text-[#FF914D]">SETTINGS</span>
                 </h2>
@@ -155,12 +157,13 @@ export default function AccountSettings() {
                 </p>
               </div>
 
-              {fetching ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="animate-spin text-[#FF914D]" size={32} />
-                </div>
-              ) : (
-                <form onSubmit={handleSave} className="space-y-4">
+              <div className="min-h-0 flex-1 overflow-y-auto p-6 custom-scrollbar">
+                {fetching ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="animate-spin text-[#FF914D]" size={32} />
+                  </div>
+                ) : (
+                  <form onSubmit={handleSave} className="space-y-4">
                   {/* SEZIONE ANAGRAFICA */}
                   <div className="space-y-4">
                     <div>
@@ -247,8 +250,9 @@ export default function AccountSettings() {
                   >
                     {loading ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> SALVA DATI</>}
                   </button>
-                </form>
-              )}
+                  </form>
+                )}
+              </div>
             </motion.div>
           </div>
         )}
