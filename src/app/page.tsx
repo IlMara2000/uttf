@@ -134,7 +134,7 @@ export default function HomePage() {
               <Link href="/galleria" className="group">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
                   <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">KM0_ART_ARCHIVE:</span>
-                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">GALLERIA D&apos;ARTE A KM0</h3>
+                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">ARTE A KM 0</h3>
                   <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
                 </motion.div>
               </Link>
