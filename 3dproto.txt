@@ -1,0 +1,22 @@
+Prompt per ricreare la palla 3D animata UTTF:
+
+Ricrea una scena centrale premium per la homepage Under The Tower Factory, da usare al posto del logo statico sotto i pulsanti principali e sopra la sezione UTTF_NEWS. La scena deve sembrare una palla di vetro scura e profonda, con il logo UTTF dentro, illuminazione arancio #ff914d, riflessi freddi bianchi/blu e un effetto da "nucleo" sospeso.
+
+Elementi obbligatori:
+- Contenitore centrato, responsive, circa 320px su mobile e 520-620px su desktop.
+- Sfondo trasparente, coerente con il background spaziale/arancio del sito.
+- Dietro la palla devono esserci 3 o 4 cerchi/orbite sottili, inclinati in prospettiva, animati lentamente a velocita diverse.
+- La palla deve avere bordo vetroso, gradienti radiali, glow interno, ombra profonda e riflesso superiore.
+- Dentro la palla deve esserci il logo /icons/homelogo.png, non deformato, centrato e con drop-shadow.
+- Aggiungere una breve CTA dentro la palla o subito sotto: "SCEGLI UNA ROTTA" / "I PANNELLI INTORNO SONO LA NUOVA NAVIGAZIONE DEL SITO" solo se la palla sostituisce anche i bottoni; se sostituisce solo il logo, mantenere solo il logo.
+- Animazioni: floating verticale leggero, scala molto sottile, glow pulsante, orbite in rotazione continua, nessun movimento aggressivo.
+- Stile: nero, vetro, arancio #ff914d, accenti bianchi freddi. Deve sembrare premium, non gaming cheap.
+- Accessibilita/performance: usare CSS transform/opacity, evitare canvas pesante se non necessario; rispettare prefers-reduced-motion riducendo le animazioni.
+
+Implementazione consigliata:
+- In React/Next usare motion.div di framer-motion per floating e glow.
+- Usare div assoluti per le orbite, con classi Tailwind e animate={{ rotate: 360 }}.
+- Usare Image o img con src="/icons/homelogo.png".
+- Non usare video come asset.
+- Non rimuovere la logica Supabase della home.
+- Se viene integrata nella home attuale, sostituire solo il blocco commentato "IL LOGO QUI SOTTO I 4 BOTTONI" in src/app/page.tsx.

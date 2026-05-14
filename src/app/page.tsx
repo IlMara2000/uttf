@@ -166,27 +166,76 @@ export default function HomePage() {
           </motion.div>
         </section>
         
-          {/* IL LOGO QUI SOTTO I 4 BOTTONI */}
-          <div className="flex justify-center mb-16 md:mb-20 px-4">
-            <motion.img 
-              src="/icons/homelogo.png" 
-              alt="UTTF Home Logo" 
-              className="w-full max-w-[300px] sm:max-w-[400px] md:max-w-[600px] aspect-square object-contain rounded-full" 
-              animate={{
-                scale: [1, 1.02, 1],
-                opacity: [0.85, 1, 0.85],
-                boxShadow: [
-                  "0 0 0px 0px rgba(255, 145, 77, 0)",
-                  "0 0 60px 20px rgba(255, 145, 77, 0.15)",
-                  "0 0 0px 0px rgba(255, 145, 77, 0)"
-                ]
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
+          {/* NUCLEO 3D SOPRA LA SEZIONE NEWS */}
+          <div className="relative flex w-full justify-center overflow-hidden px-4 pb-6 pt-2 mb-16 md:mb-20">
+            <div className="relative h-[360px] w-full max-w-[620px] md:h-[520px]">
+              {[0, 1, 2, 3].map((ring) => (
+                <motion.div
+                  key={ring}
+                  aria-hidden="true"
+                  className="absolute left-1/2 top-1/2"
+                  style={{
+                    width: `${260 + ring * 82}px`,
+                    height: `${260 + ring * 82}px`,
+                    marginLeft: `${-(260 + ring * 82) / 2}px`,
+                    marginTop: `${-(260 + ring * 82) / 2}px`,
+                  }}
+                  animate={{ rotate: ring % 2 === 0 ? 360 : -360 }}
+                  transition={{
+                    duration: 18 + ring * 6,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                >
+                  <div
+                    className="h-full w-full rounded-full border border-[#FF914D]/20"
+                    style={{
+                      transform: `rotateX(${62 + ring * 4}deg) rotateZ(${ring * 18}deg)`,
+                      boxShadow: '0 0 40px rgba(255,145,77,0.08), inset 0 0 28px rgba(255,145,77,0.08)',
+                    }}
+                  />
+                </motion.div>
+              ))}
+
+              <motion.div
+                className="absolute left-1/2 top-1/2 grid aspect-square w-[260px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[radial-gradient(circle_at_42%_34%,rgba(255,255,255,0.22),transparent_16%),radial-gradient(circle_at_center,rgba(255,145,77,0.2),rgba(7,13,22,0.9)_55%,rgba(0,0,0,0.84))] shadow-[0_45px_90px_rgba(0,0,0,0.65),0_0_110px_rgba(255,145,77,0.22),inset_0_0_80px_rgba(135,190,255,0.12)] backdrop-blur-xl sm:w-[340px] md:w-[430px]"
+                animate={{
+                  y: [0, -14, 0],
+                  scale: [1, 1.025, 1],
+                  boxShadow: [
+                    '0 45px 90px rgba(0,0,0,0.65),0 0 80px rgba(255,145,77,0.14),inset 0 0 70px rgba(135,190,255,0.1)',
+                    '0 55px 110px rgba(0,0,0,0.72),0 0 130px rgba(255,145,77,0.28),inset 0 0 96px rgba(135,190,255,0.16)',
+                    '0 45px 90px rgba(0,0,0,0.65),0 0 80px rgba(255,145,77,0.14),inset 0 0 70px rgba(135,190,255,0.1)',
+                  ],
+                }}
+                transition={{
+                  duration: 5.8,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              >
+                <div className="absolute inset-[-18%] rounded-full border border-[#FF914D]/10 [transform:rotateX(72deg)]" />
+                <div className="absolute inset-8 rounded-full bg-black/20 shadow-[inset_0_0_45px_rgba(255,145,77,0.16)]" />
+                <motion.img
+                  src="/icons/homelogo.png"
+                  alt="UTTF Home Logo"
+                  className="relative z-10 w-[58%] object-contain drop-shadow-[0_20px_28px_rgba(0,0,0,0.85)]"
+                  animate={{
+                    opacity: [0.88, 1, 0.88],
+                    filter: [
+                      'drop-shadow(0 18px 26px rgba(0,0,0,0.82)) drop-shadow(0 0 8px rgba(255,255,255,0.12))',
+                      'drop-shadow(0 22px 34px rgba(0,0,0,0.86)) drop-shadow(0 0 18px rgba(255,255,255,0.28))',
+                      'drop-shadow(0 18px 26px rgba(0,0,0,0.82)) drop-shadow(0 0 8px rgba(255,255,255,0.12))',
+                    ],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                />
+              </motion.div>
+            </div>
           </div>
 
         {/* NEWS FEED SECTION */}
