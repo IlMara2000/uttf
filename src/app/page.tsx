@@ -44,8 +44,11 @@ type RevealActionProps = {
   eyebrow: string;
   label: string;
   compactLabel: string;
+  hint: string;
   className?: string;
   reverse?: boolean;
+  center?: boolean;
+  delay?: number;
 };
 
 function RevealAction({
@@ -55,47 +58,70 @@ function RevealAction({
   eyebrow,
   label,
   compactLabel,
+  hint,
   className = '',
   reverse = false,
+  center = false,
+  delay = 0,
 }: RevealActionProps) {
   const actionClass = [
-    'group pointer-events-auto flex h-14 w-[7.9rem] items-center gap-3 overflow-hidden rounded-full border border-[#FF914D]/35 bg-black/45 px-2 text-white shadow-[0_18px_46px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.13),inset_0_0_24px_rgba(255,145,77,0.09)] backdrop-blur-2xl',
-    'transition-[width,border-color,background-color,box-shadow,transform] duration-500 ease-out hover:w-[13.5rem] hover:border-[#FF914D]/75 hover:bg-[#FF914D]/12 hover:shadow-[0_22px_58px_rgba(0,0,0,0.68),0_0_38px_rgba(255,145,77,0.24),inset_0_0_30px_rgba(255,145,77,0.15)] active:w-[13.5rem] focus-visible:w-[13.5rem]',
-    'md:w-14 md:hover:w-56 md:active:w-56 md:focus-visible:w-56',
+    'group relative flex h-16 w-[9.2rem] items-center gap-3 overflow-hidden rounded-full border border-[#FF914D]/42 bg-black/50 px-2.5 text-white shadow-[0_20px_50px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.15),inset_0_0_28px_rgba(255,145,77,0.1)] backdrop-blur-2xl sm:w-44 md:h-[4.35rem] md:w-[12.5rem]',
+    'transition-[width,border-color,background-color,box-shadow] duration-500 ease-out hover:w-[11.25rem] hover:border-[#FF914D]/80 hover:bg-[#FF914D]/12 hover:shadow-[0_24px_62px_rgba(0,0,0,0.7),0_0_42px_rgba(255,145,77,0.26),inset_0_0_34px_rgba(255,145,77,0.16)] active:w-[11.25rem] focus-visible:w-[11.25rem] sm:hover:w-60 sm:active:w-60 sm:focus-visible:w-60 md:hover:w-72 md:active:w-72 md:focus-visible:w-72',
     reverse ? 'flex-row-reverse text-right' : 'text-left',
-    className,
   ].join(' ');
 
   const content = (
     <>
-      <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/35 bg-[#FF914D]/14 text-[#FF914D] shadow-[inset_0_0_18px_rgba(255,145,77,0.16)]">
-        <span className="absolute inset-1 rounded-full bg-white/8 blur-[2px]" />
+      <span className="pointer-events-none absolute inset-y-2 left-3 w-10 rounded-full bg-[#FF914D]/12 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+      <motion.span
+        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/45 bg-[#FF914D]/16 text-[#FF914D] shadow-[inset_0_0_20px_rgba(255,145,77,0.18)] md:h-12 md:w-12"
+        animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.04, 1] }}
+        transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay }}
+      >
+        <span className="absolute inset-1 rounded-full bg-white/10 blur-[2px]" />
         <span className="relative z-10">{icon}</span>
-      </span>
-      <span className={`flex min-w-0 flex-col ${reverse ? 'items-end' : 'items-start'}`}>
-        <span className="whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.36em] text-[#FF914D]/70">
+      </motion.span>
+      <span className={`relative z-10 flex min-w-0 flex-1 flex-col ${reverse ? 'items-end' : 'items-start'}`}>
+        <span className="mb-0.5 whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.34em] text-[#FF914D]/72">
           {eyebrow}
         </span>
-        <span className="max-w-[5.7rem] truncate whitespace-nowrap text-[10px] font-black uppercase italic tracking-tight text-white transition-[max-width,opacity] duration-500 group-hover:max-w-[11rem] group-active:max-w-[11rem] group-focus-visible:max-w-[11rem] md:max-w-0 md:opacity-0 md:group-hover:max-w-[11rem] md:group-hover:opacity-100 md:group-active:max-w-[11rem] md:group-active:opacity-100 md:group-focus-visible:max-w-[11rem] md:group-focus-visible:opacity-100">
-          <span className="md:hidden group-hover:hidden group-active:hidden group-focus-visible:hidden">{compactLabel}</span>
-          <span className="hidden group-hover:inline group-active:inline group-focus-visible:inline md:inline">{label}</span>
+        <span className="max-w-[6rem] truncate whitespace-nowrap text-[11px] font-black uppercase italic leading-none tracking-tight text-white transition-[max-width] duration-500 group-hover:max-w-[11rem] group-active:max-w-[11rem] group-focus-visible:max-w-[11rem] sm:max-w-[7.2rem] md:max-w-[8.5rem] md:text-xs">
+          <span className="group-hover:hidden group-active:hidden group-focus-visible:hidden">{compactLabel}</span>
+          <span className="hidden group-hover:inline group-active:inline group-focus-visible:inline">{label}</span>
+        </span>
+        <span className="mt-1 max-w-[6.2rem] truncate whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.12em] text-white/50 transition-[max-width,color] duration-500 group-hover:max-w-[13rem] group-hover:text-white/72 group-active:max-w-[13rem] group-focus-visible:max-w-[13rem] sm:max-w-[7.6rem] md:max-w-[9.4rem]">
+          {hint}
         </span>
       </span>
     </>
   );
 
+  const outerClassName = ['pointer-events-auto inline-flex', className].filter(Boolean).join(' ');
+  const motionProps = {
+    className: outerClassName,
+    style: center ? { x: '-50%' } : undefined,
+    animate: { y: [0, -5, 0] },
+    transition: { duration: 5.2, repeat: Infinity, ease: 'easeInOut' as const, delay },
+    whileHover: { scale: 1.035 },
+    whileTap: { scale: 0.97 },
+  };
+
   if (href) {
     return (
-      <Link href={href} aria-label={label} className={actionClass}>
-        {content}
-      </Link>
+      <motion.div {...motionProps}>
+        <Link href={href} aria-label={`${label}: ${hint}`} className={actionClass}>
+          {content}
+        </Link>
+      </motion.div>
     );
   }
 
   return (
-    <button type="button" aria-label={label} onClick={onClick} className={actionClass}>
-      {content}
-    </button>
+    <motion.div {...motionProps}>
+      <button type="button" aria-label={`${label}: ${hint}`} onClick={onClick} className={actionClass}>
+        {content}
+      </button>
+    </motion.div>
   );
 }
 
@@ -175,10 +201,10 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40">
+    <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-52 md:pb-40">
       
       {/* HEADER */}
-      <header className="pt-24 pb-12 flex flex-col items-center gap-6">
+      <header className="pt-16 pb-8 flex flex-col items-center gap-5 md:pt-24 md:pb-12 md:gap-6">
         <Image
           src="/icons/favicon.svg" 
           alt="UTTF" 
@@ -195,17 +221,17 @@ export default function HomePage() {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="w-full max-w-7xl px-6 flex flex-col items-center">
+      <main className="w-full max-w-7xl px-4 flex flex-col items-center md:px-6">
         
         {/* HERO SECTION */}
-        <section className="py-12 w-full flex flex-col items-center">
+        <section className="py-6 w-full flex flex-col items-center md:py-12">
           <motion.div 
             initial={{ opacity: 0, y: 30 }} 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             className="w-full flex flex-col items-center"
           >
-            <h1 className="hero-title text-[14vw] md:text-[8vw] leading-[0.9] text-center mb-16 font-black uppercase italic tracking-tighter">
+            <h1 className="hero-title text-[13vw] leading-[0.86] text-center mb-10 font-black uppercase italic tracking-tighter sm:text-[14vw] md:mb-16 md:text-[8vw]">
               Under The<br />
               Tower<br />
               <span style={{ color: '#FF914D' }}>Factory</span>
@@ -213,7 +239,7 @@ export default function HomePage() {
 
             {/* SEZIONE COS'È - GLASSMORPHISM RESTYLE */}
             <motion.div 
-              className="relative w-full max-w-5xl mb-8 overflow-hidden rounded-[2rem] border border-[#FF914D]/45 bg-[radial-gradient(circle_at_34%_24%,rgba(255,255,255,0.26),transparent_18%),radial-gradient(circle_at_74%_72%,rgba(255,145,77,0.31),transparent_30%),radial-gradient(circle_at_center,rgba(255,145,77,0.13),rgba(42,22,18,0.8)_54%,rgba(0,0,0,0.86))] p-8 shadow-[0_42px_120px_rgba(0,0,0,0.74),0_0_110px_rgba(255,145,77,0.26),inset_0_1px_0_rgba(255,255,255,0.18),inset_24px_20px_46px_rgba(255,255,255,0.06),inset_-28px_-32px_62px_rgba(0,0,0,0.48)] backdrop-blur-2xl md:p-14"
+              className="relative isolate w-full max-w-5xl mb-5 overflow-hidden rounded-[1.65rem] border border-[#FF914D]/45 bg-[radial-gradient(circle_at_34%_24%,rgba(255,255,255,0.22),transparent_18%),radial-gradient(circle_at_74%_72%,rgba(255,145,77,0.25),transparent_30%),radial-gradient(circle_at_center,rgba(255,145,77,0.11),rgba(42,22,18,0.78)_54%,rgba(0,0,0,0.88))] px-5 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.68),0_0_58px_rgba(255,145,77,0.18),inset_0_1px_0_rgba(255,255,255,0.16),inset_18px_16px_34px_rgba(255,255,255,0.045),inset_-20px_-24px_46px_rgba(0,0,0,0.46)] backdrop-blur-2xl sm:p-8 md:mb-8 md:rounded-[2rem] md:p-14 md:shadow-[0_42px_120px_rgba(0,0,0,0.74),0_0_110px_rgba(255,145,77,0.26),inset_0_1px_0_rgba(255,255,255,0.18),inset_24px_20px_46px_rgba(255,255,255,0.06),inset_-28px_-32px_62px_rgba(0,0,0,0.48)]"
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
@@ -236,7 +262,7 @@ export default function HomePage() {
               <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/55 to-transparent" />
               <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-white/12 blur-3xl" />
               <div className="pointer-events-none absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-[#FF914D]/24 blur-3xl" />
-              <div className="pointer-events-none absolute inset-4 rounded-[1.55rem] border border-white/12 shadow-[inset_0_0_48px_rgba(255,255,255,0.06)]" />
+              <div className="pointer-events-none absolute inset-2 rounded-[1.25rem] border border-white/12 shadow-[inset_0_0_38px_rgba(255,255,255,0.05)] md:inset-4 md:rounded-[1.55rem]" />
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute left-1/2 top-1/2 h-[135%] w-[66%] rounded-full border border-[#FF914D]/16"
@@ -257,34 +283,38 @@ export default function HomePage() {
                   translateZ: 44,
                 }}
               >
-                <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-7 text-center tracking-tighter text-[#FF914D] drop-shadow-[0_0_22px_rgba(255,145,77,0.28)]">
+                <h3 className="text-[1.45rem] leading-tight md:text-4xl font-black uppercase italic mb-5 md:mb-7 text-center tracking-tighter text-[#FF914D] drop-shadow-[0_0_22px_rgba(255,145,77,0.28)]">
                   COS&apos;È UNDER THE TOWER?
                 </h3>
-                <p className="text-white text-xs md:text-lg uppercase text-center tracking-[0.14em] font-sans font-medium leading-relaxed max-w-3xl mx-auto opacity-90">
+                <p className="text-white text-[10.5px] md:text-lg uppercase text-center tracking-[0.1em] md:tracking-[0.14em] font-sans font-medium leading-[1.8] md:leading-relaxed max-w-3xl mx-auto opacity-90">
                   UN PROGETTO CREATIVO CHE NASCE CON L&apos;OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL&apos;INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
                 </p>
               </motion.div>
             </motion.div>
 
-            <div className="relative z-20 mb-8 flex w-full max-w-5xl flex-col items-center">
-              <div className="h-10 w-px bg-gradient-to-b from-[#FF914D]/55 via-[#FF914D]/18 to-transparent" />
-              <div className="relative flex w-full max-w-xl items-center justify-center gap-3 px-1 sm:gap-6">
+            <div className="relative z-20 mb-3 flex w-full max-w-5xl flex-col items-center md:mb-8">
+              <div className="h-8 w-px bg-gradient-to-b from-[#FF914D]/55 via-[#FF914D]/18 to-transparent md:h-10" />
+              <div className="relative flex w-full max-w-[22rem] items-center justify-center gap-2 px-1 sm:max-w-xl sm:gap-6">
                 <div className="pointer-events-none absolute left-1/2 top-1/2 h-px w-[72%] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#FF914D]/28 to-transparent" />
                 <RevealAction
                   href="/feed"
-                  icon={<Radio size={18} />}
-                  eyebrow="core"
+                  icon={<Radio size={20} />}
+                  eyebrow="hub"
                   label="Under The Tower"
-                  compactLabel="Under"
+                  compactLabel="Feed UTTF"
+                  hint="post + stream"
                   className="justify-self-end"
+                  delay={0.15}
                 />
                 <RevealAction
                   href="/labs"
-                  icon={<FlaskConical size={18} />}
+                  icon={<FlaskConical size={20} />}
                   eyebrow="lab"
                   label="RAPF*CKTORY"
-                  compactLabel="Rapf"
+                  compactLabel="Rap Lab"
+                  hint="lab rap e call"
                   reverse
+                  delay={0.55}
                 />
               </div>
             </div>
@@ -292,9 +322,9 @@ export default function HomePage() {
         </section>
         
           {/* NUCLEO 3D SOPRA LA SEZIONE NEWS */}
-          <div className="relative flex w-full justify-center overflow-hidden px-4 pb-6 pt-2 mb-16 md:mb-20">
+          <div className="relative flex w-full justify-center overflow-hidden px-0 pb-20 pt-0 mb-8 md:px-4 md:pb-6 md:pt-2 md:mb-20">
             <div
-              className="relative h-[440px] w-full max-w-[680px] sm:h-[500px] md:h-[580px]"
+              className="relative h-[430px] w-full max-w-[680px] sm:h-[500px] md:h-[580px]"
               onPointerMove={(event) => updatePointer(event, logoPointerX, logoPointerY)}
               onPointerLeave={() => {
                 logoPointerX.set(0);
@@ -334,34 +364,41 @@ export default function HomePage() {
 
               <RevealAction
                 href="/team"
-                icon={<Users size={18} />}
+                icon={<Users size={20} />}
                 eyebrow="team"
                 label="Conosci il nostro team"
                 compactLabel="Team"
-                className="absolute left-0 top-[25%] z-40 sm:left-5 md:left-10"
+                hint="chi siamo"
+                className="absolute left-0 top-[7%] z-40 sm:left-5 md:left-10 md:top-[25%]"
+                delay={0.9}
               />
 
               <RevealAction
                 href="/galleria"
-                icon={<ImageIcon size={18} />}
-                eyebrow="km0"
+                icon={<ImageIcon size={20} />}
+                eyebrow="arte"
                 label="Arte a KM 0"
                 compactLabel="KM0"
-                className="absolute right-0 top-[25%] z-40 sm:right-5 md:right-10"
+                hint="galleria locale"
+                className="absolute right-0 top-[7%] z-40 sm:right-5 md:right-10 md:top-[25%]"
                 reverse
+                delay={1.2}
               />
 
               <RevealAction
                 onClick={() => setIsMapOpen(true)}
-                icon={<MapPin size={18} />}
+                icon={<MapPin size={20} />}
                 eyebrow="map"
                 label="Vieni a trovarci"
                 compactLabel="Mappa"
-                className="absolute bottom-[8%] left-1/2 z-40 -translate-x-1/2"
+                hint="posizione"
+                className="absolute bottom-[3%] left-1/2 z-40 md:bottom-[8%]"
+                center
+                delay={1.55}
               />
 
               <motion.div
-                className="absolute left-1/2 top-1/2 grid aspect-square w-[286px] place-items-center rounded-full border border-[#FF914D]/38 bg-[radial-gradient(circle_at_34%_25%,rgba(255,255,255,0.36),transparent_15%),radial-gradient(circle_at_68%_74%,rgba(255,145,77,0.35),transparent_27%),radial-gradient(circle_at_center,rgba(255,145,77,0.29),rgba(62,32,22,0.88)_55%,rgba(0,0,0,0.9))] shadow-[0_58px_120px_rgba(0,0,0,0.78),0_0_160px_rgba(255,145,77,0.34),inset_0_0_102px_rgba(255,145,77,0.2),inset_28px_24px_52px_rgba(255,255,255,0.09),inset_-34px_-38px_70px_rgba(0,0,0,0.54)] backdrop-blur-xl sm:w-[360px] md:w-[460px]"
+                className="absolute left-1/2 top-[47%] grid aspect-square w-[286px] place-items-center rounded-full border border-[#FF914D]/38 bg-[radial-gradient(circle_at_34%_25%,rgba(255,255,255,0.36),transparent_15%),radial-gradient(circle_at_68%_74%,rgba(255,145,77,0.35),transparent_27%),radial-gradient(circle_at_center,rgba(255,145,77,0.29),rgba(62,32,22,0.88)_55%,rgba(0,0,0,0.9))] shadow-[0_58px_120px_rgba(0,0,0,0.78),0_0_160px_rgba(255,145,77,0.34),inset_0_0_102px_rgba(255,145,77,0.2),inset_28px_24px_52px_rgba(255,255,255,0.09),inset_-34px_-38px_70px_rgba(0,0,0,0.54)] backdrop-blur-xl sm:w-[360px] md:top-1/2 md:w-[460px]"
                 style={{
                   x: '-50%',
                   y: '-50%',

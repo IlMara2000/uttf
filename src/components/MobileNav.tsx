@@ -33,7 +33,7 @@ export default function MobileNav() {
   const isCollapsed = !showAsDashboard && !isOpen;
 
   return (
-    <div className={`fixed bottom-8 left-0 right-0 z-[100] flex justify-center px-6 pointer-events-none ${!isDashboard ? 'md:hidden' : ''}`}>
+    <div className={`fixed bottom-4 left-0 right-0 z-[100] flex justify-center px-6 pointer-events-none ${!isDashboard ? 'md:hidden' : ''}`}>
       <motion.nav 
         layout
         initial={{ y: 100 }}
@@ -56,10 +56,10 @@ export default function MobileNav() {
               animate={{ opacity: 1, rotate: 0, scale: 1 }}
               exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
               transition={{ duration: 0.2 }}
-              className="w-14 h-14 flex items-center justify-center text-white rounded-full"
+              className="w-12 h-12 flex items-center justify-center text-white rounded-full"
               aria-label="Apri menu"
             >
-              <Menu size={24} strokeWidth={2.5} />
+              <Menu size={22} strokeWidth={2.5} />
             </motion.button>
           ) : (
             /* NAVBAR ESTESA (Glassmorphism e Bottoni) */
@@ -75,7 +75,7 @@ export default function MobileNav() {
               {/* TASTO BACK: Sempre presente come prima opzione a sinistra */}
               <button 
                 onClick={() => router.back()}
-                className="relative p-4 rounded-full transition-all flex flex-col items-center justify-center min-w-[64px] text-zinc-500 hover:text-white"
+                className="relative p-3.5 rounded-full transition-all flex flex-col items-center justify-center min-w-[58px] text-zinc-500 hover:text-white"
                 aria-label="Torna indietro"
               >
                 <span className="relative z-10 transition-all duration-300 hover:scale-110">
@@ -90,7 +90,7 @@ export default function MobileNav() {
                   <Link 
                     key={item.href} 
                     href={item.href}
-                    className="relative p-4 rounded-full transition-all flex flex-col items-center justify-center min-w-[64px]"
+                    className="relative p-3.5 rounded-full transition-all flex flex-col items-center justify-center min-w-[58px]"
                   >
                     {/* IL PALLINO ARANCIONE (Appare solo se la rotta è attiva) */}
                     {isActive && (
@@ -117,7 +117,7 @@ export default function MobileNav() {
               {!showAsDashboard && (
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="relative p-4 rounded-full transition-all flex flex-col items-center justify-center min-w-[64px] text-[#FF914D] hover:bg-white/10"
+                  className="relative p-3.5 rounded-full transition-all flex flex-col items-center justify-center min-w-[58px] text-[#FF914D] hover:bg-white/10"
                   aria-label="Chiudi menu"
                 >
                   <span className="relative z-10 transition-all duration-300 hover:scale-110">
