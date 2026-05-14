@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react';
+import type { PointerEvent } from 'react';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { 
   Loader2, 
   ArrowRight, 
@@ -31,6 +32,20 @@ export default function HomePage() {
   const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
   const BUCKET_NAME = 'publications'; 
 
+  const introPointerX = useMotionValue(0);
+  const introPointerY = useMotionValue(0);
+  const introTextX = useSpring(useTransform(introPointerX, [-0.5, 0.5], [-12, 12]), { stiffness: 120, damping: 22 });
+  const introTextY = useSpring(useTransform(introPointerY, [-0.5, 0.5], [-8, 8]), { stiffness: 120, damping: 22 });
+  const introRotateX = useSpring(useTransform(introPointerY, [-0.5, 0.5], [3, -3]), { stiffness: 130, damping: 24 });
+  const introRotateY = useSpring(useTransform(introPointerX, [-0.5, 0.5], [-4, 4]), { stiffness: 130, damping: 24 });
+
+  const logoPointerX = useMotionValue(0);
+  const logoPointerY = useMotionValue(0);
+  const logoRotateX = useSpring(useTransform(logoPointerY, [-0.5, 0.5], [11, -11]), { stiffness: 110, damping: 20 });
+  const logoRotateY = useSpring(useTransform(logoPointerX, [-0.5, 0.5], [-15, 15]), { stiffness: 110, damping: 20 });
+  const logoImageX = useSpring(useTransform(logoPointerX, [-0.5, 0.5], [-22, 22]), { stiffness: 120, damping: 20 });
+  const logoImageY = useSpring(useTransform(logoPointerY, [-0.5, 0.5], [-16, 16]), { stiffness: 120, damping: 20 });
+
   useEffect(() => {
     async function fetchPublications() {
       const { data, error } = await supabase
@@ -45,6 +60,16 @@ export default function HomePage() {
   }, []);
 
   const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
+
+  const updatePointer = (
+    event: PointerEvent<HTMLDivElement>,
+    pointerX: typeof introPointerX,
+    pointerY: typeof introPointerY
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    pointerX.set((event.clientX - rect.left) / rect.width - 0.5);
+    pointerY.set((event.clientY - rect.top) / rect.height - 0.5);
+  };
 
   // Tipizzazione esplicita come Variants per risolvere l'errore di build
   const pulseGlow: Variants = {
@@ -101,24 +126,47 @@ export default function HomePage() {
 
             {/* SEZIONE COS'È - GLASSMORPHISM RESTYLE */}
             <motion.div 
-              className="relative p-10 md:p-14 w-full max-w-4xl mb-16 rounded-[2.5rem] overflow-hidden border border-[#FF914D]/30 bg-[#FF914D]/10 backdrop-blur-xl shadow-2xl"
+              className="relative w-full max-w-5xl mb-16 overflow-hidden rounded-[2rem] border border-[#FF914D]/35 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.16),transparent_25%),radial-gradient(circle_at_50%_50%,rgba(255,145,77,0.18),rgba(18,18,26,0.78)_58%,rgba(0,0,0,0.78))] p-10 shadow-[0_38px_110px_rgba(0,0,0,0.72),0_0_90px_rgba(255,145,77,0.22),inset_0_1px_0_rgba(255,255,255,0.16),inset_0_0_70px_rgba(255,145,77,0.13)] backdrop-blur-2xl md:p-14"
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
               variants={pulseGlow}
               animate="animate"
+              onPointerMove={(event) => updatePointer(event, introPointerX, introPointerY)}
+              onPointerLeave={() => {
+                introPointerX.set(0);
+                introPointerY.set(0);
+              }}
+              style={{
+                rotateX: introRotateX,
+                rotateY: introRotateY,
+                transformPerspective: 1100,
+                transformStyle: 'preserve-3d',
+              }}
             >
               {/* Grain Texture Overlay */}
               <div className="absolute inset-0 bg-[url('/images/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none" />
+              <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent" />
+              <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+              <div className="pointer-events-none absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-[#FF914D]/20 blur-3xl" />
+              <div className="pointer-events-none absolute inset-4 rounded-[1.55rem] border border-white/10 shadow-[inset_0_0_45px_rgba(255,255,255,0.05)]" />
               
-              <div className="relative z-10">
+              <motion.div
+                className="relative z-10 mx-auto max-w-4xl"
+                style={{
+                  x: introTextX,
+                  y: introTextY,
+                  transformStyle: 'preserve-3d',
+                  translateZ: 44,
+                }}
+              >
                 <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-8 text-center tracking-tighter text-[#FF914D]">
                   COS&apos;È UNDER THE TOWER?
                 </h3>
                 <p className="text-white text-sm md:text-lg uppercase text-center tracking-[0.15em] font-sans font-medium leading-relaxed max-w-3xl mx-auto opacity-90">
                   UN PROGETTO CREATIVO CHE NASCE CON L&apos;OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL&apos;INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
                 </p>
-              </div>
+              </motion.div>
             </motion.div>
 
             {/* GRID DELLE 4 BOX */}
@@ -168,7 +216,14 @@ export default function HomePage() {
         
           {/* NUCLEO 3D SOPRA LA SEZIONE NEWS */}
           <div className="relative flex w-full justify-center overflow-hidden px-4 pb-6 pt-2 mb-16 md:mb-20">
-            <div className="relative h-[360px] w-full max-w-[620px] md:h-[520px]">
+            <div
+              className="relative h-[360px] w-full max-w-[620px] md:h-[520px]"
+              onPointerMove={(event) => updatePointer(event, logoPointerX, logoPointerY)}
+              onPointerLeave={() => {
+                logoPointerX.set(0);
+                logoPointerY.set(0);
+              }}
+            >
               {[0, 1, 2, 3].map((ring) => (
                 <motion.div
                   key={ring}
@@ -188,24 +243,34 @@ export default function HomePage() {
                   }}
                 >
                   <div
-                    className="h-full w-full rounded-full border border-[#FF914D]/20"
+                    className="h-full w-full rounded-full border"
                     style={{
+                      borderColor: ring === 1 ? 'rgba(255,145,77,0.52)' : 'rgba(255,145,77,0.24)',
                       transform: `rotateX(${62 + ring * 4}deg) rotateZ(${ring * 18}deg)`,
-                      boxShadow: '0 0 40px rgba(255,145,77,0.08), inset 0 0 28px rgba(255,145,77,0.08)',
+                      boxShadow: ring === 1
+                        ? '0 0 58px rgba(255,145,77,0.26), inset 0 0 38px rgba(255,145,77,0.22)'
+                        : '0 0 40px rgba(255,145,77,0.12), inset 0 0 28px rgba(255,145,77,0.1)',
                     }}
                   />
                 </motion.div>
               ))}
 
               <motion.div
-                className="absolute left-1/2 top-1/2 grid aspect-square w-[260px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[radial-gradient(circle_at_42%_34%,rgba(255,255,255,0.22),transparent_16%),radial-gradient(circle_at_center,rgba(255,145,77,0.2),rgba(7,13,22,0.9)_55%,rgba(0,0,0,0.84))] shadow-[0_45px_90px_rgba(0,0,0,0.65),0_0_110px_rgba(255,145,77,0.22),inset_0_0_80px_rgba(135,190,255,0.12)] backdrop-blur-xl sm:w-[340px] md:w-[430px]"
+                className="absolute left-1/2 top-1/2 grid aspect-square w-[260px] place-items-center rounded-full border border-[#FF914D]/35 bg-[radial-gradient(circle_at_37%_30%,rgba(255,255,255,0.32),transparent_16%),radial-gradient(circle_at_63%_72%,rgba(255,145,77,0.28),transparent_26%),radial-gradient(circle_at_center,rgba(255,145,77,0.28),rgba(61,31,19,0.9)_55%,rgba(0,0,0,0.88))] shadow-[0_50px_100px_rgba(0,0,0,0.72),0_0_130px_rgba(255,145,77,0.28),inset_0_0_92px_rgba(255,145,77,0.18),inset_22px_18px_42px_rgba(255,255,255,0.08),inset_-30px_-34px_58px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:w-[340px] md:w-[430px]"
+                style={{
+                  x: '-50%',
+                  y: '-50%',
+                  rotateX: logoRotateX,
+                  rotateY: logoRotateY,
+                  transformPerspective: 1200,
+                  transformStyle: 'preserve-3d',
+                }}
                 animate={{
-                  y: [0, -14, 0],
                   scale: [1, 1.025, 1],
                   boxShadow: [
-                    '0 45px 90px rgba(0,0,0,0.65),0 0 80px rgba(255,145,77,0.14),inset 0 0 70px rgba(135,190,255,0.1)',
-                    '0 55px 110px rgba(0,0,0,0.72),0 0 130px rgba(255,145,77,0.28),inset 0 0 96px rgba(135,190,255,0.16)',
-                    '0 45px 90px rgba(0,0,0,0.65),0 0 80px rgba(255,145,77,0.14),inset 0 0 70px rgba(135,190,255,0.1)',
+                    '0 50px 100px rgba(0,0,0,0.72),0 0 95px rgba(255,145,77,0.2),inset 0 0 78px rgba(255,145,77,0.14)',
+                    '0 62px 128px rgba(0,0,0,0.78),0 0 150px rgba(255,145,77,0.36),inset 0 0 105px rgba(255,145,77,0.24)',
+                    '0 50px 100px rgba(0,0,0,0.72),0 0 95px rgba(255,145,77,0.2),inset 0 0 78px rgba(255,145,77,0.14)',
                   ],
                 }}
                 transition={{
@@ -214,12 +279,20 @@ export default function HomePage() {
                   ease: 'easeInOut',
                 }}
               >
-                <div className="absolute inset-[-18%] rounded-full border border-[#FF914D]/10 [transform:rotateX(72deg)]" />
-                <div className="absolute inset-8 rounded-full bg-black/20 shadow-[inset_0_0_45px_rgba(255,145,77,0.16)]" />
+                <div className="absolute inset-[-18%] rounded-full border border-[#FF914D]/24 [transform:rotateX(72deg)_translateZ(20px)]" />
+                <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.18),transparent_34%,rgba(0,0,0,0.36)_76%)]" />
+                <div className="absolute left-[18%] top-[15%] h-[30%] w-[28%] rounded-full bg-white/16 blur-xl" />
+                <div className="absolute inset-8 rounded-full bg-black/14 shadow-[inset_0_0_52px_rgba(255,145,77,0.22)]" />
                 <motion.img
                   src="/icons/homelogo.png"
                   alt="UTTF Home Logo"
-                  className="relative z-10 w-[58%] object-contain drop-shadow-[0_20px_28px_rgba(0,0,0,0.85)]"
+                  className="relative z-10 w-[87%] object-contain drop-shadow-[0_26px_34px_rgba(0,0,0,0.88)]"
+                  style={{
+                    x: logoImageX,
+                    y: logoImageY,
+                    translateZ: 72,
+                    transformStyle: 'preserve-3d',
+                  }}
                   animate={{
                     opacity: [0.88, 1, 0.88],
                     filter: [
@@ -280,7 +353,7 @@ export default function HomePage() {
                         </div>
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element -- Post media can come from Supabase paths outside the static image allowlist.
-                        <img src={imageUrl} alt={post.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-in-out" />
+                        <img src={imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" />
                       )}
                     </div>
                     <div className="p-6">

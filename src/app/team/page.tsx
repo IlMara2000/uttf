@@ -121,7 +121,7 @@ export default function TeamPage() {
                 <img 
                   src={member.image} 
                   alt={member.name}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   onError={(e) => {
                     e.currentTarget.src = "https://placehold.co/600x800/0a0a0a/FF914D?text=FACTORY_MEMBER";
                   }}
