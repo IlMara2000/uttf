@@ -1,15 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react';
-import type { PointerEvent } from 'react';
+import type { PointerEvent, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence, Variants, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { 
   Loader2, 
-  ArrowRight, 
   X, 
   Play, 
-  Maximize2 
+  Maximize2,
+  Users,
+  Image as ImageIcon,
+  MapPin,
+  Radio,
+  FlaskConical
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -22,6 +26,78 @@ type Publication = {
   description: string | null;
   image_url: string;
 };
+
+const FALLBACK_PUBLICATIONS: Publication[] = [
+  {
+    id: 'fallback-factory-update',
+    created_at: '2026-03-25T00:00:00.000Z',
+    title: 'WORK IN PROGRESS',
+    description: 'Presto aggiorneremo la pagina con tutto il programma. Restate sintonizzati.',
+    image_url: '/instagram/post2.jpeg',
+  },
+];
+
+type RevealActionProps = {
+  href?: string;
+  onClick?: () => void;
+  icon: ReactNode;
+  eyebrow: string;
+  label: string;
+  compactLabel: string;
+  className?: string;
+  reverse?: boolean;
+};
+
+function RevealAction({
+  href,
+  onClick,
+  icon,
+  eyebrow,
+  label,
+  compactLabel,
+  className = '',
+  reverse = false,
+}: RevealActionProps) {
+  const actionClass = [
+    'group pointer-events-auto flex h-14 w-[7.9rem] items-center gap-3 overflow-hidden rounded-full border border-[#FF914D]/35 bg-black/45 px-2 text-white shadow-[0_18px_46px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.13),inset_0_0_24px_rgba(255,145,77,0.09)] backdrop-blur-2xl',
+    'transition-[width,border-color,background-color,box-shadow,transform] duration-500 ease-out hover:w-[13.5rem] hover:border-[#FF914D]/75 hover:bg-[#FF914D]/12 hover:shadow-[0_22px_58px_rgba(0,0,0,0.68),0_0_38px_rgba(255,145,77,0.24),inset_0_0_30px_rgba(255,145,77,0.15)] active:w-[13.5rem] focus-visible:w-[13.5rem]',
+    'md:w-14 md:hover:w-56 md:active:w-56 md:focus-visible:w-56',
+    reverse ? 'flex-row-reverse text-right' : 'text-left',
+    className,
+  ].join(' ');
+
+  const content = (
+    <>
+      <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/35 bg-[#FF914D]/14 text-[#FF914D] shadow-[inset_0_0_18px_rgba(255,145,77,0.16)]">
+        <span className="absolute inset-1 rounded-full bg-white/8 blur-[2px]" />
+        <span className="relative z-10">{icon}</span>
+      </span>
+      <span className={`flex min-w-0 flex-col ${reverse ? 'items-end' : 'items-start'}`}>
+        <span className="whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.36em] text-[#FF914D]/70">
+          {eyebrow}
+        </span>
+        <span className="max-w-[5.7rem] truncate whitespace-nowrap text-[10px] font-black uppercase italic tracking-tight text-white transition-[max-width,opacity] duration-500 group-hover:max-w-[11rem] group-active:max-w-[11rem] group-focus-visible:max-w-[11rem] md:max-w-0 md:opacity-0 md:group-hover:max-w-[11rem] md:group-hover:opacity-100 md:group-active:max-w-[11rem] md:group-active:opacity-100 md:group-focus-visible:max-w-[11rem] md:group-focus-visible:opacity-100">
+          <span className="md:hidden group-hover:hidden group-active:hidden group-focus-visible:hidden">{compactLabel}</span>
+          <span className="hidden group-hover:inline group-active:inline group-focus-visible:inline md:inline">{label}</span>
+        </span>
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} aria-label={label} className={actionClass}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" aria-label={label} onClick={onClick} className={actionClass}>
+      {content}
+    </button>
+  );
+}
 
 export default function HomePage() {
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -48,18 +124,29 @@ export default function HomePage() {
 
   useEffect(() => {
     async function fetchPublications() {
-      const { data, error } = await supabase
-        .from('publications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(6);
-      if (!error && data) setPublications(data as Publication[]);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from('publications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(6);
+        if (!error && data?.length) setPublications(data as Publication[]);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchPublications();
   }, []);
 
   const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
+
+  const visiblePublications = publications.length > 0 ? publications : FALLBACK_PUBLICATIONS;
+
+  const getPublicationMediaUrl = (imageUrl: string) => {
+    if (!imageUrl) return FALLBACK_PUBLICATIONS[0].image_url;
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('/')) return imageUrl;
+    return `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${imageUrl}`;
+  };
 
   const updatePointer = (
     event: PointerEvent<HTMLDivElement>,
@@ -126,7 +213,7 @@ export default function HomePage() {
 
             {/* SEZIONE COS'È - GLASSMORPHISM RESTYLE */}
             <motion.div 
-              className="relative w-full max-w-5xl mb-16 overflow-hidden rounded-[2rem] border border-[#FF914D]/35 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.16),transparent_25%),radial-gradient(circle_at_50%_50%,rgba(255,145,77,0.18),rgba(18,18,26,0.78)_58%,rgba(0,0,0,0.78))] p-10 shadow-[0_38px_110px_rgba(0,0,0,0.72),0_0_90px_rgba(255,145,77,0.22),inset_0_1px_0_rgba(255,255,255,0.16),inset_0_0_70px_rgba(255,145,77,0.13)] backdrop-blur-2xl md:p-14"
+              className="relative w-full max-w-5xl mb-8 overflow-hidden rounded-[2rem] border border-[#FF914D]/45 bg-[radial-gradient(circle_at_34%_24%,rgba(255,255,255,0.26),transparent_18%),radial-gradient(circle_at_74%_72%,rgba(255,145,77,0.31),transparent_30%),radial-gradient(circle_at_center,rgba(255,145,77,0.13),rgba(42,22,18,0.8)_54%,rgba(0,0,0,0.86))] p-8 shadow-[0_42px_120px_rgba(0,0,0,0.74),0_0_110px_rgba(255,145,77,0.26),inset_0_1px_0_rgba(255,255,255,0.18),inset_24px_20px_46px_rgba(255,255,255,0.06),inset_-28px_-32px_62px_rgba(0,0,0,0.48)] backdrop-blur-2xl md:p-14"
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
@@ -146,10 +233,20 @@ export default function HomePage() {
             >
               {/* Grain Texture Overlay */}
               <div className="absolute inset-0 bg-[url('/images/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none" />
-              <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent" />
-              <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-              <div className="pointer-events-none absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-[#FF914D]/20 blur-3xl" />
-              <div className="pointer-events-none absolute inset-4 rounded-[1.55rem] border border-white/10 shadow-[inset_0_0_45px_rgba(255,255,255,0.05)]" />
+              <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/55 to-transparent" />
+              <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-white/12 blur-3xl" />
+              <div className="pointer-events-none absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-[#FF914D]/24 blur-3xl" />
+              <div className="pointer-events-none absolute inset-4 rounded-[1.55rem] border border-white/12 shadow-[inset_0_0_48px_rgba(255,255,255,0.06)]" />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-1/2 h-[135%] w-[66%] rounded-full border border-[#FF914D]/16"
+                style={{ transform: 'translate(-50%, -50%) rotateX(68deg) rotateZ(-9deg)' }}
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-1/2 h-[126%] w-[52%] rounded-full border border-white/8"
+                style={{ transform: 'translate(-50%, -50%) rotateX(66deg) rotateZ(18deg)' }}
+              />
               
               <motion.div
                 className="relative z-10 mx-auto max-w-4xl"
@@ -160,56 +257,36 @@ export default function HomePage() {
                   translateZ: 44,
                 }}
               >
-                <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-8 text-center tracking-tighter text-[#FF914D]">
+                <h3 className="text-2xl md:text-4xl font-black uppercase italic mb-7 text-center tracking-tighter text-[#FF914D] drop-shadow-[0_0_22px_rgba(255,145,77,0.28)]">
                   COS&apos;È UNDER THE TOWER?
                 </h3>
-                <p className="text-white text-sm md:text-lg uppercase text-center tracking-[0.15em] font-sans font-medium leading-relaxed max-w-3xl mx-auto opacity-90">
+                <p className="text-white text-xs md:text-lg uppercase text-center tracking-[0.14em] font-sans font-medium leading-relaxed max-w-3xl mx-auto opacity-90">
                   UN PROGETTO CREATIVO CHE NASCE CON L&apos;OBIETTIVO DI UNIRE PERSONE, IDEE E PASSIONI ALL&apos;INTERNO DI UN ECOSISTEMA DINAMICO. UN COMMUNITY HUB DOVE ARTE, INTRATTENIMENTO E INGEGNO SI INCONTRANO PER CREARE ESPERIENZE IMMERSIVE E COINVOLGENTI.
                 </p>
               </motion.div>
             </motion.div>
 
-            {/* GRID DELLE 4 BOX */}
-            <div className="w-full max-w-3xl flex flex-col gap-6 md:gap-8">
-              <Link href="/team" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">IDENTITY_CORE:</span>
-                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">CONOSCI IL NOSTRO TEAM!</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-                </motion.div>
-              </Link>
-
-              <Link href="/galleria" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">KM0_ART_ARCHIVE:</span>
-                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">ARTE A KM 0</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-                </motion.div>
-              </Link>
-
-              <div onClick={() => setIsMapOpen(true)} className="cursor-pointer group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">LOCATION_DATA:</span>
-                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">VIENI A TROVARCI</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-                </motion.div>
+            <div className="relative z-20 mb-8 flex w-full max-w-5xl flex-col items-center">
+              <div className="h-10 w-px bg-gradient-to-b from-[#FF914D]/55 via-[#FF914D]/18 to-transparent" />
+              <div className="relative flex w-full max-w-xl items-center justify-center gap-3 px-1 sm:gap-6">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 h-px w-[72%] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#FF914D]/28 to-transparent" />
+                <RevealAction
+                  href="/feed"
+                  icon={<Radio size={18} />}
+                  eyebrow="core"
+                  label="Under The Tower"
+                  compactLabel="Under"
+                  className="justify-self-end"
+                />
+                <RevealAction
+                  href="/labs"
+                  icon={<FlaskConical size={18} />}
+                  eyebrow="lab"
+                  label="RAPF*CKTORY"
+                  compactLabel="Rapf"
+                  reverse
+                />
               </div>
-
-              <Link href="/feed" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Creative_Collective</span>
-                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">Under The Tower</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-                </motion.div>
-              </Link>
-
-              <Link href="/labs" className="group">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-panel p-8 md:p-12 flex flex-col items-center text-center border border-white/5 bg-white/5 rounded-3xl group-hover:border-[#FF914D]/30 transition-all duration-500 relative overflow-hidden">
-                  <span className="text-[9px] tracking-[0.8em] text-[#FF914D] mb-4 font-mono uppercase">Lab_Unit</span>
-                  <h3 className="text-2xl md:text-4xl font-black italic uppercase text-white tracking-tighter leading-none">RAPF*CKTORY</h3>
-                  <ArrowRight className="absolute right-8 bottom-8 text-white/10 group-hover:text-[#FF914D] group-hover:translate-x-2 transition-all" size={20} />
-                </motion.div>
-              </Link>
             </div>
           </motion.div>
         </section>
@@ -217,7 +294,7 @@ export default function HomePage() {
           {/* NUCLEO 3D SOPRA LA SEZIONE NEWS */}
           <div className="relative flex w-full justify-center overflow-hidden px-4 pb-6 pt-2 mb-16 md:mb-20">
             <div
-              className="relative h-[360px] w-full max-w-[620px] md:h-[520px]"
+              className="relative h-[440px] w-full max-w-[680px] sm:h-[500px] md:h-[580px]"
               onPointerMove={(event) => updatePointer(event, logoPointerX, logoPointerY)}
               onPointerLeave={() => {
                 logoPointerX.set(0);
@@ -255,8 +332,36 @@ export default function HomePage() {
                 </motion.div>
               ))}
 
+              <RevealAction
+                href="/team"
+                icon={<Users size={18} />}
+                eyebrow="team"
+                label="Conosci il nostro team"
+                compactLabel="Team"
+                className="absolute left-0 top-[25%] z-40 sm:left-5 md:left-10"
+              />
+
+              <RevealAction
+                href="/galleria"
+                icon={<ImageIcon size={18} />}
+                eyebrow="km0"
+                label="Arte a KM 0"
+                compactLabel="KM0"
+                className="absolute right-0 top-[25%] z-40 sm:right-5 md:right-10"
+                reverse
+              />
+
+              <RevealAction
+                onClick={() => setIsMapOpen(true)}
+                icon={<MapPin size={18} />}
+                eyebrow="map"
+                label="Vieni a trovarci"
+                compactLabel="Mappa"
+                className="absolute bottom-[8%] left-1/2 z-40 -translate-x-1/2"
+              />
+
               <motion.div
-                className="absolute left-1/2 top-1/2 grid aspect-square w-[260px] place-items-center rounded-full border border-[#FF914D]/35 bg-[radial-gradient(circle_at_37%_30%,rgba(255,255,255,0.32),transparent_16%),radial-gradient(circle_at_63%_72%,rgba(255,145,77,0.28),transparent_26%),radial-gradient(circle_at_center,rgba(255,145,77,0.28),rgba(61,31,19,0.9)_55%,rgba(0,0,0,0.88))] shadow-[0_50px_100px_rgba(0,0,0,0.72),0_0_130px_rgba(255,145,77,0.28),inset_0_0_92px_rgba(255,145,77,0.18),inset_22px_18px_42px_rgba(255,255,255,0.08),inset_-30px_-34px_58px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:w-[340px] md:w-[430px]"
+                className="absolute left-1/2 top-1/2 grid aspect-square w-[286px] place-items-center rounded-full border border-[#FF914D]/38 bg-[radial-gradient(circle_at_34%_25%,rgba(255,255,255,0.36),transparent_15%),radial-gradient(circle_at_68%_74%,rgba(255,145,77,0.35),transparent_27%),radial-gradient(circle_at_center,rgba(255,145,77,0.29),rgba(62,32,22,0.88)_55%,rgba(0,0,0,0.9))] shadow-[0_58px_120px_rgba(0,0,0,0.78),0_0_160px_rgba(255,145,77,0.34),inset_0_0_102px_rgba(255,145,77,0.2),inset_28px_24px_52px_rgba(255,255,255,0.09),inset_-34px_-38px_70px_rgba(0,0,0,0.54)] backdrop-blur-xl sm:w-[360px] md:w-[460px]"
                 style={{
                   x: '-50%',
                   y: '-50%',
@@ -268,9 +373,9 @@ export default function HomePage() {
                 animate={{
                   scale: [1, 1.025, 1],
                   boxShadow: [
-                    '0 50px 100px rgba(0,0,0,0.72),0 0 95px rgba(255,145,77,0.2),inset 0 0 78px rgba(255,145,77,0.14)',
-                    '0 62px 128px rgba(0,0,0,0.78),0 0 150px rgba(255,145,77,0.36),inset 0 0 105px rgba(255,145,77,0.24)',
-                    '0 50px 100px rgba(0,0,0,0.72),0 0 95px rgba(255,145,77,0.2),inset 0 0 78px rgba(255,145,77,0.14)',
+                    '0 58px 120px rgba(0,0,0,0.78),0 0 112px rgba(255,145,77,0.22),inset 0 0 88px rgba(255,145,77,0.16)',
+                    '0 72px 150px rgba(0,0,0,0.84),0 0 172px rgba(255,145,77,0.4),inset 0 0 118px rgba(255,145,77,0.26)',
+                    '0 58px 120px rgba(0,0,0,0.78),0 0 112px rgba(255,145,77,0.22),inset 0 0 88px rgba(255,145,77,0.16)',
                   ],
                 }}
                 transition={{
@@ -280,13 +385,15 @@ export default function HomePage() {
                 }}
               >
                 <div className="absolute inset-[-18%] rounded-full border border-[#FF914D]/24 [transform:rotateX(72deg)_translateZ(20px)]" />
-                <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.18),transparent_34%,rgba(0,0,0,0.36)_76%)]" />
-                <div className="absolute left-[18%] top-[15%] h-[30%] w-[28%] rounded-full bg-white/16 blur-xl" />
-                <div className="absolute inset-8 rounded-full bg-black/14 shadow-[inset_0_0_52px_rgba(255,145,77,0.22)]" />
+                <div className="absolute inset-[-8%] rounded-full border border-white/8 [transform:rotateX(48deg)_rotateZ(-18deg)]" />
+                <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.2),transparent_33%,rgba(0,0,0,0.38)_76%)]" />
+                <div className="absolute left-[17%] top-[14%] h-[31%] w-[29%] rounded-full bg-white/18 blur-xl" />
+                <div className="absolute left-[28%] top-[26%] h-px w-[52%] rotate-[-6deg] bg-gradient-to-r from-transparent via-white/22 to-transparent" />
+                <div className="absolute inset-7 rounded-full bg-black/12 shadow-[inset_0_0_58px_rgba(255,145,77,0.24)]" />
                 <motion.img
                   src="/icons/homelogo.png"
                   alt="UTTF Home Logo"
-                  className="relative z-10 w-[87%] object-contain drop-shadow-[0_26px_34px_rgba(0,0,0,0.88)]"
+                  className="relative z-10 w-[78%] object-contain drop-shadow-[0_26px_34px_rgba(0,0,0,0.88)] sm:w-[84%] md:w-[88%]"
                   style={{
                     x: logoImageX,
                     y: logoImageY,
@@ -326,12 +433,9 @@ export default function HomePage() {
                   <Loader2 className="animate-spin text-zinc-800" size={32} />
                 </div>
               ))
-            ) : publications.length > 0 ? (
-              publications.map((post) => {
-                let imageUrl = post.image_url;
-                if (imageUrl && !imageUrl.startsWith('http')) {
-                  imageUrl = `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${imageUrl}`;
-                }
+            ) : (
+              visiblePublications.map((post) => {
+                const imageUrl = getPublicationMediaUrl(post.image_url);
                 return (
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }} 
@@ -366,10 +470,6 @@ export default function HomePage() {
                   </motion.div>
                 );
               })
-            ) : (
-              <div className="col-span-full py-20 text-center opacity-30">
-                <p className="text-zinc-600 font-mono text-[10px] uppercase tracking-[0.5em]">No_Output_Detected</p>
-              </div>
             )}
           </div>
         </section>
