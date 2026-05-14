@@ -325,7 +325,15 @@ export default function HomePage() {
           <div className="relative isolate flex w-full justify-center overflow-visible px-0 pb-20 pt-0 mb-8 md:px-4 md:pb-6 md:pt-2 md:mb-20">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-[-32vw] -top-36 bottom-[-12rem] -z-10 bg-[radial-gradient(circle_at_50%_42%,rgba(255,145,77,0.18),rgba(255,145,77,0.07)_28%,rgba(0,0,0,0.38)_56%,transparent_82%),linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.44)_18%,rgba(0,0,0,0.54)_68%,transparent_100%)]"
+              className="pointer-events-none absolute left-1/2 top-[48%] -z-10 h-[34rem] w-[185vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,145,77,0.24)_0%,rgba(255,145,77,0.13)_26%,rgba(12,7,4,0.24)_52%,transparent_78%)] blur-2xl md:hidden"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-[48%] -z-10 h-[25rem] w-[118vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),rgba(255,145,77,0.1)_34%,transparent_72%)] blur-[54px] md:hidden"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-[-32vw] -top-36 bottom-[-12rem] -z-10 hidden bg-[radial-gradient(circle_at_50%_42%,rgba(255,145,77,0.18),rgba(255,145,77,0.07)_28%,rgba(0,0,0,0.38)_56%,transparent_82%),linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.44)_18%,rgba(0,0,0,0.54)_68%,transparent_100%)] md:block"
               style={{
                 maskImage: 'linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%)',
                 WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%)',
@@ -333,7 +341,7 @@ export default function HomePage() {
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-[-18vw] -top-20 bottom-[-6rem] -z-10 bg-[radial-gradient(ellipse_at_center,rgba(38,69,97,0.12),transparent_58%)] blur-3xl"
+              className="pointer-events-none absolute inset-x-[-18vw] -top-20 bottom-[-6rem] -z-10 hidden bg-[radial-gradient(ellipse_at_center,rgba(38,69,97,0.12),transparent_58%)] blur-3xl md:block"
             />
             <div
               className="relative h-[430px] w-full max-w-[680px] sm:h-[500px] md:h-[580px]"
