@@ -419,7 +419,7 @@ export default function HomePage() {
               />
 
               <motion.div
-                className="absolute left-1/2 top-[47%] grid aspect-square w-[286px] place-items-center rounded-full border border-white/15 bg-[radial-gradient(circle_at_32%_22%,rgba(255,255,255,0.5),transparent_12%),radial-gradient(circle_at_66%_72%,rgba(255,145,77,0.22),transparent_28%),radial-gradient(circle_at_center,rgba(126,148,178,0.32),rgba(54,47,67,0.64)_42%,rgba(29,14,9,0.78)_64%,rgba(0,0,0,0.93))] shadow-[0_58px_120px_rgba(0,0,0,0.78),0_0_160px_rgba(255,145,77,0.3),inset_0_0_118px_rgba(185,214,255,0.16),inset_28px_24px_58px_rgba(255,255,255,0.13),inset_-38px_-44px_82px_rgba(0,0,0,0.66)] backdrop-blur-xl sm:w-[360px] md:top-1/2 md:w-[460px]"
+                className="absolute left-1/2 top-[47%] grid aspect-square w-[286px] place-items-center rounded-full border border-[#FF914D]/38 bg-[radial-gradient(circle_at_34%_25%,rgba(255,255,255,0.36),transparent_15%),radial-gradient(circle_at_68%_74%,rgba(255,145,77,0.35),transparent_27%),radial-gradient(circle_at_center,rgba(255,145,77,0.29),rgba(62,32,22,0.88)_55%,rgba(0,0,0,0.9))] shadow-[0_58px_120px_rgba(0,0,0,0.78),0_0_160px_rgba(255,145,77,0.34),inset_0_0_102px_rgba(255,145,77,0.2),inset_28px_24px_52px_rgba(255,255,255,0.09),inset_-34px_-38px_70px_rgba(0,0,0,0.54)] backdrop-blur-xl sm:w-[360px] md:top-1/2 md:w-[460px]"
                 style={{
                   x: '-50%',
                   y: '-50%',
@@ -444,15 +444,14 @@ export default function HomePage() {
               >
                 <div className="absolute inset-[-18%] rounded-full border border-[#FF914D]/24 [transform:rotateX(72deg)_translateZ(20px)]" />
                 <div className="absolute inset-[-8%] rounded-full border border-white/8 [transform:rotateX(48deg)_rotateZ(-18deg)]" />
-                <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.24),transparent_31%,rgba(0,0,0,0.46)_78%)]" />
-                <div className="absolute inset-[15%] z-[7] rounded-full bg-[radial-gradient(circle_at_47%_43%,rgba(255,255,255,0.14),rgba(42,62,88,0.24)_36%,rgba(255,145,77,0.12)_58%,transparent_76%)] shadow-[inset_0_0_46px_rgba(255,255,255,0.08),0_0_42px_rgba(255,145,77,0.14)]" />
-                <div className="absolute left-[17%] top-[14%] z-[21] h-[31%] w-[29%] rounded-full bg-white/20 blur-xl" />
+                <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.2),transparent_33%,rgba(0,0,0,0.38)_76%)]" />
+                <div className="absolute left-[17%] top-[14%] h-[31%] w-[29%] rounded-full bg-white/18 blur-xl" />
                 <div className="absolute left-[28%] top-[26%] h-px w-[52%] rotate-[-6deg] bg-gradient-to-r from-transparent via-white/22 to-transparent" />
                 <div className="absolute inset-7 rounded-full bg-black/12 shadow-[inset_0_0_58px_rgba(255,145,77,0.24)]" />
                 <motion.img
                   src="/icons/homelogo.png"
                   alt="UTTF Home Logo"
-                  className="relative z-10 w-[78%] object-contain opacity-95 drop-shadow-[0_26px_34px_rgba(0,0,0,0.88)] sm:w-[84%] md:w-[88%]"
+                  className="relative z-10 w-[78%] object-contain drop-shadow-[0_26px_34px_rgba(0,0,0,0.88)] sm:w-[84%] md:w-[88%]"
                   style={{
                     x: logoImageX,
                     y: logoImageY,
@@ -473,8 +472,6 @@ export default function HomePage() {
                     ease: 'easeInOut',
                   }}
                 />
-                <div className="pointer-events-none absolute inset-0 z-20 rounded-full bg-[radial-gradient(circle_at_32%_22%,rgba(255,255,255,0.38),transparent_13%),radial-gradient(ellipse_at_43%_35%,rgba(255,255,255,0.11),transparent_35%),linear-gradient(145deg,rgba(255,255,255,0.13),transparent_38%,rgba(0,0,0,0.36)_78%)] shadow-[inset_20px_18px_46px_rgba(255,255,255,0.12),inset_-32px_-38px_76px_rgba(0,0,0,0.64),inset_0_0_0_1px_rgba(255,255,255,0.16)]" />
-                <div className="pointer-events-none absolute inset-[5%] z-30 rounded-full border border-white/10 bg-[radial-gradient(ellipse_at_37%_24%,rgba(255,255,255,0.24),transparent_18%),radial-gradient(ellipse_at_65%_72%,rgba(255,145,77,0.12),transparent_34%)] mix-blend-screen" />
               </motion.div>
             </div>
           </div>
