@@ -1,21 +1,27 @@
 {
-  "name": "Under The Tower Factory App",
-  "short_name": "UTTF",
+  "name": "Under The Tower Factory ODV",
+  "short_name": "UTTF ODV",
+  "description": "Organizzazione di Volontariato a Rozzano: laboratori creativi, arte urbana, rap, cultura e community hub.",
+  "lang": "it-IT",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0a0a0a",
+  "background_color": "#000000",
+  "categories": ["culture", "education", "music", "social"],
   "icons": [
     {
-      "src": "/favicon.ico/web-app-manifest-192x192.png",
+      "src": "/icons/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
-      "src": "/favicon.ico/web-app-manifest-512x512.png",
+      "src": "/icons/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }

@@ -1,14 +1,83 @@
 import './globals.css';
+import type { Metadata } from 'next';
 import { Unbounded, Space_Grotesk, Geist_Mono } from 'next/font/google';
 import MobileNav from '@/components/MobileNav';
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_OG_IMAGE,
+  ORGANIZATION_NAME,
+  SITE_NAME,
+  SITE_URL,
+  organizationJsonLd,
+  websiteJsonLd,
+} from './seo';
 
 const unbounded = Unbounded({ subsets: ['latin'], variable: '--font-display', weight: ['900'] });
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-sans', weight: ['400', '500', '700'] });
 const geist = Geist_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
-export const metadata = {
-  title: 'UTTF | Urban Creative Core',
-  description: 'Under The Tower Factory - Urban Art & Culture',
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${ORGANIZATION_NAME} | Associazione di volontariato`,
+    template: `%s | UTTF ODV`,
+  },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    'Under The Tower Factory',
+    'UTTF',
+    'associazione di volontariato',
+    'ODV Rozzano',
+    'laboratori creativi Rozzano',
+    'arte urbana',
+    'rap',
+    'beat making',
+    'community hub',
+  ],
+  authors: [{ name: ORGANIZATION_NAME, url: SITE_URL }],
+  creator: ORGANIZATION_NAME,
+  publisher: ORGANIZATION_NAME,
+  category: 'Nonprofit organization',
+  alternates: {
+    canonical: '/',
+    languages: {
+      'it-IT': '/',
+    },
+  },
+  openGraph: {
+    title: `${ORGANIZATION_NAME} | Associazione di volontariato`,
+    description: DEFAULT_DESCRIPTION,
+    url: '/',
+    siteName: SITE_NAME,
+    locale: 'it_IT',
+    type: 'website',
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 1536,
+        height: 1024,
+        alt: `${SITE_NAME} - ODV a Rozzano`,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${ORGANIZATION_NAME} | Associazione di volontariato`,
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/icons/favicon.ico' },
@@ -19,6 +88,8 @@ export const metadata = {
   },
   manifest: '/icons/site.webmanifest',
 };
+
+const jsonLd = JSON.stringify([organizationJsonLd, websiteJsonLd]).replace(/</g, '\\u003c');
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,6 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <MobileNav />
         </div>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
       </body>
     </html>
   );
