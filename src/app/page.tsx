@@ -400,7 +400,7 @@ export default function HomePage() {
                 eyebrow="arte"
                 label="Arte a KM 0"
                 compactLabel="KM0"
-                hint="galleria locale"
+                hint="vetrina"
                 className="absolute right-0 top-[7%] z-40 sm:right-5 md:right-10 md:top-[25%]"
                 reverse
                 delay={1.2}
