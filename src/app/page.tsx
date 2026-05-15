@@ -65,8 +65,8 @@ function RevealAction({
   delay = 0,
 }: RevealActionProps) {
   const actionClass = [
-    'group relative flex h-16 w-[9.2rem] items-center gap-3 overflow-hidden rounded-full border border-[#FF914D]/42 bg-black/50 px-2.5 text-white shadow-[0_20px_50px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.15),inset_0_0_28px_rgba(255,145,77,0.1)] backdrop-blur-2xl sm:w-44 md:h-[4.35rem] md:w-[12.5rem]',
-    'transition-[width,border-color,background-color,box-shadow] duration-500 ease-out hover:w-[11.25rem] hover:border-[#FF914D]/80 hover:bg-[#FF914D]/12 hover:shadow-[0_24px_62px_rgba(0,0,0,0.7),0_0_42px_rgba(255,145,77,0.26),inset_0_0_34px_rgba(255,145,77,0.16)] active:w-[11.25rem] focus-visible:w-[11.25rem] sm:hover:w-60 sm:active:w-60 sm:focus-visible:w-60 md:hover:w-72 md:active:w-72 md:focus-visible:w-72',
+    'group relative flex h-16 w-[9.9rem] items-center gap-3 overflow-hidden rounded-full border border-[#FF914D]/42 bg-black/50 px-2.5 text-white shadow-[0_20px_50px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.15),inset_0_0_28px_rgba(255,145,77,0.1)] backdrop-blur-2xl sm:w-44 md:h-[4.35rem] md:w-[12.5rem]',
+    'transition-[width,border-color,background-color,box-shadow] duration-500 ease-out hover:w-[11.75rem] hover:border-[#FF914D]/80 hover:bg-[#FF914D]/12 hover:shadow-[0_24px_62px_rgba(0,0,0,0.7),0_0_42px_rgba(255,145,77,0.26),inset_0_0_34px_rgba(255,145,77,0.16)] active:w-[11.75rem] focus-visible:w-[11.75rem] sm:hover:w-60 sm:active:w-60 sm:focus-visible:w-60 md:hover:w-72 md:active:w-72 md:focus-visible:w-72',
     reverse ? 'flex-row-reverse text-right' : 'text-left',
   ].join(' ');
 
@@ -82,14 +82,14 @@ function RevealAction({
         <span className="relative z-10">{icon}</span>
       </motion.span>
       <span className={`relative z-10 flex min-w-0 flex-1 flex-col ${reverse ? 'items-end' : 'items-start'}`}>
-        <span className="mb-0.5 whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.34em] text-[#FF914D]/72">
+        <span className="mb-0.5 w-full truncate whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.34em] text-[#FF914D]/72">
           {eyebrow}
         </span>
-        <span className="max-w-[6rem] truncate whitespace-nowrap text-[11px] font-black uppercase italic leading-none tracking-tight text-white transition-[max-width] duration-500 group-hover:max-w-[11rem] group-active:max-w-[11rem] group-focus-visible:max-w-[11rem] sm:max-w-[7.2rem] md:max-w-[8.5rem] md:text-xs">
+        <span className="w-full truncate whitespace-nowrap text-[11px] font-black uppercase italic leading-none tracking-tight text-white md:text-xs">
           <span className="group-hover:hidden group-active:hidden group-focus-visible:hidden">{compactLabel}</span>
           <span className="hidden group-hover:inline group-active:inline group-focus-visible:inline">{label}</span>
         </span>
-        <span className="mt-1 max-w-[6.2rem] truncate whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.12em] text-white/50 transition-[max-width,color] duration-500 group-hover:max-w-[13rem] group-hover:text-white/72 group-active:max-w-[13rem] group-focus-visible:max-w-[13rem] sm:max-w-[7.6rem] md:max-w-[9.4rem]">
+        <span className="mt-1 w-full truncate whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.1em] text-white/50 transition-colors duration-500 group-hover:text-white/72">
           {hint}
         </span>
       </span>
@@ -239,7 +239,7 @@ export default function HomePage() {
 
             {/* SEZIONE COS'È - GLASSMORPHISM RESTYLE */}
             <motion.div 
-              className="relative isolate w-full max-w-5xl mb-5 overflow-hidden rounded-[1.65rem] border border-[#FF914D]/45 bg-[radial-gradient(circle_at_34%_24%,rgba(255,255,255,0.22),transparent_18%),radial-gradient(circle_at_74%_72%,rgba(255,145,77,0.25),transparent_30%),radial-gradient(circle_at_center,rgba(255,145,77,0.11),rgba(42,22,18,0.78)_54%,rgba(0,0,0,0.88))] px-5 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.68),0_0_58px_rgba(255,145,77,0.18),inset_0_1px_0_rgba(255,255,255,0.16),inset_18px_16px_34px_rgba(255,255,255,0.045),inset_-20px_-24px_46px_rgba(0,0,0,0.46)] backdrop-blur-2xl sm:p-8 md:mb-8 md:rounded-[2rem] md:p-14 md:shadow-[0_42px_120px_rgba(0,0,0,0.74),0_0_110px_rgba(255,145,77,0.26),inset_0_1px_0_rgba(255,255,255,0.18),inset_24px_20px_46px_rgba(255,255,255,0.06),inset_-28px_-32px_62px_rgba(0,0,0,0.48)]"
+              className="relative isolate w-full max-w-5xl mb-5 overflow-hidden rounded-[1.65rem] border border-[#FF914D]/45 bg-black/70 px-5 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.68),0_0_58px_rgba(255,145,77,0.18),inset_0_1px_0_rgba(255,255,255,0.16),inset_18px_16px_34px_rgba(255,255,255,0.045),inset_-20px_-24px_46px_rgba(0,0,0,0.46)] backdrop-blur-2xl sm:p-8 md:mb-8 md:rounded-[2rem] md:p-14 md:shadow-[0_42px_120px_rgba(0,0,0,0.74),0_0_110px_rgba(255,145,77,0.26),inset_0_1px_0_rgba(255,255,255,0.18),inset_24px_20px_46px_rgba(255,255,255,0.06),inset_-28px_-32px_62px_rgba(0,0,0,0.48)]"
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
@@ -258,10 +258,11 @@ export default function HomePage() {
               }}
             >
               {/* Grain Texture Overlay */}
-              <div className="absolute inset-0 bg-[url('/images/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none" />
+              <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_34%_24%,rgba(255,255,255,0.2),transparent_18%),radial-gradient(circle_at_74%_72%,rgba(255,145,77,0.22),transparent_31%),radial-gradient(circle_at_center,rgba(255,145,77,0.1),rgba(42,22,18,0.72)_56%,rgba(0,0,0,0.9))]" />
+              <div className="absolute inset-0 rounded-[inherit] bg-[url('/images/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none" />
               <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/55 to-transparent" />
-              <div className="pointer-events-none absolute -left-24 -top-28 h-72 w-72 rounded-full bg-white/12 blur-3xl" />
-              <div className="pointer-events-none absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-[#FF914D]/24 blur-3xl" />
+              <div className="pointer-events-none absolute -left-24 -top-28 hidden h-72 w-72 rounded-full bg-white/12 blur-3xl md:block" />
+              <div className="pointer-events-none absolute -right-28 bottom-0 hidden h-80 w-80 rounded-full bg-[#FF914D]/24 blur-3xl md:block" />
               <div className="pointer-events-none absolute inset-2 rounded-[1.25rem] border border-white/12 shadow-[inset_0_0_38px_rgba(255,255,255,0.05)] md:inset-4 md:rounded-[1.55rem]" />
               <div
                 aria-hidden="true"
