@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence, Variants, useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -36,6 +36,163 @@ const FALLBACK_PUBLICATIONS: Publication[] = [
     image_url: '/instagram/post2.jpeg',
   },
 ];
+
+const SHAKE_DURATION_MS = 3600;
+
+type ShakeIconKey = 'feed' | 'labs' | 'team' | 'gallery' | 'map';
+type ShakePoint = readonly [number, number];
+type MotionPermissionEvent = typeof DeviceMotionEvent & {
+  requestPermission?: () => Promise<PermissionState>;
+};
+
+type ShakeAction = {
+  key: ShakeIconKey;
+  eyebrow: string;
+  label: string;
+  hint: string;
+  home: ShakePoint;
+  path: readonly [ShakePoint, ShakePoint, ShakePoint, ShakePoint];
+};
+
+const SHAKE_ACTIONS: readonly ShakeAction[] = [
+  {
+    key: 'feed',
+    eyebrow: 'hub',
+    label: 'Feed UTTF',
+    hint: 'post + stream',
+    home: [40, 50],
+    path: [[14, 19], [82, 28], [21, 78], [62, 36]],
+  },
+  {
+    key: 'labs',
+    eyebrow: 'lab',
+    label: 'Rap Lab',
+    hint: 'lab rap e call',
+    home: [60, 50],
+    path: [[84, 16], [18, 34], [78, 76], [39, 27]],
+  },
+  {
+    key: 'team',
+    eyebrow: 'team',
+    label: 'Team',
+    hint: 'chi siamo',
+    home: [33, 70],
+    path: [[23, 88], [74, 18], [12, 52], [57, 82]],
+  },
+  {
+    key: 'gallery',
+    eyebrow: 'arte',
+    label: 'KM0',
+    hint: 'vetrina',
+    home: [67, 70],
+    path: [[78, 86], [17, 23], [88, 48], [43, 81]],
+  },
+  {
+    key: 'map',
+    eyebrow: 'map',
+    label: 'Mappa',
+    hint: 'posizione',
+    home: [50, 83],
+    path: [[50, 15], [12, 62], [88, 66], [48, 31]],
+  },
+];
+
+function ShakeActionIcon({ icon }: { icon: ShakeIconKey }) {
+  switch (icon) {
+    case 'feed':
+      return <Radio size={18} />;
+    case 'labs':
+      return <FlaskConical size={18} />;
+    case 'team':
+      return <Users size={18} />;
+    case 'gallery':
+      return <ImageIcon size={18} />;
+    case 'map':
+      return <MapPin size={18} />;
+  }
+}
+
+function ShakeChaosOverlay() {
+  return (
+    <motion.div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-[120] overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+    >
+      <svg className="absolute inset-0 h-full w-full">
+        {SHAKE_ACTIONS.map((action, index) => {
+          const points = [action.home, ...action.path, action.home];
+          const xs = points.map(([x]) => `${x}%`);
+          const ys = points.map(([, y]) => `${y}%`);
+
+          return (
+            <motion.line
+              key={`${action.key}-wire`}
+              x1="50%"
+              y1="58%"
+              x2={`${action.home[0]}%`}
+              y2={`${action.home[1]}%`}
+              stroke="#FF914D"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeDasharray="7 9"
+              initial={{ opacity: 0 }}
+              animate={{ x2: xs, y2: ys, opacity: [0, 0.72, 0.62, 0.68, 0.5, 0] }}
+              transition={{
+                duration: SHAKE_DURATION_MS / 1000,
+                ease: 'easeInOut',
+                repeat: 0,
+                times: [0, 0.18, 0.38, 0.62, 0.82, 1],
+                delay: index * 0.03,
+              }}
+            />
+          );
+        })}
+      </svg>
+
+      {SHAKE_ACTIONS.map((action, index) => {
+        const points = [action.home, ...action.path, action.home];
+        const xs = points.map(([x]) => `${x}%`);
+        const ys = points.map(([, y]) => `${y}%`);
+
+        return (
+          <motion.div
+            key={action.key}
+            className="fixed flex h-12 w-36 items-center gap-2 rounded-full border border-[#FF914D]/65 bg-black/70 px-2 text-white shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_34px_rgba(255,145,77,0.24),inset_0_0_18px_rgba(255,145,77,0.12)] backdrop-blur-xl"
+            style={{ x: '-50%', y: '-50%', left: `${action.home[0]}%`, top: `${action.home[1]}%` }}
+            initial={{ opacity: 0, scale: 0.72, rotate: 0 }}
+            animate={{
+              left: xs,
+              top: ys,
+              opacity: [0, 1, 1, 1, 0.96, 0],
+              rotate: [0, -18, 16, -10, 12, 0],
+              scale: [0.72, 1.06, 0.94, 1.08, 0.98, 0.72],
+            }}
+            transition={{
+              duration: SHAKE_DURATION_MS / 1000,
+              ease: 'easeInOut',
+              repeat: 0,
+              times: [0, 0.18, 0.38, 0.62, 0.82, 1],
+              delay: index * 0.03,
+            }}
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/55 bg-[#FF914D]/18 text-[#FF914D]">
+              <ShakeActionIcon icon={action.key} />
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <span className="font-mono text-[7px] uppercase tracking-[0.28em] text-[#FF914D]/80">{action.eyebrow}</span>
+              <span className="truncate text-[11px] font-black uppercase italic leading-tight">{action.label}</span>
+              <span className="truncate font-mono text-[7px] uppercase tracking-[0.08em] text-white/52">{action.hint}</span>
+            </span>
+          </motion.div>
+        );
+      })}
+    </motion.div>
+  );
+}
 
 type RevealActionProps = {
   href?: string;
@@ -130,6 +287,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<Publication | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isShakeMode, setIsShakeMode] = useState(false);
+  const [shakeBurstId, setShakeBurstId] = useState(0);
+  const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastShakeAtRef = useRef(0);
+  const lastMotionMagnitudeRef = useRef<number | null>(null);
 
   const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
   const BUCKET_NAME = 'publications'; 
@@ -147,6 +309,84 @@ export default function HomePage() {
   const logoRotateY = useSpring(useTransform(logoPointerX, [-0.5, 0.5], [-15, 15]), { stiffness: 110, damping: 20 });
   const logoImageX = useSpring(useTransform(logoPointerX, [-0.5, 0.5], [-22, 22]), { stiffness: 120, damping: 20 });
   const logoImageY = useSpring(useTransform(logoPointerY, [-0.5, 0.5], [-16, 16]), { stiffness: 120, damping: 20 });
+
+  const triggerShakeBurst = useCallback(() => {
+    setShakeBurstId((current) => current + 1);
+    setIsShakeMode(true);
+
+    if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
+    shakeTimeoutRef.current = setTimeout(() => {
+      setIsShakeMode(false);
+      shakeTimeoutRef.current = null;
+    }, SHAKE_DURATION_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const motionEvent = window.DeviceMotionEvent as MotionPermissionEvent | undefined;
+    let motionAttached = false;
+    let permissionRequested = false;
+
+    const handleMotion = (event: DeviceMotionEvent) => {
+      const acceleration = event.accelerationIncludingGravity ?? event.acceleration;
+      if (!acceleration) return;
+
+      const x = acceleration.x ?? 0;
+      const y = acceleration.y ?? 0;
+      const z = acceleration.z ?? 0;
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
+      const previousMagnitude = lastMotionMagnitudeRef.current ?? magnitude;
+      const delta = Math.abs(magnitude - previousMagnitude);
+      const now = Date.now();
+
+      lastMotionMagnitudeRef.current = magnitude;
+
+      if (((delta > 12 && magnitude > 18) || magnitude > 32) && now - lastShakeAtRef.current > 1800) {
+        lastShakeAtRef.current = now;
+        triggerShakeBurst();
+      }
+    };
+
+    const attachMotion = () => {
+      if (motionAttached) return;
+      window.addEventListener('devicemotion', handleMotion, { passive: true });
+      motionAttached = true;
+    };
+
+    const requestMotionAccess = () => {
+      if (permissionRequested) return;
+      permissionRequested = true;
+
+      if (typeof motionEvent?.requestPermission === 'function') {
+        motionEvent.requestPermission()
+          .then((permission) => {
+            if (permission === 'granted') attachMotion();
+          })
+          .catch(() => {});
+        return;
+      }
+
+      attachMotion();
+    };
+
+    if (typeof motionEvent?.requestPermission === 'function') {
+      window.addEventListener('pointerdown', requestMotionAccess, { passive: true, once: true });
+      window.addEventListener('touchstart', requestMotionAccess, { passive: true, once: true });
+    } else {
+      attachMotion();
+    }
+
+    return () => {
+      window.removeEventListener('pointerdown', requestMotionAccess);
+      window.removeEventListener('touchstart', requestMotionAccess);
+      if (motionAttached) window.removeEventListener('devicemotion', handleMotion);
+    };
+  }, [triggerShakeBurst]);
 
   useEffect(() => {
     async function fetchPublications() {
@@ -532,6 +772,10 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+
+      <AnimatePresence>
+        {isShakeMode && <ShakeChaosOverlay key={shakeBurstId} />}
+      </AnimatePresence>
 
       {/* MODALS */}
       <AnimatePresence>
