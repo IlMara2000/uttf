@@ -114,6 +114,11 @@ export default function CalendarWidget() {
     return isShiftTask(event) ? 'Turno in sede' : 'Task';
   };
 
+  const getEventShape = (event: CalendarEvent) => {
+    if (event.eventType === 'activity') return 'activity';
+    return isShiftTask(event) ? 'shift' : 'task';
+  };
+
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/20 shadow-sm backdrop-blur-md">
       <div className="flex items-center justify-between gap-3 border-b border-zinc-800/80 bg-zinc-950/30 p-4 md:p-5">
@@ -167,13 +172,28 @@ export default function CalendarWidget() {
               <div className="mt-1 flex max-w-full flex-col gap-0.5 overflow-hidden">
                 {dayEvents.map((e, idx) => {
                   const colors = getEventColors(e);
+                  const shape = getEventShape(e);
+
+                  if (shape === 'shift') {
+                    return (
+                      <div key={idx} className="flex h-1.5 w-full max-w-[54px] overflow-hidden rounded-full" title={getEventTitle(e)}>
+                        {colors.slice(0, 4).map((color, colorIndex) => (
+                          <span
+                            key={`${color}-${colorIndex}`}
+                            className="min-w-2 flex-1"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    );
+                  }
 
                   return (
-                    <div key={idx} className="flex h-1.5 w-full max-w-[54px] overflow-hidden rounded-full" title={getEventTitle(e)}>
+                    <div key={idx} className="flex min-h-2 items-center gap-1" title={getEventTitle(e)}>
                       {colors.slice(0, 4).map((color, colorIndex) => (
                         <span
                           key={`${color}-${colorIndex}`}
-                          className="min-w-2 flex-1"
+                          className={`${shape === 'activity' ? 'h-2 w-2 rounded-full' : 'h-2 w-2 rounded-[2px]'} shrink-0`}
                           style={{ backgroundColor: color }}
                         />
                       ))}
@@ -191,18 +211,27 @@ export default function CalendarWidget() {
         <div className="space-y-3">
           {events.filter(e => e.deadline && isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => {
             const colors = getEventColors(e);
+            const shape = getEventShape(e);
 
             return (
               <div key={idx} className="flex flex-col gap-2 p-3 bg-black/40 rounded-xl border border-white/5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-4 w-1 flex-col overflow-hidden rounded-full">
-                    {colors.slice(0, 4).map((color, colorIndex) => (
-                      <span
-                        key={`${color}-${colorIndex}`}
-                        className="min-h-1 flex-1"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
+                  <div className={`flex shrink-0 overflow-hidden ${shape === 'shift' ? 'h-4 w-1 flex-col rounded-full' : 'h-4 w-4 items-center justify-center gap-0.5'}`}>
+                    {shape === 'shift'
+                      ? colors.slice(0, 4).map((color, colorIndex) => (
+                          <span
+                            key={`${color}-${colorIndex}`}
+                            className="min-h-1 flex-1"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))
+                      : colors.slice(0, 1).map((color, colorIndex) => (
+                          <span
+                            key={`${color}-${colorIndex}`}
+                            className={`${shape === 'activity' ? 'h-3 w-3 rounded-full' : 'h-3 w-3 rounded-[3px]'} block`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
                   </div>
                   <div className="flex flex-col">
                     <span className={`text-[10px] font-black uppercase italic ${e.eventType === 'activity' ? 'text-white' : 'text-zinc-300'}`}>
