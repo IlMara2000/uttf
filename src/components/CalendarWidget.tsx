@@ -74,9 +74,9 @@ export default function CalendarWidget() {
     return () => window.removeEventListener('refreshCalendar', fetchEvents);
   }, [fetchEvents]);
 
-  const calendarDays = eachDayOfInterval({ 
-    start: startOfWeek(startOfMonth(currentMonth)), 
-    end: endOfWeek(endOfMonth(currentMonth)) 
+  const calendarDays = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 }),
+    end: endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 })
   });
 
   const getFallbackColor = (seed?: string | number) => {
@@ -144,7 +144,7 @@ export default function CalendarWidget() {
       </div>
 
       <div className="grid min-w-0 grid-cols-7 gap-px bg-zinc-800/50">
-        {['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'].map(d => (
+        {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map(d => (
           <div key={d} className="text-center text-[7px] font-mono text-zinc-600 uppercase py-3 bg-black">{d}</div>
         ))}
         {calendarDays.map((day, i) => {

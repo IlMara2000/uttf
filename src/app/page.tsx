@@ -249,7 +249,7 @@ export default function HomePage() {
 
             {/* SEZIONE COS'È - GLASSMORPHISM RESTYLE */}
             <motion.div 
-              className="relative isolate w-full max-w-5xl mb-5 overflow-hidden rounded-[1.65rem] border border-[#FF914D]/36 bg-black/68 px-5 py-7 shadow-[0_20px_48px_rgba(0,0,0,0.58),0_0_34px_rgba(255,145,77,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md sm:p-8 md:mb-8 md:rounded-[2rem] md:p-14"
+              className="relative isolate flex min-h-[280px] w-full max-w-5xl items-center overflow-hidden rounded-[1.65rem] border border-[#FF914D]/36 bg-black/68 px-5 py-10 shadow-[0_20px_48px_rgba(0,0,0,0.58),0_0_34px_rgba(255,145,77,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md sm:min-h-[300px] sm:px-8 sm:py-12 md:mb-8 md:min-h-[330px] md:rounded-[2rem] md:px-14 md:py-20"
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
@@ -469,7 +469,7 @@ export default function HomePage() {
                 <motion.img
                   src="/icons/homelogo.png"
                   alt="UTTF Home Logo"
-                  className="relative z-10 mt-[-24%] w-[42%] object-contain drop-shadow-[0_20px_26px_rgba(0,0,0,0.88)] transition-transform duration-150 ease-out sm:w-[44%] md:w-[46%]"
+                  className="relative z-10 mt-[-18%] w-[58%] object-contain drop-shadow-[0_22px_30px_rgba(0,0,0,0.88)] transition-transform duration-150 ease-out sm:w-[60%] md:w-[62%]"
                   style={{
                     transform: 'translate3d(calc(var(--pointer-x, 0) * 14px), calc(var(--pointer-y, 0) * 10px), 0)',
                   }}

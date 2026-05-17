@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { CalendarPlus, Plus, Trash2, Users } from 'lucide-react';
+import { CalendarPlus, Clock, Plus, Trash2, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/errors';
 
@@ -250,12 +250,20 @@ export default function ShiftPlanner() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-[160px_1fr]">
-            <input
-              type="time"
-              value={time}
-              onChange={(event) => setTime(event.target.value)}
-              className="h-11 rounded-lg border border-white/5 bg-black/40 px-3 font-mono text-[10px] uppercase text-white outline-none focus:border-[#FF914D]/40"
-            />
+            <label className="relative block">
+              <input
+                type="time"
+                value={time}
+                onChange={(event) => setTime(event.target.value)}
+                className="h-11 w-full rounded-lg border border-white/5 bg-black/40 px-3 pr-10 font-mono text-[10px] uppercase text-white outline-none [color-scheme:dark] focus:border-[#FF914D]/40"
+                aria-label="Orario turno"
+              />
+              <Clock
+                size={15}
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#FF914D]"
+                aria-hidden="true"
+              />
+            </label>
             <input
               type="text"
               value={note}
