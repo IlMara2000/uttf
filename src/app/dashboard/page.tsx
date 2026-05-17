@@ -26,12 +26,13 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Planner from '@/components/Planner';
 import CalendarWidget from '@/components/CalendarWidget';
+import ShiftPlanner from '@/components/ShiftPlanner';
 import NotesManager from '@/components/NotesManager';
 import AccountSettings from '@/components/AccountSettings';
 import ManagementBottomLogo from '@/components/ManagementBottomLogo';
 import type { Review } from '@/types/database';
 
-type ActiveView = 'menu' | 'publish' | 'notes' | 'planner' | 'newsletter' | 'reviews';
+type ActiveView = 'menu' | 'calendar' | 'publish' | 'notes' | 'newsletter' | 'reviews';
 
 type NewsletterSubscriber = {
   created_at: string;
@@ -386,6 +387,13 @@ export default function Dashboard() {
       action: () => setActiveView('menu'),
     },
     {
+      key: 'calendar' as ActiveView,
+      title: 'Calendario',
+      subtitle: 'Calendario e gestione task',
+      icon: <CalendarDays size={18} />,
+      action: () => setActiveView('calendar'),
+    },
+    {
       key: 'publish' as ActiveView,
       title: 'Post',
       subtitle: 'Pubblica e gestisci i contenuti',
@@ -412,13 +420,6 @@ export default function Dashboard() {
       subtitle: 'Controlla ed elimina le review',
       icon: <Star size={18} />,
       action: () => setActiveView('reviews'),
-    },
-    {
-      key: 'planner' as ActiveView,
-      title: 'Planner',
-      subtitle: 'Gestione task',
-      icon: <CalendarDays size={18} />,
-      action: () => setActiveView('planner'),
     },
   ];
   const activeSection = managementSections.find((section) => section.key === activeView) ?? managementSections[0];
@@ -711,11 +712,17 @@ export default function Dashboard() {
                 </div>
               </div>
             </section>
-
-            <CalendarWidget />
           </div>
         ) : (
           <div className="flex flex-col gap-6">
+            {activeView === 'calendar' && (
+              <div className="space-y-6">
+                <CalendarWidget />
+                <ShiftPlanner />
+                <Planner />
+              </div>
+            )}
+
             {activeView === 'publish' && (
               <div className="grid min-w-0 gap-6 xl:grid-cols-[1.25fr_0.75fr]">
                 <div className="min-w-0 space-y-6">
@@ -971,7 +978,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {activeView === 'planner' && <Planner />}
             {activeView === 'notes' && <NotesManager />}
           </div>
         )}

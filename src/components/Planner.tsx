@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isShiftTask } from '@/components/ShiftPlanner';
 
 type PlannerUser = {
   id: string;
@@ -156,8 +157,9 @@ export default function Planner() {
     }
   };
 
-  const activeTasks = tasks.filter((task) => task.status !== 'done');
-  const completedTasks = tasks.filter((task) => task.status === 'done');
+  const visibleTasks = tasks.filter((task) => !isShiftTask(task));
+  const activeTasks = visibleTasks.filter((task) => task.status !== 'done');
+  const completedTasks = visibleTasks.filter((task) => task.status === 'done');
 
   const TaskRow = ({ task, index }: { task: PlannerTask, index: number }) => (
     <tr key={task.id} onClick={() => handleEditClick(task)} className="border-b border-white/5 hover:bg-white/[0.05] cursor-pointer">

@@ -154,7 +154,7 @@ export default function GalleryPage() {
                   </p>
 
                   <div className="space-y-4 mb-8">
-                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Art_Process</p>
+                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Come nasce</p>
                     <div className="flex flex-wrap gap-2">
                       {artwork.techniques.map((technique) => (
                         <span key={technique} className="px-3 py-1 bg-white/5 border border-white/5 rounded text-[9px] font-black uppercase text-zinc-300">
@@ -186,7 +186,7 @@ export default function GalleryPage() {
             Vuoi proporre un <span className="text-[#FF914D]">progetto o un&apos;idea</span>?
           </h2>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8">
-            La galleria cresce con artisti, idee e contributi del territorio.
+            La galleria cresce con artisti, idee e contributi che arrivano dal territorio.
           </p>
 
           <button
@@ -243,7 +243,7 @@ export default function GalleryPage() {
         </div>
 
         <p className="mt-20 text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
-          UTTF_KM0_GALLERY_2026
+          UTTF arte a km 0 / 2026
         </p>
       </footer>
     </div>

@@ -146,7 +146,7 @@ export default function TeamPage() {
                   </p>
 
                   <div className="space-y-4 mb-8">
-                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Operational_Skills</p>
+                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Cosa porta nel team</p>
                     <div className="flex flex-wrap gap-2">
                       {member.skills.map(skill => (
                         <span key={skill} className="px-3 py-1 bg-white/5 border border-white/5 rounded text-[9px] font-black uppercase text-zinc-300">
@@ -176,10 +176,10 @@ export default function TeamPage() {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FF914D]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           
           <h2 className="text-2xl font-black uppercase italic mb-6 tracking-tighter">
-            Vuoi entrare nella <span className="text-[#FF914D]">SQUADRA</span>?
+            Vorresti entrare nella <span className="text-[#FF914D]">SQUADRA</span>?
           </h2>
-          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8">
-            Siamo sempre alla ricerca di nuove risorse creative.
+          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8 leading-relaxed">
+            Cerchiamo persone volenterose, con grinta e voglia di mettersi in gioco: gente pronta ad aiutare gli altri a migliorarsi e a crescere insieme dentro una community creativa.
           </p>
           
           <a 
@@ -194,7 +194,7 @@ export default function TeamPage() {
         </div>
         
         <p className="mt-20 text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
-          UTTF_STAFF_MANIFEST_2026
+          UTTF staff / 2026
         </p>
       </footer>
     </div>

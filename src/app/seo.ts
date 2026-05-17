@@ -2,9 +2,17 @@ import type { Metadata } from 'next';
 
 export const SITE_URL = 'https://uttf.vercel.app';
 export const SITE_NAME = 'Under The Tower Factory';
-export const ORGANIZATION_NAME = 'Under The Tower Factory ODV';
+export const ORGANIZATION_NAME = 'Under The Tower Factory';
+export const SOCIAL_LINKS = [
+  'https://linktr.ee/underthetower',
+  'https://www.instagram.com/under_the_tower_factory',
+  'https://www.instagram.com/rapfcktory',
+  'https://www.tiktok.com',
+  'https://www.youtube.com',
+  'https://open.spotify.com',
+];
 export const DEFAULT_DESCRIPTION =
-  'Under The Tower Factory e una Organizzazione di Volontariato a Rozzano: laboratori creativi, arte urbana, rap, cultura e progetti di comunita.';
+  'Under The Tower Factory e una community creativa di Rozzano: laboratori rap, beat making, arte urbana, galleria a km 0, eventi e progetti per il territorio.';
 export const DEFAULT_OG_IMAGE = '/bg-uttf.jpg';
 
 export type PublicRoute = {
@@ -18,64 +26,64 @@ export type PublicRoute = {
 export const publicRoutes: PublicRoute[] = [
   {
     path: '/',
-    title: 'Under The Tower Factory ODV',
-    description: DEFAULT_DESCRIPTION,
+    title: 'Under The Tower Factory',
+    description: 'Community creativa a Rozzano per rap, arte urbana, laboratori, eventi, galleria a km 0 e progetti culturali del territorio.',
     changeFrequency: 'weekly',
     priority: 1,
   },
   {
     path: '/feed',
-    title: 'Feed e aggiornamenti',
-    description: 'News, post e aggiornamenti ufficiali di Under The Tower Factory ODV.',
+    title: 'News, recensioni e aggiornamenti',
+    description: 'Post, recensioni, Instagram, newsletter e aggiornamenti dalla community Under The Tower Factory di Rozzano.',
     changeFrequency: 'weekly',
     priority: 0.85,
   },
   {
     path: '/labs',
-    title: 'Laboratori creativi',
-    description: 'Laboratori di rap, beat making, urban arts e community hub curati da Under The Tower Factory ODV.',
+    title: 'Laboratori rap e creativi',
+    description: 'RAPF*CKTORY, scrittura, open mic, beat making, urban arts e laboratori creativi per ragazzi e community.',
     changeFrequency: 'monthly',
     priority: 0.8,
   },
   {
     path: '/team',
     title: 'Team',
-    description: 'Il team operativo e creativo di Under The Tower Factory ODV.',
+    description: 'Il team creativo e operativo di Under The Tower Factory: artisti, educatori, tecnici e persone attive sul territorio.',
     changeFrequency: 'monthly',
     priority: 0.75,
   },
   {
     path: '/galleria',
     title: 'Arte a KM 0',
-    description: 'Galleria locale, opere e processi creativi nati intorno alla community di Under The Tower Factory ODV.',
+    description: 'Galleria d arte a km 0 con opere, processi creativi, artisti locali e contributi visuali nati nel territorio.',
     changeFrequency: 'monthly',
     priority: 0.75,
   },
   {
     path: '/feed/recensioni',
     title: 'Recensioni',
-    description: 'Recensioni e feedback della community su Under The Tower Factory ODV.',
+    description: 'Pareri, recensioni e feedback reali della community su laboratori, eventi e attivita Under The Tower Factory.',
     changeFrequency: 'weekly',
     priority: 0.65,
   },
   {
     path: '/stream',
-    title: 'Stream',
-    description: 'Archivio streaming, contenuti live e broadcast della community Under The Tower Factory ODV.',
+    title: 'Video e live',
+    description: 'Archivio video, live, contenuti YouTube e momenti dagli eventi Under The Tower Factory e RAPF*CKTORY.',
     changeFrequency: 'monthly',
     priority: 0.65,
   },
   {
     path: '/privacy',
     title: 'Privacy Policy',
-    description: 'Informativa privacy di Under The Tower Factory ODV.',
+    description: 'Informativa privacy del sito Under The Tower Factory.',
     changeFrequency: 'yearly',
     priority: 0.35,
   },
   {
     path: '/terms',
     title: 'Termini e condizioni',
-    description: 'Termini, condizioni e regole d uso del sito Under The Tower Factory ODV.',
+    description: 'Termini, condizioni e regole d uso del sito Under The Tower Factory.',
     changeFrequency: 'yearly',
     priority: 0.3,
   },
@@ -93,7 +101,7 @@ export function metadataForPath(path: string): Metadata {
       canonical: route.path,
     },
     openGraph: {
-      title: `${title} | UTTF ODV`,
+      title: `${title} | UTTF`,
       description,
       url: route.path,
       siteName: SITE_NAME,
@@ -104,13 +112,13 @@ export function metadataForPath(path: string): Metadata {
           url: DEFAULT_OG_IMAGE,
           width: 1536,
           height: 1024,
-          alt: `${SITE_NAME} - Associazione di volontariato a Rozzano`,
+          alt: `${SITE_NAME} - Community hub creativo a Rozzano`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} | UTTF ODV`,
+      title: `${title} | UTTF`,
       description,
       images: [DEFAULT_OG_IMAGE],
     },
@@ -119,7 +127,9 @@ export function metadataForPath(path: string): Metadata {
 
 export function noIndexMetadata(title: string, description = 'Area riservata Under The Tower Factory.'): Metadata {
   return {
-    title,
+    title: {
+      absolute: `${title} | UTTF`,
+    },
     description,
     robots: {
       index: false,
@@ -135,16 +145,16 @@ export function noIndexMetadata(title: string, description = 'Area riservata Und
 
 export const organizationJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'NGO',
+  '@type': 'Organization',
   '@id': `${SITE_URL}/#organization`,
   name: SITE_NAME,
   alternateName: ['UTTF', ORGANIZATION_NAME],
   legalName: ORGANIZATION_NAME,
   url: SITE_URL,
+  sameAs: SOCIAL_LINKS,
   logo: `${SITE_URL}/icons/homelogo.png`,
   image: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
   description: DEFAULT_DESCRIPTION,
-  nonprofitStatus: 'https://schema.org/ITVolunteerAssociationCharity',
   foundingLocation: {
     '@type': 'Place',
     name: 'Rozzano',
@@ -177,21 +187,25 @@ export const organizationJsonLd = {
     },
   ],
   knowsAbout: [
-    'volontariato',
     'arte urbana',
     'rap',
+    'hip hop',
+    'open mic',
     'beat making',
+    'RAPF*CKTORY',
     'laboratori creativi',
     'cultura giovanile',
     'community hub',
+    'galleria arte a km 0',
+    'eventi culturali Rozzano',
   ],
   makesOffer: [
     {
       '@type': 'Offer',
       itemOffered: {
         '@type': 'Service',
-        name: 'Laboratori creativi e musicali',
-        description: 'Percorsi di rap, scrittura, beat making, urban arts e aggregazione culturale.',
+        name: 'Laboratori rap, musica e creativita urbana',
+        description: 'Percorsi di rap, scrittura, open mic, beat making, urban arts, galleria a km 0 e aggregazione culturale.',
       },
     },
   ],

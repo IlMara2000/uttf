@@ -46,12 +46,12 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
 
       if (dbError) throw dbError
 
-      alert("SYNC_COMPLETED");
+      alert("File caricato correttamente.");
       router.refresh()
     } catch (error) {
       const message = getErrorMessage(error, 'Upload non riuscito')
       console.error('Upload Error:', message)
-      alert('UPLOAD_FAILED: ' + message)
+      alert('Upload non riuscito: ' + message)
     } finally {
       setUploading(false)
     }
@@ -70,10 +70,10 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
         ${uploading ? 'bg-zinc-900 border-orange-500' : 'bg-black hover:border-zinc-500'}
       `}>
         <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${uploading ? 'text-orange-500 animate-pulse' : 'text-zinc-500'}`}>
-          {uploading ? '>> SYNCING_FILE...' : '++ ATTACH_MEDIA'}
+          {uploading ? 'Caricamento file...' : 'Allega file'}
         </span>
         {!uploading && (
-          <span className="text-[8px] bg-zinc-900 px-2 py-1 rounded text-zinc-600 group-hover/upload:text-white transition-colors font-mono">UPLOAD</span>
+          <span className="text-[8px] bg-zinc-900 px-2 py-1 rounded text-zinc-600 group-hover/upload:text-white transition-colors font-mono">Scegli</span>
         )}
       </div>
       

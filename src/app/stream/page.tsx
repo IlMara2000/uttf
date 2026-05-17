@@ -17,12 +17,12 @@ import Link from 'next/link';
 
 const stream = {
   title: 'NO LIMIT JAM 2025',
-  subtitle: 'UTTF broadcast archive',
+  subtitle: 'Archivio video UTTF',
   embedUrl: 'https://www.youtube.com/embed/pnL4b4Xhaxg',
   watchUrl: 'https://youtu.be/pnL4b4Xhaxg',
   status: 'Archive online',
   viewers: 'Replay',
-  quality: 'HD_READY',
+  quality: 'HD',
   latency: '0.0',
 };
 
@@ -47,7 +47,7 @@ export default function StreamPage() {
         <div className="w-full flex justify-start">
           <Link href="/feed" className="nav-tag flex items-center gap-2 group border-white/10 hover:border-[#FF914D]/50 transition-all">
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="font-mono tracking-widest text-[10px]">BACK</span>
+            <span className="font-mono tracking-widest text-[10px]">INDIETRO</span>
           </Link>
         </div>
 
@@ -66,7 +66,7 @@ export default function StreamPage() {
           <div className="flex items-center gap-4 mt-6">
             <span className="h-[1px] w-12 bg-zinc-800" />
             <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em]">
-              Broadcast_Unit // Rozzano_Main_Frame
+              Archivio live e video dalla Factory
             </p>
             <span className="h-[1px] w-12 bg-zinc-800" />
           </div>
@@ -110,12 +110,12 @@ export default function StreamPage() {
               <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-center">
                 <Zap size={18} className="mx-auto mb-2 text-[#FF914D]" />
                 <p className="text-2xl font-black italic">{stream.latency}<span className="ml-1 text-[10px] text-zinc-600">ms</span></p>
-                <p className="mt-1 text-[8px] font-mono uppercase tracking-widest text-zinc-500">Latency</p>
+                <p className="mt-1 text-[8px] font-mono uppercase tracking-widest text-zinc-500">Tempo risposta</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-center">
                 <Activity size={18} className="mx-auto mb-2 text-[#FF914D]" />
                 <p className="text-xl font-black italic">{stream.quality}</p>
-                <p className="mt-1 text-[8px] font-mono uppercase tracking-widest text-zinc-500">Signal</p>
+                <p className="mt-1 text-[8px] font-mono uppercase tracking-widest text-zinc-500">Qualita video</p>
               </div>
             </div>
 
@@ -145,13 +145,13 @@ export default function StreamPage() {
           <div className="md:col-span-2 glass-panel p-6 border-white/5 bg-zinc-900/20 rounded-[1.5rem]">
             <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/5">
               <Terminal size={14} className="text-[#FF914D]" />
-              <h3 className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">System_Output</h3>
+              <h3 className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">Note dalla regia</h3>
             </div>
             <div className="space-y-2 font-mono text-[11px] text-zinc-500 overflow-hidden">
-              <p className="text-[#FF914D]/70 leading-none">&gt; UTTF_ARCHIVE_LINK_ESTABLISHED</p>
-              <p>&gt; VIDEO_SOURCE_CONNECTED: YOUTUBE</p>
-              <p>&gt; PLAYER_READY_FOR_PUBLIC_VIEW</p>
-              <p className="text-white/40">&gt; NEXT_LIVE_SLOT_PENDING...</p>
+              <p className="text-[#FF914D]/70 leading-none">Video collegato all'archivio UTTF.</p>
+              <p>Fonte video: YouTube.</p>
+              <p>Player pronto per la visione.</p>
+              <p className="text-white/40">La prossima live verra comunicata appena fissata.</p>
             </div>
           </div>
 
@@ -177,7 +177,7 @@ export default function StreamPage() {
 
       <footer className="py-24 text-center opacity-20">
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
-          UTTF_BROADCAST_SESSION
+          UTTF video archive / Rozzano
         </p>
       </footer>
     </div>

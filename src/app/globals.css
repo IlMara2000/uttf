@@ -31,6 +31,15 @@
     50% { box-shadow: 0 0 32px 0 rgba(255, 145, 77, 0.12); }
   }
 
+  @keyframes uttf-bg-drift {
+    0%, 100% {
+      transform: translate3d(-0.7%, -0.5%, 0) scale(1.035);
+    }
+    50% {
+      transform: translate3d(0.7%, 0.55%, 0) scale(1.055);
+    }
+  }
+
   body {
     /* Gradiente Radiale Ellittico per l'effetto "Sfumatura dai lati" */
     background-color: #000000;
@@ -220,6 +229,13 @@
 
 .ambient-glow {
   animation: ambient-glow 5s ease-in-out infinite;
+}
+
+.uttf-bg-motion {
+  animation: uttf-bg-drift 28s ease-in-out infinite;
+  transform: translate3d(0, 0, 0) scale(1.04);
+  transform-origin: center;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {

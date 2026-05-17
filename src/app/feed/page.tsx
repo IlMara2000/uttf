@@ -178,7 +178,7 @@ export default function FeedPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF914D] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF914D]"></span>
               </span>
-              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Enter_Live_Stream</span>
+              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Entra nella live</span>
               <ArrowLeft size={16} className="rotate-180 text-zinc-500 group-hover:text-[#FF914D] transition-colors" />
             </button>
           </Link>
@@ -190,7 +190,7 @@ export default function FeedPage() {
               className="relative w-full px-8 py-4 bg-[#FF914D]/15 backdrop-blur-xl border-2 border-[#FF914D]/40 rounded-full flex items-center justify-center gap-4 transition-all duration-300 shadow-[0_0_30px_rgba(255,145,77,0.2)] hover:shadow-[0_0_40px_5px_rgba(255,145,77,0.4)] hover:border-[#FF914D]/70 hover:scale-[1.02]"
             >
               <Mail size={18} className="text-white" strokeWidth={2.5} />
-              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Attiva_Newsletter</span>
+              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Ricevi aggiornamenti</span>
             </button>
           </div>
 
@@ -198,7 +198,7 @@ export default function FeedPage() {
             <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 via-[#FF914D] to-orange-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
             <div className="relative w-full px-8 py-4 bg-[#FF914D]/15 backdrop-blur-xl border-2 border-[#FF914D]/40 rounded-full flex items-center justify-center gap-4 transition-all duration-300 shadow-[0_0_30px_rgba(255,145,77,0.2)] hover:shadow-[0_0_40px_5px_rgba(255,145,77,0.4)] hover:border-[#FF914D]/70 hover:scale-[1.02]">
               <Star size={18} className="text-white" strokeWidth={2.5} />
-              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Lascia_Recensione</span>
+              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Lascia una recensione</span>
             </div>
           </Link>
         </section>
@@ -209,7 +209,7 @@ export default function FeedPage() {
         <section>
           <div className="flex flex-col items-center mb-12">
             <h2 className="text-2xl md:text-4xl font-black uppercase italic mb-4 text-center">
-              SYNC ON<span className="text-[#FF914D]">_INSTA</span>
+              DAL NOSTRO <span className="text-[#FF914D]">INSTA</span>
             </h2>
             
             <div className="flex items-center gap-3">
@@ -220,7 +220,7 @@ export default function FeedPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mx-auto grid w-full max-w-[22rem] grid-cols-1 gap-6 sm:max-w-[45rem] sm:grid-cols-2 lg:max-w-none lg:grid-cols-3">
             {instagramPosts.map((ig, index) => (
               <motion.div
                 key={ig.id}
@@ -252,7 +252,7 @@ export default function FeedPage() {
                       src={ig.img} 
                       alt="IG Post" 
                       fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 22rem, 22rem"
                       className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" 
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -282,7 +282,7 @@ export default function FeedPage() {
       </main>
 
       <footer className="py-24 text-center opacity-30 relative z-10">
-        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF_SYSTEM_V.3.0 // ROZZANO</p>
+        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600">UTTF 2026 / ROZZANO</p>
       </footer>
 
       {/* MODALE NEWSLETTER CON STATO DI SUCCESSO */}
@@ -328,7 +328,7 @@ export default function FeedPage() {
                     BENVENUTO A_<span className="text-[#FF914D]">BORDO</span>
                   </h2>
                   <p className="text-xs font-mono text-zinc-400 uppercase tracking-widest leading-relaxed">
-                    Operazione confermata. Il contatto e stato salvato nel gestionale staff.
+                    Ci sei: abbiamo salvato il tuo contatto. Ti scriveremo quando ci sono novita, live o eventi.
                   </p>
                 </motion.div>
               ) : (

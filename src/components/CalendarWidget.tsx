@@ -7,6 +7,7 @@ import {
 } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { SHIFT_MARKER, SHIFT_TITLE_PREFIX, isShiftTask } from '@/components/ShiftPlanner';
 
 type CalendarEvent = {
   id?: string | number;
@@ -96,6 +97,23 @@ export default function CalendarWidget() {
     });
   };
 
+  const getEventTitle = (event: CalendarEvent) => {
+    const title = event.title || '';
+    if (!isShiftTask(event)) return title;
+
+    return title.replace(`${SHIFT_TITLE_PREFIX} - `, 'Turno in sede - ');
+  };
+
+  const getEventDescription = (event: CalendarEvent) => {
+    if (!event.description) return '';
+    return event.description.replace(SHIFT_MARKER, '').trim();
+  };
+
+  const getEventLabel = (event: CalendarEvent) => {
+    if (event.eventType === 'activity') return 'Attivita';
+    return isShiftTask(event) ? 'Turno in sede' : 'Task';
+  };
+
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/20 shadow-sm backdrop-blur-md">
       <div className="flex items-center justify-between gap-3 border-b border-zinc-800/80 bg-zinc-950/30 p-4 md:p-5">
@@ -151,7 +169,7 @@ export default function CalendarWidget() {
                   const colors = getEventColors(e);
 
                   return (
-                    <div key={idx} className="flex h-1.5 w-full max-w-[54px] overflow-hidden rounded-full" title={e.title}>
+                    <div key={idx} className="flex h-1.5 w-full max-w-[54px] overflow-hidden rounded-full" title={getEventTitle(e)}>
                       {colors.slice(0, 4).map((color, colorIndex) => (
                         <span
                           key={`${color}-${colorIndex}`}
@@ -169,7 +187,7 @@ export default function CalendarWidget() {
       </div>
 
       <div className="border-t border-zinc-800/80 bg-zinc-950/40 p-4 md:p-5">
-        <p className="text-[8px] font-mono text-zinc-600 uppercase mb-3">Focus_Day: {format(selectedDate, 'dd/MM')}</p>
+        <p className="text-[8px] font-mono text-zinc-600 uppercase mb-3">Giorno selezionato: {format(selectedDate, 'dd/MM')}</p>
         <div className="space-y-3">
           {events.filter(e => e.deadline && isSameDay(new Date(e.deadline), selectedDate)).map((e, idx) => {
             const colors = getEventColors(e);
@@ -188,19 +206,19 @@ export default function CalendarWidget() {
                   </div>
                   <div className="flex flex-col">
                     <span className={`text-[10px] font-black uppercase italic ${e.eventType === 'activity' ? 'text-white' : 'text-zinc-300'}`}>
-                      {e.title}
+                      {getEventTitle(e)}
                     </span>
                     <span className="text-[7px] font-mono text-zinc-500 tracking-widest uppercase">
-                      {e.eventType === 'activity' ? 'ACT_UNIT' : 'TSK_UNIT'}
+                      {getEventLabel(e)}
                     </span>
                   </div>
                 </div>
                 
                 {/* RENDER DELLA DESCRIZIONE SE ESISTE */}
-                {e.description && (
+                {getEventDescription(e) && (
                   <div className="pl-4 ml-0.5 border-l border-white/10 mt-1">
                     <p className="text-[9px] font-mono text-zinc-400 leading-relaxed whitespace-pre-wrap">
-                      {e.description}
+                      {getEventDescription(e)}
                     </p>
                   </div>
                 )}
@@ -208,7 +226,7 @@ export default function CalendarWidget() {
             );
           })}
           {events.filter(e => e.deadline && isSameDay(new Date(e.deadline), selectedDate)).length === 0 && (
-            <p className="text-[8px] font-mono text-zinc-800 italic uppercase text-center py-4">No_Operations</p>
+            <p className="text-[8px] font-mono text-zinc-800 italic uppercase text-center py-4">Nessun impegno per questo giorno</p>
           )}
         </div>
       </div>

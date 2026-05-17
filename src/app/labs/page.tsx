@@ -21,19 +21,19 @@ const labCategories = [
     tags: ["WRITING", "FLOW", "LIVE"]
   },
   {
-    title: "BEAT_MAKING",
+    title: "BEAT MAKING",
     icon: <Music size={24} />,
     description: "Dalla creazione del sample alla struttura del beat. I ragazzi imparano a produrre le proprie basi utilizzando software professionali.",
     tags: ["PRODUCTION", "DAW", "SOUND"]
   },
   {
-    title: "URBAN_ARTS",
+    title: "URBAN ARTS",
     icon: <Palette size={24} />,
     description: "Non solo musica. Esploriamo il mondo dei graffiti, della grafica e della fotografia per dare un'identità visiva ai progetti della Factory.",
     tags: ["GRAFFITI", "GRAPHIC", "PHOTO"]
   },
   {
-    title: "COMMUNITY_HUB",
+    title: "COMMUNITY HUB",
     icon: <Users size={24} />,
     description: "Incontri aperti, dibattiti e momenti di aggregazione. Il laboratorio fisico dove le idee circolano e nascono nuove collaborazioni.",
     tags: ["MEETING", "ROZZANO", "CO-WORKING"]
@@ -56,7 +56,7 @@ export default function LabsPage() {
           
         {/* TASTO BACK CON TESTO ARANCIONE */}
           <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
-            <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
+            <ArrowLeft size={14} className="text-[#FF914D]" /> INDIETRO
           </Link>
         </div>
         
@@ -74,7 +74,7 @@ export default function LabsPage() {
             UTTF_<span className="text-[#FF914D]">LABS<br /></span>
           </h1>
           <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">
-            Attività per la Comunità
+            Attivita per la comunita
           </p>
         </div>
       </header>
@@ -158,7 +158,7 @@ export default function LabsPage() {
               Vuoi partecipare anche tu?
             </h2>
             <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] mb-8">
-              I nostri laboratori sono aperti a tutti i ragazzi del territorio. Contattaci per scoprire come unirti alla UTTFactory.
+              I nostri laboratori sono aperti ai ragazzi del territorio. Scrivici e capiamo insieme qual e il percorso giusto per entrare nella Factory.
             </p>
             <a 
               href="https://forms.gle/gbkbEvaavFaHFkkG9" 
@@ -175,7 +175,7 @@ export default function LabsPage() {
 
       <footer className="py-24 text-center opacity-20">
         <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
-          UTTF_LAB_ARCHIVE_2026 // ROZZANO
+          UTTF labs / Rozzano / 2026
         </p>
       </footer>
     </div>

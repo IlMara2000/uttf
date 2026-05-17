@@ -8,6 +8,7 @@ import {
   ORGANIZATION_NAME,
   SITE_NAME,
   SITE_URL,
+  SOCIAL_LINKS,
   organizationJsonLd,
   websiteJsonLd,
 } from './seo';
@@ -19,26 +20,39 @@ const geist = Geist_Mono({ subsets: ['latin'], variable: '--font-mono' });
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${ORGANIZATION_NAME} | Associazione di volontariato`,
-    template: `%s | UTTF ODV`,
+    default: ORGANIZATION_NAME,
+    template: `%s | UTTF`,
   },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
   keywords: [
     'Under The Tower Factory',
     'UTTF',
-    'associazione di volontariato',
-    'ODV Rozzano',
+    'Under The Tower Factory Rozzano',
+    'community hub Rozzano',
+    'Under The Tower Rozzano',
     'laboratori creativi Rozzano',
+    'RAPF*CKTORY',
+    'RAPFCKTORY',
+    'rap lab Rozzano',
+    'open mic Milano',
+    'open mic Rozzano',
     'arte urbana',
+    'arte a km 0',
+    'galleria arte Rozzano',
     'rap',
     'beat making',
+    'laboratori rap',
+    'hip hop Rozzano',
+    'hip hop Milano',
+    'cultura urbana Milano',
+    'eventi culturali Rozzano',
     'community hub',
   ],
   authors: [{ name: ORGANIZATION_NAME, url: SITE_URL }],
   creator: ORGANIZATION_NAME,
   publisher: ORGANIZATION_NAME,
-  category: 'Nonprofit organization',
+  category: 'Community organization',
   alternates: {
     canonical: '/',
     languages: {
@@ -46,7 +60,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: `${ORGANIZATION_NAME} | Associazione di volontariato`,
+    title: ORGANIZATION_NAME,
     description: DEFAULT_DESCRIPTION,
     url: '/',
     siteName: SITE_NAME,
@@ -57,15 +71,25 @@ export const metadata: Metadata = {
         url: DEFAULT_OG_IMAGE,
         width: 1536,
         height: 1024,
-        alt: `${SITE_NAME} - ODV a Rozzano`,
+        alt: `${SITE_NAME} - Community hub creativo a Rozzano`,
       },
     ],
   },
+  other: {
+    'profile:username': 'under_the_tower_factory',
+    'instagram:creator': '@under_the_tower_factory',
+    'same-as': SOCIAL_LINKS.join(', '),
+  },
   twitter: {
     card: 'summary_large_image',
-    title: `${ORGANIZATION_NAME} | Associazione di volontariato`,
+    title: ORGANIZATION_NAME,
     description: DEFAULT_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE],
+  },
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: 'black-translucent',
   },
   robots: {
     index: true,
@@ -84,7 +108,8 @@ export const metadata: Metadata = {
       { url: '/icons/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
       { url: '/icons/favicon.svg', type: 'image/svg+xml' },
     ],
-    apple: [{ url: '/icons/apple-touch-icon.png' }],
+    shortcut: ['/icons/favicon.ico'],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   manifest: '/icons/site.webmanifest',
 };
@@ -98,7 +123,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         
         {/* SFONDO PERENNE - IL TUO BLACK HOLE */}
         <div 
-          className="fixed inset-0 z-[-10] w-full h-full bg-cover bg-center bg-no-repeat"
+          className="uttf-bg-motion fixed -inset-6 z-[-10] bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/bg-uttf.jpg')" }}
         >
           {/* Overlay scuro per far risaltare il contenuto */}

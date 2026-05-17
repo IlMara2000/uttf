@@ -90,7 +90,7 @@ export default function ReviewsSection() {
 
   const handleDeleteReview = async (id: number) => {
     if (!staffAccessToken) return;
-    if (!confirm('ELIMINARE_REVIEW?')) return;
+    if (!confirm('Vuoi eliminare questa recensione?')) return;
 
     setDeletingReviewId(id);
 
@@ -118,7 +118,7 @@ export default function ReviewsSection() {
 
       await fetchReviews();
     } catch (error) {
-      alert(`ERRORE_CANCELLAZIONE_REVIEW: ${getErrorMessage(error)}`);
+      alert(`Non sono riuscito a eliminare la recensione: ${getErrorMessage(error)}`);
     } finally {
       setDeletingReviewId(null);
     }
@@ -130,15 +130,15 @@ export default function ReviewsSection() {
         <div className="flex items-center gap-3 text-[#FF914D]">
           <MessageSquareQuote size={20} />
           <span className="font-mono text-[10px] uppercase tracking-[0.5em]">
-            UTTF_REVIEWS
+            Voci dalla community
           </span>
         </div>
         <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter">
           PARERI <span className="text-[#FF914D]">REALI</span>
         </h2>
-        <p className="max-w-2xl text-[11px] font-mono uppercase tracking-[0.25em] text-zinc-500">
-          In alto vedi le 3 recensioni piu forti. Se scorri, sotto trovi tutta la
-          timeline completa dalla piu recente alla piu vecchia.
+        <p className="max-w-2xl text-[11px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+          Qui trovi i pareri piu belli della community. Scorrendo trovi anche tutte
+          le altre recensioni, dalle ultime arrivate a quelle piu vecchie.
         </p>
       </div>
 
@@ -149,7 +149,7 @@ export default function ReviewsSection() {
       ) : loadError ? (
         <div className="glass-panel rounded-[2rem] border-red-500/10 bg-red-950/10 p-10 text-center">
           <p className="text-[10px] font-mono uppercase tracking-[0.4em] text-red-300">
-            RECENSIONI_NON_DISPONIBILI
+          Recensioni non disponibili
           </p>
           <p className="mt-3 text-xs font-mono uppercase tracking-[0.2em] text-zinc-500">
             {loadError}
@@ -172,7 +172,7 @@ export default function ReviewsSection() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[10px] font-mono uppercase tracking-[0.35em] text-zinc-500">
-                      Top Review
+                      In evidenza
                     </p>
                     <h3 className="mt-2 text-lg font-black uppercase italic tracking-tight">
                       {review.author_name}
@@ -230,7 +230,7 @@ export default function ReviewsSection() {
                   <div className="relative inline-flex items-center gap-3 px-6 py-3 bg-[#FF914D]/15 backdrop-blur-xl border-2 border-[#FF914D]/40 rounded-full text-white">
                     <Star size={16} className="text-white" />
                     <span className="font-mono text-[10px] font-bold tracking-[0.3em] uppercase">
-                      Lascia_Recensione
+                      Lascia una recensione
                     </span>
                     <ArrowRight size={14} className="text-zinc-300 group-hover:text-white transition-colors" />
                   </div>

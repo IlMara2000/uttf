@@ -86,11 +86,15 @@ export default function MobileNav() {
               {/* ALTRI TASTI NAVIGAZIONE */}
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
+                const isDashboardHomeButton = showAsDashboard && item.href === '/';
+
                 return (
                   <Link 
                     key={item.href} 
                     href={item.href}
-                    className="relative p-3.5 rounded-full transition-all flex flex-col items-center justify-center min-w-[58px]"
+                    className={`relative flex min-w-[58px] flex-col items-center justify-center rounded-full p-3.5 transition-all ${
+                      isDashboardHomeButton ? 'bg-[#FF914D] text-white shadow-[0_0_20px_rgba(255,145,77,0.35)]' : ''
+                    }`}
                   >
                     {/* IL PALLINO ARANCIONE (Appare solo se la rotta è attiva) */}
                     {isActive && (
@@ -103,9 +107,11 @@ export default function MobileNav() {
                     
                     {/* L'ICONA */}
                     <span className={`relative z-10 transition-all duration-300 ${
-                      isActive 
-                        ? 'text-white scale-110' 
-                        : 'text-zinc-500 hover:text-white'
+                      isDashboardHomeButton
+                        ? 'text-white scale-110'
+                        : isActive
+                          ? 'text-white scale-110'
+                          : 'text-zinc-500 hover:text-white'
                     }`}>
                       {item.icon}
                     </span>

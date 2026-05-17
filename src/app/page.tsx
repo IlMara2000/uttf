@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence, Variants, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   Loader2, 
   X, 
@@ -37,163 +37,6 @@ const FALLBACK_PUBLICATIONS: Publication[] = [
   },
 ];
 
-const SHAKE_DURATION_MS = 3600;
-
-type ShakeIconKey = 'feed' | 'labs' | 'team' | 'gallery' | 'map';
-type ShakePoint = readonly [number, number];
-type MotionPermissionEvent = typeof DeviceMotionEvent & {
-  requestPermission?: () => Promise<PermissionState>;
-};
-
-type ShakeAction = {
-  key: ShakeIconKey;
-  eyebrow: string;
-  label: string;
-  hint: string;
-  home: ShakePoint;
-  path: readonly [ShakePoint, ShakePoint, ShakePoint, ShakePoint];
-};
-
-const SHAKE_ACTIONS: readonly ShakeAction[] = [
-  {
-    key: 'feed',
-    eyebrow: 'hub',
-    label: 'Feed UTTF',
-    hint: 'post + stream',
-    home: [40, 50],
-    path: [[14, 19], [82, 28], [21, 78], [62, 36]],
-  },
-  {
-    key: 'labs',
-    eyebrow: 'lab',
-    label: 'Rap Lab',
-    hint: 'lab rap e call',
-    home: [60, 50],
-    path: [[84, 16], [18, 34], [78, 76], [39, 27]],
-  },
-  {
-    key: 'team',
-    eyebrow: 'team',
-    label: 'Team',
-    hint: 'chi siamo',
-    home: [33, 70],
-    path: [[23, 88], [74, 18], [12, 52], [57, 82]],
-  },
-  {
-    key: 'gallery',
-    eyebrow: 'arte',
-    label: 'KM0',
-    hint: 'vetrina',
-    home: [67, 70],
-    path: [[78, 86], [17, 23], [88, 48], [43, 81]],
-  },
-  {
-    key: 'map',
-    eyebrow: 'map',
-    label: 'Mappa',
-    hint: 'posizione',
-    home: [50, 83],
-    path: [[50, 15], [12, 62], [88, 66], [48, 31]],
-  },
-];
-
-function ShakeActionIcon({ icon }: { icon: ShakeIconKey }) {
-  switch (icon) {
-    case 'feed':
-      return <Radio size={18} />;
-    case 'labs':
-      return <FlaskConical size={18} />;
-    case 'team':
-      return <Users size={18} />;
-    case 'gallery':
-      return <ImageIcon size={18} />;
-    case 'map':
-      return <MapPin size={18} />;
-  }
-}
-
-function ShakeChaosOverlay() {
-  return (
-    <motion.div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[120] overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.22 }}
-    >
-      <svg className="absolute inset-0 h-full w-full">
-        {SHAKE_ACTIONS.map((action, index) => {
-          const points = [action.home, ...action.path, action.home];
-          const xs = points.map(([x]) => `${x}%`);
-          const ys = points.map(([, y]) => `${y}%`);
-
-          return (
-            <motion.line
-              key={`${action.key}-wire`}
-              x1="50%"
-              y1="58%"
-              x2={`${action.home[0]}%`}
-              y2={`${action.home[1]}%`}
-              stroke="#FF914D"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeDasharray="7 9"
-              initial={{ opacity: 0 }}
-              animate={{ x2: xs, y2: ys, opacity: [0, 0.72, 0.62, 0.68, 0.5, 0] }}
-              transition={{
-                duration: SHAKE_DURATION_MS / 1000,
-                ease: 'easeInOut',
-                repeat: 0,
-                times: [0, 0.18, 0.38, 0.62, 0.82, 1],
-                delay: index * 0.03,
-              }}
-            />
-          );
-        })}
-      </svg>
-
-      {SHAKE_ACTIONS.map((action, index) => {
-        const points = [action.home, ...action.path, action.home];
-        const xs = points.map(([x]) => `${x}%`);
-        const ys = points.map(([, y]) => `${y}%`);
-
-        return (
-          <motion.div
-            key={action.key}
-            className="fixed flex h-12 w-36 items-center gap-2 rounded-full border border-[#FF914D]/65 bg-black/70 px-2 text-white shadow-[0_20px_45px_rgba(0,0,0,0.7),0_0_34px_rgba(255,145,77,0.24),inset_0_0_18px_rgba(255,145,77,0.12)] backdrop-blur-xl"
-            style={{ x: '-50%', y: '-50%', left: `${action.home[0]}%`, top: `${action.home[1]}%` }}
-            initial={{ opacity: 0, scale: 0.72, rotate: 0 }}
-            animate={{
-              left: xs,
-              top: ys,
-              opacity: [0, 1, 1, 1, 0.96, 0],
-              rotate: [0, -18, 16, -10, 12, 0],
-              scale: [0.72, 1.06, 0.94, 1.08, 0.98, 0.72],
-            }}
-            transition={{
-              duration: SHAKE_DURATION_MS / 1000,
-              ease: 'easeInOut',
-              repeat: 0,
-              times: [0, 0.18, 0.38, 0.62, 0.82, 1],
-              delay: index * 0.03,
-            }}
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/55 bg-[#FF914D]/18 text-[#FF914D]">
-              <ShakeActionIcon icon={action.key} />
-            </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="font-mono text-[7px] uppercase tracking-[0.28em] text-[#FF914D]/80">{action.eyebrow}</span>
-              <span className="truncate text-[11px] font-black uppercase italic leading-tight">{action.label}</span>
-              <span className="truncate font-mono text-[7px] uppercase tracking-[0.08em] text-white/52">{action.hint}</span>
-            </span>
-          </motion.div>
-        );
-      })}
-    </motion.div>
-  );
-}
-
 type RevealActionProps = {
   href?: string;
   onClick?: () => void;
@@ -222,31 +65,31 @@ function RevealAction({
   delay = 0,
 }: RevealActionProps) {
   const actionClass = [
-    'group relative flex h-16 w-[9.9rem] items-center gap-3 overflow-hidden rounded-full border border-[#FF914D]/42 bg-black/50 px-2.5 text-white shadow-[0_20px_50px_rgba(0,0,0,0.62),inset_0_1px_0_rgba(255,255,255,0.15),inset_0_0_28px_rgba(255,145,77,0.1)] backdrop-blur-2xl sm:w-44 md:h-[4.35rem] md:w-[12.5rem]',
-    'transition-[width,border-color,background-color,box-shadow] duration-500 ease-out hover:w-[11.75rem] hover:border-[#FF914D]/80 hover:bg-[#FF914D]/12 hover:shadow-[0_24px_62px_rgba(0,0,0,0.7),0_0_42px_rgba(255,145,77,0.26),inset_0_0_34px_rgba(255,145,77,0.16)] active:w-[11.75rem] focus-visible:w-[11.75rem] sm:hover:w-60 sm:active:w-60 sm:focus-visible:w-60 md:hover:w-72 md:active:w-72 md:focus-visible:w-72',
+    'group relative flex h-[4.25rem] w-[10.4rem] items-center gap-3 overflow-hidden rounded-full border border-[#FF914D]/68 bg-[#2a1208]/72 px-3 text-white shadow-[0_18px_38px_rgba(0,0,0,0.58),0_0_24px_rgba(255,145,77,0.14),inset_0_1px_0_rgba(255,255,255,0.16),inset_0_0_24px_rgba(255,145,77,0.16)] backdrop-blur-md sm:w-[11.6rem] md:h-[4.55rem] md:w-[12.7rem]',
+    'transition-[width,border-color,background-color,box-shadow] duration-500 ease-out hover:w-[12.6rem] hover:border-[#FF914D] hover:bg-[#FF914D]/22 hover:shadow-[0_24px_52px_rgba(0,0,0,0.64),0_0_36px_rgba(255,145,77,0.34),inset_0_0_28px_rgba(255,145,77,0.2)] active:w-[12.6rem] focus-visible:w-[12.6rem] sm:hover:w-[15.7rem] sm:active:w-[15.7rem] sm:focus-visible:w-[15.7rem] md:hover:w-[18.2rem] md:active:w-[18.2rem] md:focus-visible:w-[18.2rem]',
     reverse ? 'flex-row-reverse text-right' : 'text-left',
   ].join(' ');
 
   const content = (
     <>
-      <span className="pointer-events-none absolute inset-y-2 left-3 w-10 rounded-full bg-[#FF914D]/12 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+      <span className={`pointer-events-none absolute inset-y-2 w-12 rounded-full bg-[#FF914D]/24 blur-lg transition-opacity duration-500 group-hover:opacity-100 ${reverse ? 'right-3' : 'left-3'}`} />
       <motion.span
-        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/45 bg-[#FF914D]/16 text-[#FF914D] shadow-[inset_0_0_20px_rgba(255,145,77,0.18)] md:h-12 md:w-12"
+        className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/70 bg-[#FF914D]/28 text-[#FF914D] shadow-[0_0_18px_rgba(255,145,77,0.22),inset_0_0_18px_rgba(255,145,77,0.22)] md:h-[3.15rem] md:w-[3.15rem]"
         animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.04, 1] }}
-        transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay }}
+        transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut', delay }}
       >
-        <span className="absolute inset-1 rounded-full bg-white/10 blur-[2px]" />
+        <span className="absolute inset-1 rounded-full bg-white/14 blur-[2px]" />
         <span className="relative z-10">{icon}</span>
       </motion.span>
-      <span className={`relative z-10 flex min-w-0 flex-1 flex-col ${reverse ? 'items-end' : 'items-start'}`}>
-        <span className="mb-0.5 w-full truncate whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.34em] text-[#FF914D]/72">
+      <span className={`relative z-10 flex min-w-0 flex-1 flex-col ${reverse ? 'items-end pl-1' : 'items-start pr-1'}`}>
+        <span className="mb-0.5 w-full truncate whitespace-nowrap font-mono text-[7.7px] uppercase tracking-[0.3em] text-[#FF914D]">
           {eyebrow}
         </span>
-        <span className="w-full truncate whitespace-nowrap text-[11px] font-black uppercase italic leading-none tracking-tight text-white md:text-xs">
+        <span className="w-full truncate whitespace-nowrap text-[12px] font-black uppercase italic leading-none tracking-tight text-white md:text-[13px]">
           <span className="group-hover:hidden group-active:hidden group-focus-visible:hidden">{compactLabel}</span>
           <span className="hidden group-hover:inline group-active:inline group-focus-visible:inline">{label}</span>
         </span>
-        <span className="mt-1 w-full truncate whitespace-nowrap font-mono text-[7px] uppercase tracking-[0.1em] text-white/50 transition-colors duration-500 group-hover:text-white/72">
+        <span className="mt-1 w-full truncate whitespace-nowrap font-mono text-[7.7px] uppercase tracking-[0.08em] text-white/62 transition-colors duration-500 group-hover:text-white/82">
           {hint}
         </span>
       </span>
@@ -257,9 +100,9 @@ function RevealAction({
   const motionProps = {
     className: outerClassName,
     style: center ? { x: '-50%' } : undefined,
-    animate: { y: [0, -5, 0] },
-    transition: { duration: 5.2, repeat: Infinity, ease: 'easeInOut' as const, delay },
-    whileHover: { scale: 1.035 },
+    animate: { y: [0, -3, 0] },
+    transition: { duration: 6.8, repeat: Infinity, ease: 'easeInOut' as const, delay },
+    whileHover: { scale: 1.025 },
     whileTap: { scale: 0.97 },
   };
 
@@ -287,106 +130,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<Publication | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
-  const [isShakeMode, setIsShakeMode] = useState(false);
-  const [shakeBurstId, setShakeBurstId] = useState(0);
-  const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastShakeAtRef = useRef(0);
-  const lastMotionMagnitudeRef = useRef<number | null>(null);
+  const logoSceneRef = useRef<HTMLDivElement | null>(null);
+  const logoPointerFrameRef = useRef<number | null>(null);
 
   const PROJECT_ID = 'oieqtrfeoyfabyjirrqa'; 
   const BUCKET_NAME = 'publications'; 
-
-  const introPointerX = useMotionValue(0);
-  const introPointerY = useMotionValue(0);
-  const introTextX = useSpring(useTransform(introPointerX, [-0.5, 0.5], [-12, 12]), { stiffness: 120, damping: 22 });
-  const introTextY = useSpring(useTransform(introPointerY, [-0.5, 0.5], [-8, 8]), { stiffness: 120, damping: 22 });
-  const introRotateX = useSpring(useTransform(introPointerY, [-0.5, 0.5], [3, -3]), { stiffness: 130, damping: 24 });
-  const introRotateY = useSpring(useTransform(introPointerX, [-0.5, 0.5], [-4, 4]), { stiffness: 130, damping: 24 });
-
-  const logoPointerX = useMotionValue(0);
-  const logoPointerY = useMotionValue(0);
-  const logoRotateX = useSpring(useTransform(logoPointerY, [-0.5, 0.5], [11, -11]), { stiffness: 110, damping: 20 });
-  const logoRotateY = useSpring(useTransform(logoPointerX, [-0.5, 0.5], [-15, 15]), { stiffness: 110, damping: 20 });
-  const logoImageX = useSpring(useTransform(logoPointerX, [-0.5, 0.5], [-22, 22]), { stiffness: 120, damping: 20 });
-  const logoImageY = useSpring(useTransform(logoPointerY, [-0.5, 0.5], [-16, 16]), { stiffness: 120, damping: 20 });
-
-  const triggerShakeBurst = useCallback(() => {
-    setShakeBurstId((current) => current + 1);
-    setIsShakeMode(true);
-
-    if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
-    shakeTimeoutRef.current = setTimeout(() => {
-      setIsShakeMode(false);
-      shakeTimeoutRef.current = null;
-    }, SHAKE_DURATION_MS);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    const motionEvent = window.DeviceMotionEvent as MotionPermissionEvent | undefined;
-    let motionAttached = false;
-    let permissionRequested = false;
-
-    const handleMotion = (event: DeviceMotionEvent) => {
-      const acceleration = event.accelerationIncludingGravity ?? event.acceleration;
-      if (!acceleration) return;
-
-      const x = acceleration.x ?? 0;
-      const y = acceleration.y ?? 0;
-      const z = acceleration.z ?? 0;
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-      const previousMagnitude = lastMotionMagnitudeRef.current ?? magnitude;
-      const delta = Math.abs(magnitude - previousMagnitude);
-      const now = Date.now();
-
-      lastMotionMagnitudeRef.current = magnitude;
-
-      if (((delta > 12 && magnitude > 18) || magnitude > 32) && now - lastShakeAtRef.current > 1800) {
-        lastShakeAtRef.current = now;
-        triggerShakeBurst();
-      }
-    };
-
-    const attachMotion = () => {
-      if (motionAttached) return;
-      window.addEventListener('devicemotion', handleMotion, { passive: true });
-      motionAttached = true;
-    };
-
-    const requestMotionAccess = () => {
-      if (permissionRequested) return;
-      permissionRequested = true;
-
-      if (typeof motionEvent?.requestPermission === 'function') {
-        motionEvent.requestPermission()
-          .then((permission) => {
-            if (permission === 'granted') attachMotion();
-          })
-          .catch(() => {});
-        return;
-      }
-
-      attachMotion();
-    };
-
-    if (typeof motionEvent?.requestPermission === 'function') {
-      window.addEventListener('pointerdown', requestMotionAccess, { passive: true, once: true });
-      window.addEventListener('touchstart', requestMotionAccess, { passive: true, once: true });
-    } else {
-      attachMotion();
-    }
-
-    return () => {
-      window.removeEventListener('pointerdown', requestMotionAccess);
-      window.removeEventListener('touchstart', requestMotionAccess);
-      if (motionAttached) window.removeEventListener('devicemotion', handleMotion);
-    };
-  }, [triggerShakeBurst]);
 
   useEffect(() => {
     async function fetchPublications() {
@@ -404,6 +152,12 @@ export default function HomePage() {
     fetchPublications();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (logoPointerFrameRef.current) cancelAnimationFrame(logoPointerFrameRef.current);
+    };
+  }, []);
+
   const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i);
 
   const visiblePublications = publications.length > 0 ? publications : FALLBACK_PUBLICATIONS;
@@ -414,26 +168,42 @@ export default function HomePage() {
     return `https://${PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${imageUrl}`;
   };
 
-  const updatePointer = (
-    event: PointerEvent<HTMLDivElement>,
-    pointerX: typeof introPointerX,
-    pointerY: typeof introPointerY
-  ) => {
+  const updateLogoPointer = (event: PointerEvent<HTMLDivElement>) => {
+    const scene = logoSceneRef.current;
+    if (!scene) return;
+
     const rect = event.currentTarget.getBoundingClientRect();
-    pointerX.set((event.clientX - rect.left) / rect.width - 0.5);
-    pointerY.set((event.clientY - rect.top) / rect.height - 0.5);
+    const pointerX = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const pointerY = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+
+    if (logoPointerFrameRef.current) cancelAnimationFrame(logoPointerFrameRef.current);
+    logoPointerFrameRef.current = requestAnimationFrame(() => {
+      scene.style.setProperty('--pointer-x', pointerX.toFixed(3));
+      scene.style.setProperty('--pointer-y', pointerY.toFixed(3));
+    });
+  };
+
+  const resetLogoPointer = () => {
+    const scene = logoSceneRef.current;
+    if (!scene) return;
+
+    if (logoPointerFrameRef.current) cancelAnimationFrame(logoPointerFrameRef.current);
+    logoPointerFrameRef.current = requestAnimationFrame(() => {
+      scene.style.setProperty('--pointer-x', '0');
+      scene.style.setProperty('--pointer-y', '0');
+    });
   };
 
   // Tipizzazione esplicita come Variants per risolvere l'errore di build
   const pulseGlow: Variants = {
     animate: {
       boxShadow: [
-        "0 0 20px 0px rgba(255, 145, 77, 0.2)",
-        "0 0 40px 10px rgba(255, 145, 77, 0.4)",
-        "0 0 20px 0px rgba(255, 145, 77, 0.2)"
+        "0 0 18px 0px rgba(255, 145, 77, 0.12)",
+        "0 0 30px 4px rgba(255, 145, 77, 0.22)",
+        "0 0 18px 0px rgba(255, 145, 77, 0.12)"
       ],
       transition: {
-        duration: 3,
+        duration: 5,
         repeat: Infinity,
         ease: "easeInOut"
       }
@@ -479,30 +249,19 @@ export default function HomePage() {
 
             {/* SEZIONE COS'È - GLASSMORPHISM RESTYLE */}
             <motion.div 
-              className="relative isolate w-full max-w-5xl mb-5 overflow-hidden rounded-[1.65rem] border border-[#FF914D]/45 bg-black/70 px-5 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.68),0_0_58px_rgba(255,145,77,0.18),inset_0_1px_0_rgba(255,255,255,0.16),inset_18px_16px_34px_rgba(255,255,255,0.045),inset_-20px_-24px_46px_rgba(0,0,0,0.46)] backdrop-blur-2xl sm:p-8 md:mb-8 md:rounded-[2rem] md:p-14 md:shadow-[0_42px_120px_rgba(0,0,0,0.74),0_0_110px_rgba(255,145,77,0.26),inset_0_1px_0_rgba(255,255,255,0.18),inset_24px_20px_46px_rgba(255,255,255,0.06),inset_-28px_-32px_62px_rgba(0,0,0,0.48)]"
+              className="relative isolate w-full max-w-5xl mb-5 overflow-hidden rounded-[1.65rem] border border-[#FF914D]/36 bg-black/68 px-5 py-7 shadow-[0_20px_48px_rgba(0,0,0,0.58),0_0_34px_rgba(255,145,77,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md sm:p-8 md:mb-8 md:rounded-[2rem] md:p-14"
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.5 }}
               variants={pulseGlow}
               animate="animate"
-              onPointerMove={(event) => updatePointer(event, introPointerX, introPointerY)}
-              onPointerLeave={() => {
-                introPointerX.set(0);
-                introPointerY.set(0);
-              }}
-              style={{
-                rotateX: introRotateX,
-                rotateY: introRotateY,
-                transformPerspective: 1100,
-                transformStyle: 'preserve-3d',
-              }}
             >
               {/* Grain Texture Overlay */}
               <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_34%_24%,rgba(255,255,255,0.2),transparent_18%),radial-gradient(circle_at_74%_72%,rgba(255,145,77,0.22),transparent_31%),radial-gradient(circle_at_center,rgba(255,145,77,0.1),rgba(42,22,18,0.72)_56%,rgba(0,0,0,0.9))]" />
               <div className="absolute inset-0 rounded-[inherit] bg-[url('/images/noise.svg')] opacity-20 mix-blend-soft-light pointer-events-none" />
               <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/55 to-transparent" />
-              <div className="pointer-events-none absolute -left-24 -top-28 hidden h-72 w-72 rounded-full bg-white/12 blur-3xl md:block" />
-              <div className="pointer-events-none absolute -right-28 bottom-0 hidden h-80 w-80 rounded-full bg-[#FF914D]/24 blur-3xl md:block" />
+              <div className="pointer-events-none absolute -left-24 -top-28 hidden h-72 w-72 rounded-full bg-white/8 blur-2xl md:block" />
+              <div className="pointer-events-none absolute -right-28 bottom-0 hidden h-80 w-80 rounded-full bg-[#FF914D]/14 blur-2xl md:block" />
               <div className="pointer-events-none absolute inset-2 rounded-[1.25rem] border border-white/12 shadow-[inset_0_0_38px_rgba(255,255,255,0.05)] md:inset-4 md:rounded-[1.55rem]" />
               <div
                 aria-hidden="true"
@@ -517,12 +276,6 @@ export default function HomePage() {
               
               <motion.div
                 className="relative z-10 mx-auto max-w-4xl"
-                style={{
-                  x: introTextX,
-                  y: introTextY,
-                  transformStyle: 'preserve-3d',
-                  translateZ: 44,
-                }}
               >
                 <h3 className="text-[1.45rem] leading-tight md:text-4xl font-black uppercase italic mb-5 md:mb-7 text-center tracking-tighter text-[#FF914D] drop-shadow-[0_0_22px_rgba(255,145,77,0.28)]">
                   COS&apos;È UNDER THE TOWER?
@@ -533,44 +286,22 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
 
-            <div className="relative z-20 mb-3 flex w-full max-w-5xl flex-col items-center md:mb-8">
-              <div className="h-8 w-px bg-gradient-to-b from-[#FF914D]/55 via-[#FF914D]/18 to-transparent md:h-10" />
-              <div className="relative flex w-full max-w-[22rem] items-center justify-center gap-2 px-1 sm:max-w-xl sm:gap-6">
-                <div className="pointer-events-none absolute left-1/2 top-1/2 h-px w-[72%] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#FF914D]/28 to-transparent" />
-                <RevealAction
-                  href="/feed"
-                  icon={<Radio size={20} />}
-                  eyebrow="hub"
-                  label="Under The Tower"
-                  compactLabel="Feed UTTF"
-                  hint="post + stream"
-                  className="justify-self-end"
-                  delay={0.15}
-                />
-                <RevealAction
-                  href="/labs"
-                  icon={<FlaskConical size={20} />}
-                  eyebrow="lab"
-                  label="RAPF*CKTORY"
-                  compactLabel="Rap Lab"
-                  hint="lab rap e call"
-                  reverse
-                  delay={0.55}
-                />
-              </div>
-            </div>
           </motion.div>
         </section>
         
           {/* NUCLEO 3D SOPRA LA SEZIONE NEWS */}
-          <div className="relative isolate flex w-full justify-center overflow-visible px-0 pb-20 pt-0 mb-8 md:px-4 md:pb-6 md:pt-2 md:mb-20">
+          <div
+            className="relative isolate flex w-full justify-center overflow-visible px-0 pb-20 pt-0 mb-8 md:px-4 md:pb-6 md:pt-2 md:mb-20"
+            onPointerMove={updateLogoPointer}
+            onPointerLeave={resetLogoPointer}
+          >
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-[48%] -z-10 h-[34rem] w-[185vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,145,77,0.24)_0%,rgba(255,145,77,0.13)_26%,rgba(12,7,4,0.24)_52%,transparent_78%)] blur-2xl md:hidden"
+              className="pointer-events-none absolute left-1/2 top-[48%] -z-10 h-[32rem] w-[170vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,145,77,0.18)_0%,rgba(255,145,77,0.1)_28%,rgba(12,7,4,0.2)_52%,transparent_78%)] blur-xl md:hidden"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-[48%] -z-10 h-[25rem] w-[118vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08),rgba(255,145,77,0.1)_34%,transparent_72%)] blur-[54px] md:hidden"
+              className="pointer-events-none absolute left-1/2 top-[48%] -z-10 h-[23rem] w-[108vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06),rgba(255,145,77,0.08)_34%,transparent_72%)] blur-2xl md:hidden"
             />
             <div
               aria-hidden="true"
@@ -582,16 +313,43 @@ export default function HomePage() {
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-x-[-18vw] -top-20 bottom-[-6rem] -z-10 hidden bg-[radial-gradient(ellipse_at_center,rgba(38,69,97,0.12),transparent_58%)] blur-3xl md:block"
+              className="pointer-events-none absolute inset-x-[-18vw] -top-20 bottom-[-6rem] -z-10 hidden bg-[radial-gradient(ellipse_at_center,rgba(38,69,97,0.09),transparent_58%)] blur-2xl md:block"
             />
             <div
-              className="relative h-[430px] w-full max-w-[680px] sm:h-[500px] md:h-[580px]"
-              onPointerMove={(event) => updatePointer(event, logoPointerX, logoPointerY)}
-              onPointerLeave={() => {
-                logoPointerX.set(0);
-                logoPointerY.set(0);
-              }}
+              ref={logoSceneRef}
+              className="relative h-[500px] w-full max-w-[760px] sm:h-[540px] md:h-[640px]"
             >
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-[47%] hidden h-[72%] w-[112%] rounded-full border border-white/10 opacity-60 transition-transform duration-150 ease-out md:block"
+                style={{
+                  transform: 'translate(calc(-50% + var(--pointer-x, 0) * -18px), calc(-50% + var(--pointer-y, 0) * -12px)) rotateX(66deg) rotateZ(-8deg)',
+                  boxShadow: '0 0 42px rgba(255,145,77,0.08), inset 0 0 32px rgba(255,255,255,0.04)',
+                }}
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-[47%] hidden h-[58%] w-[92%] rounded-full border border-[#FF914D]/18 opacity-70 transition-transform duration-150 ease-out md:block"
+                style={{
+                  transform: 'translate(calc(-50% + var(--pointer-x, 0) * 16px), calc(-50% + var(--pointer-y, 0) * 10px)) rotateX(58deg) rotateZ(16deg)',
+                  boxShadow: '0 0 36px rgba(255,145,77,0.12)',
+                }}
+              />
+              {[0, 1].map((dot) => (
+                <motion.div
+                  key={`orbit-dot-${dot}`}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-1/2 top-[47%] h-px origin-left"
+                  style={{
+                    width: dot === 0 ? 260 : 340,
+                    transform: `translate(calc(var(--pointer-x, 0) * ${dot === 0 ? -8 : 10}px), calc(var(--pointer-y, 0) * ${dot === 0 ? -5 : 7}px)) rotateX(${dot === 0 ? 66 : 58}deg)`,
+                  }}
+                  animate={{ rotate: dot === 0 ? 360 : -360 }}
+                  transition={{ duration: dot === 0 ? 22 : 34, repeat: Infinity, ease: 'linear' }}
+                >
+                  <span className="absolute right-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#FF914D] shadow-[0_0_18px_rgba(255,145,77,0.75)]" />
+                </motion.div>
+              ))}
               {[0, 1, 2, 3].map((ring) => (
                 <motion.div
                   key={ring}
@@ -605,7 +363,7 @@ export default function HomePage() {
                   }}
                   animate={{ rotate: ring % 2 === 0 ? 360 : -360 }}
                   transition={{
-                    duration: 18 + ring * 6,
+                    duration: 28 + ring * 8,
                     repeat: Infinity,
                     ease: 'linear',
                   }}
@@ -616,8 +374,8 @@ export default function HomePage() {
                       borderColor: ring === 1 ? 'rgba(255,145,77,0.52)' : 'rgba(255,145,77,0.24)',
                       transform: `rotateX(${62 + ring * 4}deg) rotateZ(${ring * 18}deg)`,
                       boxShadow: ring === 1
-                        ? '0 0 58px rgba(255,145,77,0.26), inset 0 0 38px rgba(255,145,77,0.22)'
-                        : '0 0 40px rgba(255,145,77,0.12), inset 0 0 28px rgba(255,145,77,0.1)',
+                        ? '0 0 34px rgba(255,145,77,0.18), inset 0 0 24px rgba(255,145,77,0.16)'
+                        : '0 0 24px rgba(255,145,77,0.08), inset 0 0 18px rgba(255,145,77,0.08)',
                     }}
                   />
                 </motion.div>
@@ -630,7 +388,7 @@ export default function HomePage() {
                 label="Conosci il nostro team"
                 compactLabel="Team"
                 hint="chi siamo"
-                className="absolute left-0 top-[7%] z-40 sm:left-5 md:left-10 md:top-[25%]"
+                className="absolute left-[2%] top-[10%] z-40 sm:left-[7%] md:left-[5%] md:top-[20%]"
                 delay={0.9}
               />
 
@@ -641,9 +399,32 @@ export default function HomePage() {
                 label="Arte a KM 0"
                 compactLabel="KM0"
                 hint="vetrina"
-                className="absolute right-0 top-[7%] z-40 sm:right-5 md:right-10 md:top-[25%]"
+                className="absolute right-[2%] top-[10%] z-40 sm:right-[7%] md:right-[5%] md:top-[20%]"
                 reverse
                 delay={1.2}
+              />
+
+              <RevealAction
+                href="/feed"
+                icon={<Radio size={20} />}
+                eyebrow="hub"
+                label="Under The Tower"
+                compactLabel="Feed UTTF"
+                hint="post + stream"
+                className="absolute bottom-[22%] left-[3%] z-40 sm:left-[8%] md:bottom-[22%] md:left-[4%]"
+                delay={1.35}
+              />
+
+              <RevealAction
+                href="/labs"
+                icon={<FlaskConical size={20} />}
+                eyebrow="lab"
+                label="RAPF*CKTORY"
+                compactLabel="Rap Lab"
+                hint="lab rap e call"
+                className="absolute bottom-[22%] right-[3%] z-40 sm:right-[8%] md:bottom-[22%] md:right-[4%]"
+                reverse
+                delay={1.48}
               />
 
               <RevealAction
@@ -653,66 +434,56 @@ export default function HomePage() {
                 label="Vieni a trovarci"
                 compactLabel="Mappa"
                 hint="posizione"
-                className="absolute bottom-[3%] left-1/2 z-40 md:bottom-[8%]"
+                className="absolute bottom-[3%] left-1/2 z-40 md:bottom-[6%]"
                 center
                 delay={1.55}
               />
 
-              <motion.div
-                className="absolute left-1/2 top-[47%] grid aspect-square w-[286px] place-items-center rounded-full border border-[#FF914D]/38 bg-[radial-gradient(circle_at_34%_25%,rgba(255,255,255,0.36),transparent_15%),radial-gradient(circle_at_68%_74%,rgba(255,145,77,0.35),transparent_27%),radial-gradient(circle_at_center,rgba(255,145,77,0.29),rgba(62,32,22,0.88)_55%,rgba(0,0,0,0.9))] shadow-[0_58px_120px_rgba(0,0,0,0.78),0_0_160px_rgba(255,145,77,0.34),inset_0_0_102px_rgba(255,145,77,0.2),inset_28px_24px_52px_rgba(255,255,255,0.09),inset_-34px_-38px_70px_rgba(0,0,0,0.54)] backdrop-blur-xl sm:w-[360px] md:top-1/2 md:w-[460px]"
+              <div
+                className="absolute left-1/2 top-[47%] grid aspect-square w-[292px] place-items-center transition-transform duration-150 ease-out sm:w-[368px] md:top-[48%] md:w-[460px]"
                 style={{
-                  x: '-50%',
-                  y: '-50%',
-                  rotateX: logoRotateX,
-                  rotateY: logoRotateY,
-                  transformPerspective: 1200,
+                  transform: 'translate(-50%, -50%) perspective(1200px) rotateX(calc(var(--pointer-y, 0) * -5deg)) rotateY(calc(var(--pointer-x, 0) * 7deg))',
                   transformStyle: 'preserve-3d',
                 }}
+              >
+              <motion.div
+                className="relative grid h-full w-full place-items-center overflow-hidden rounded-full border border-[#FF914D]/32 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.42),transparent_13%),radial-gradient(circle_at_72%_76%,rgba(255,145,77,0.42),transparent_30%),radial-gradient(circle_at_48%_45%,rgba(255,145,77,0.28),transparent_44%),radial-gradient(circle_at_center,rgba(255,145,77,0.34),rgba(72,30,17,0.86)_56%,rgba(7,5,4,0.95))] shadow-[0_46px_90px_rgba(0,0,0,0.72),0_0_96px_rgba(255,145,77,0.34),inset_0_0_68px_rgba(255,255,255,0.08),inset_0_0_100px_rgba(255,145,77,0.22),inset_24px_22px_42px_rgba(255,255,255,0.1),inset_-30px_-34px_58px_rgba(0,0,0,0.54)] backdrop-blur-md"
                 animate={{
-                  scale: [1, 1.025, 1],
-                  boxShadow: [
-                    '0 58px 120px rgba(0,0,0,0.78),0 0 112px rgba(255,145,77,0.22),inset 0 0 88px rgba(255,145,77,0.16)',
-                    '0 72px 150px rgba(0,0,0,0.84),0 0 172px rgba(255,145,77,0.4),inset 0 0 118px rgba(255,145,77,0.26)',
-                    '0 58px 120px rgba(0,0,0,0.78),0 0 112px rgba(255,145,77,0.22),inset 0 0 88px rgba(255,145,77,0.16)',
-                  ],
+                  scale: [1, 1.015, 1],
                 }}
                 transition={{
-                  duration: 5.8,
+                  duration: 7.2,
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
               >
-                <div className="absolute inset-[-18%] rounded-full border border-[#FF914D]/24 [transform:rotateX(72deg)_translateZ(20px)]" />
-                <div className="absolute inset-[-8%] rounded-full border border-white/8 [transform:rotateX(48deg)_rotateZ(-18deg)]" />
-                <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.2),transparent_33%,rgba(0,0,0,0.38)_76%)]" />
-                <div className="absolute left-[17%] top-[14%] h-[31%] w-[29%] rounded-full bg-white/18 blur-xl" />
-                <div className="absolute left-[28%] top-[26%] h-px w-[52%] rotate-[-6deg] bg-gradient-to-r from-transparent via-white/22 to-transparent" />
-                <div className="absolute inset-7 rounded-full bg-black/12 shadow-[inset_0_0_58px_rgba(255,145,77,0.24)]" />
+                <div className="absolute inset-[-18%] rounded-full border border-[#FF914D]/34 [transform:rotateX(72deg)_translateZ(20px)]" />
+                <div className="absolute inset-[-8%] rounded-full border border-[#FF914D]/18 [transform:rotateX(48deg)_rotateZ(-18deg)]" />
+                <div className="absolute inset-0 rounded-full bg-[linear-gradient(135deg,rgba(255,255,255,0.24),transparent_31%,rgba(0,0,0,0.43)_76%)]" />
+                <div className="absolute inset-[2.5%] rounded-full border border-white/20 shadow-[inset_0_0_28px_rgba(255,255,255,0.08)]" />
+                <div className="absolute left-[14%] top-[10%] h-[34%] w-[30%] rotate-[-18deg] rounded-full bg-white/20 blur-xl" />
+                <div className="absolute right-[18%] bottom-[18%] h-[18%] w-[26%] rotate-[-22deg] rounded-full bg-[#FF914D]/16 blur-lg" />
+                <div className="absolute left-[24%] top-[23%] h-px w-[58%] rotate-[-7deg] bg-gradient-to-r from-transparent via-white/32 to-transparent" />
+                <div className="absolute left-[18%] top-[32%] h-px w-[68%] rotate-[11deg] bg-gradient-to-r from-transparent via-[#FF914D]/16 to-transparent" />
+                <div className="absolute inset-7 rounded-full bg-black/10 shadow-[inset_0_0_48px_rgba(255,145,77,0.2),inset_0_0_26px_rgba(255,255,255,0.05)]" />
                 <motion.img
                   src="/icons/homelogo.png"
                   alt="UTTF Home Logo"
-                  className="relative z-10 w-[78%] object-contain drop-shadow-[0_26px_34px_rgba(0,0,0,0.88)] sm:w-[84%] md:w-[88%]"
+                  className="relative z-10 mt-[-24%] w-[42%] object-contain drop-shadow-[0_20px_26px_rgba(0,0,0,0.88)] transition-transform duration-150 ease-out sm:w-[44%] md:w-[46%]"
                   style={{
-                    x: logoImageX,
-                    y: logoImageY,
-                    translateZ: 72,
-                    transformStyle: 'preserve-3d',
+                    transform: 'translate3d(calc(var(--pointer-x, 0) * 14px), calc(var(--pointer-y, 0) * 10px), 0)',
                   }}
                   animate={{
                     opacity: [0.88, 1, 0.88],
-                    filter: [
-                      'drop-shadow(0 18px 26px rgba(0,0,0,0.82)) drop-shadow(0 0 8px rgba(255,255,255,0.12))',
-                      'drop-shadow(0 22px 34px rgba(0,0,0,0.86)) drop-shadow(0 0 18px rgba(255,255,255,0.28))',
-                      'drop-shadow(0 18px 26px rgba(0,0,0,0.82)) drop-shadow(0 0 8px rgba(255,255,255,0.12))',
-                    ],
                   }}
                   transition={{
-                    duration: 4,
+                    duration: 5.8,
                     repeat: Infinity,
                     ease: 'easeInOut',
                   }}
                 />
               </motion.div>
+              </div>
             </div>
           </div>
 
@@ -724,7 +495,7 @@ export default function HomePage() {
              <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">UTTF_<span className="text-[#FF914D]">NEWS</span></h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+          <div className="mx-auto grid w-full max-w-[24rem] grid-cols-1 gap-8 md:max-w-[49rem] md:grid-cols-2 lg:max-w-none lg:grid-cols-3">
             {loading ? (
               [1, 2, 3].map(i => (
                 <div key={i} className="h-80 glass-panel animate-pulse flex items-center justify-center border border-white/5 bg-white/5 rounded-3xl">
@@ -772,10 +543,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-
-      <AnimatePresence>
-        {isShakeMode && <ShakeChaosOverlay key={shakeBurstId} />}
-      </AnimatePresence>
 
       {/* MODALS */}
       <AnimatePresence>
