@@ -90,7 +90,7 @@ export default function GalleryPage() {
         >
           <Link href="/" className="nav-tag flex items-center gap-2 group border-white/10 hover:border-[#FF914D]/50 transition-all">
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="font-mono tracking-widest text-[10px]">BACK</span>
+            <span className="font-mono tracking-widest text-[10px]">INDIETRO</span>
           </Link>
         </motion.div>
 

@@ -70,6 +70,15 @@ export default function StreamPage() {
             </p>
             <span className="h-[1px] w-12 bg-zinc-800" />
           </div>
+          <a
+            href="https://linktr.ee/underthetower"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 inline-flex items-center justify-center gap-3 rounded-full bg-[#FF914D] px-8 py-4 text-[11px] font-black uppercase tracking-[0.22em] text-black shadow-[0_0_40px_rgba(255,145,77,0.28)] transition-all hover:bg-white"
+          >
+            Tutti i nostri social
+            <ExternalLink size={15} />
+          </a>
         </div>
       </header>
 

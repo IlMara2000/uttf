@@ -63,7 +63,7 @@ export default function ReviewsPage() {
       <header className="w-full max-w-5xl px-6 pt-12 pb-16 flex flex-col gap-12">
         <div className="w-full flex justify-start">
           <Link href="/feed" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
-            <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
+            <ArrowLeft size={14} className="text-[#FF914D]" /> INDIETRO
           </Link>
         </div>
 

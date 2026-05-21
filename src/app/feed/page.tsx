@@ -147,7 +147,7 @@ export default function FeedPage() {
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-8 relative z-10">
         <div className="w-full flex justify-start">
           <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
-            <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
+            <ArrowLeft size={14} className="text-[#FF914D]" /> INDIETRO
           </Link>
         </div>
         
@@ -178,7 +178,7 @@ export default function FeedPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF914D] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF914D]"></span>
               </span>
-              <span className="font-mono text-[11px] font-bold tracking-[0.3em] uppercase text-white">Entra nella live</span>
+              <span className="font-mono text-[11px] font-bold tracking-[0.24em] uppercase text-white">Seguici sui nostri social</span>
               <ArrowLeft size={16} className="rotate-180 text-zinc-500 group-hover:text-[#FF914D] transition-colors" />
             </button>
           </Link>

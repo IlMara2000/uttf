@@ -148,6 +148,27 @@ export default function CalendarWidget() {
         </div>
       </div>
 
+      <div className="flex flex-col gap-3 border-b border-zinc-800/70 bg-black/20 px-4 py-3 md:flex-row md:items-center md:justify-between md:px-5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[8px] font-mono uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px]">
+          <span className="font-bold text-[#FF914D]">Legenda</span>
+          <span className="inline-flex items-center gap-2">
+            <span className="h-1.5 w-8 rounded-full bg-[#FF914D]" />
+            Turni
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-[3px] bg-[#B877FF]" />
+            Task
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-white" />
+            Attivita
+          </span>
+        </div>
+        <p className="text-[10px] leading-relaxed text-zinc-600">
+          I colori seguono l&apos;account assegnato.
+        </p>
+      </div>
+
       <div className="grid min-w-0 grid-cols-7 gap-px bg-zinc-800/50">
         {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map(d => (
           <div key={d} className="text-center text-[7px] font-mono text-zinc-600 uppercase py-3 bg-black">{d}</div>

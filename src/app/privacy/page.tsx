@@ -53,7 +53,7 @@ export default function PrivacyPage() {
       <div className="mx-auto max-w-5xl">
         <header className="mb-14 flex flex-col gap-8">
           <Link href="/feed" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20 self-start">
-            <ArrowLeft size={14} className="text-[#FF914D]" /> BACK
+            <ArrowLeft size={14} className="text-[#FF914D]" /> INDIETRO
           </Link>
 
           <div className="space-y-5">

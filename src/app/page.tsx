@@ -418,10 +418,10 @@ export default function HomePage() {
               <RevealAction
                 href="/labs"
                 icon={<FlaskConical size={20} />}
-                eyebrow="lab"
-                label="RAPF*CKTORY"
-                compactLabel="Rap Lab"
-                hint="lab rap e call"
+                eyebrow="workshop"
+                label="Laboratori UTTF"
+                compactLabel="Labs"
+                hint="workshop e attivita"
                 className="absolute bottom-[22%] right-[3%] z-40 sm:right-[8%] md:bottom-[22%] md:right-[4%]"
                 reverse
                 delay={1.48}
@@ -482,6 +482,14 @@ export default function HomePage() {
                     ease: 'easeInOut',
                   }}
                 />
+                <a
+                  href="https://linktr.ee/underthetower"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute left-1/2 top-[71%] z-20 inline-flex -translate-x-1/2 items-center justify-center rounded-full border border-[#FF914D]/70 bg-black/45 px-4 py-2 text-[9px] font-black uppercase italic tracking-[0.22em] text-white shadow-[0_0_26px_rgba(255,145,77,0.24)] backdrop-blur-md transition-all duration-300 hover:border-[#FF914D] hover:bg-[#FF914D] hover:text-black sm:px-5 sm:text-[10px]"
+                >
+                  Tutti i link
+                </a>
               </motion.div>
               </div>
             </div>

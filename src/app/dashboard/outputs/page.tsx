@@ -89,7 +89,7 @@ export default function OutputsPage() {
               className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors group"
             >
               <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Back</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Indietro</span>
             </button>
 
             <div>
