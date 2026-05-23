@@ -111,7 +111,7 @@ export default function StreamPage() {
               <h3 className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">Live schedule</h3>
             </div>
             <p className="text-2xl font-black italic uppercase">Prossima data</p>
-            <p className="mt-2 text-xs font-mono uppercase tracking-[0.2em] text-zinc-500">In aggiornamento dallo staff</p>
+            <p className="mt-2 text-xs font-mono uppercase tracking-[0.2em] text-zinc-500">Urban Giants 12-13-14 giugno 2026</p>
           </div>
         </section>
 
