@@ -2,16 +2,12 @@
 
 import { motion } from 'framer-motion';
 import {
-  Activity,
   ArrowLeft,
   CalendarDays,
   ExternalLink,
-  Play,
   Radio,
-  Share2,
   Terminal,
   Users,
-  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,20 +23,6 @@ const stream = {
 };
 
 export default function StreamPage() {
-  const shareStream = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: stream.title,
-        text: 'Guarda il broadcast UTTF.',
-        url: stream.watchUrl,
-      });
-      return;
-    }
-
-    await navigator.clipboard.writeText(stream.watchUrl);
-    alert('Link copiato.');
-  };
-
   return (
     <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40 selection:bg-[#FF914D]/30">
       <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-12">
@@ -83,7 +65,7 @@ export default function StreamPage() {
       </header>
 
       <main className="w-full max-w-7xl px-6 flex flex-col gap-8">
-        <section className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-6">
+        <section className="grid grid-cols-1 gap-6">
           <div className="relative">
             <div className="absolute -inset-1 bg-[#FF914D]/10 blur-2xl rounded-[2rem] opacity-40" />
             <div className="glass-panel relative aspect-video w-full rounded-[2rem] border-white/10 overflow-hidden bg-black backdrop-blur-3xl">
@@ -107,47 +89,6 @@ export default function StreamPage() {
               </div>
             </div>
           </div>
-
-          <aside className="glass-panel rounded-[2rem] border-white/10 bg-zinc-950/40 p-6 flex flex-col justify-between gap-8">
-            <div>
-              <p className="text-[9px] font-mono uppercase tracking-[0.4em] text-[#FF914D]">Now playing</p>
-              <h2 className="mt-4 text-4xl font-black italic uppercase tracking-tighter">{stream.title}</h2>
-              <p className="mt-3 text-xs font-mono uppercase tracking-[0.2em] text-zinc-500">{stream.subtitle}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-center">
-                <Zap size={18} className="mx-auto mb-2 text-[#FF914D]" />
-                <p className="text-2xl font-black italic">{stream.latency}<span className="ml-1 text-[10px] text-zinc-600">ms</span></p>
-                <p className="mt-1 text-[8px] font-mono uppercase tracking-widest text-zinc-500">Tempo risposta</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-center">
-                <Activity size={18} className="mx-auto mb-2 text-[#FF914D]" />
-                <p className="text-xl font-black italic">{stream.quality}</p>
-                <p className="mt-1 text-[8px] font-mono uppercase tracking-widest text-zinc-500">Qualita video</p>
-              </div>
-            </div>
-
-            <div className="grid gap-3">
-              <a
-                href={stream.watchUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 rounded-xl bg-[#FF914D] px-5 py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-white"
-              >
-                <Play size={16} />
-                Apri player
-              </a>
-              <button
-                type="button"
-                onClick={shareStream}
-                className="inline-flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-4 text-xs font-black uppercase tracking-widest text-white transition-all hover:border-[#FF914D]/60 hover:text-[#FF914D]"
-              >
-                <Share2 size={16} />
-                Condividi
-              </button>
-            </div>
-          </aside>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
