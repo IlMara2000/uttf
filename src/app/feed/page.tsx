@@ -221,13 +221,17 @@ export default function FeedPage() {
           </div>
 
           <div className="mx-auto grid w-full max-w-[22rem] grid-cols-1 gap-6 sm:max-w-[45rem] sm:grid-cols-2 lg:max-w-none lg:grid-cols-3">
-            {instagramPosts.map((ig, index) => (
+            {instagramPosts.map((ig, index) => {
+              const isCenteredTailCard = instagramPosts.length % 2 === 1 && index === instagramPosts.length - 1;
+
+              return (
               <motion.div
                 key={ig.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
+                className={isCenteredTailCard ? 'sm:col-span-2 sm:mx-auto sm:w-full sm:max-w-[22rem] lg:col-span-1 lg:max-w-none' : undefined}
               >
                 <a 
                   href={ig.url} 
@@ -276,7 +280,8 @@ export default function FeedPage() {
                   </div>
                 </a>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </main>
