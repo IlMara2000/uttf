@@ -486,9 +486,10 @@ export default function HomePage() {
                   href="https://linktr.ee/underthetower"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="absolute left-1/2 top-[71%] z-20 inline-flex -translate-x-1/2 items-center justify-center rounded-full border border-[#FF914D]/70 bg-black/45 px-4 py-2 text-[9px] font-black uppercase italic tracking-[0.22em] text-white shadow-[0_0_26px_rgba(255,145,77,0.24)] backdrop-blur-md transition-all duration-300 hover:border-[#FF914D] hover:bg-[#FF914D] hover:text-black sm:px-5 sm:text-[10px]"
+                  aria-label="Socials UTTF"
+                  className="absolute left-1/2 top-[70%] z-20 inline-flex -translate-x-1/2 items-center justify-center rounded-full border border-white/30 bg-[#FF914D] px-5 py-2.5 text-[10px] font-black uppercase italic tracking-[0.2em] text-black shadow-[0_0_34px_rgba(255,145,77,0.48),0_10px_26px_rgba(0,0,0,0.52)] backdrop-blur-md transition-all duration-300 hover:border-[#FF914D] hover:bg-white sm:top-[71%] sm:px-6 sm:text-[11px]"
                 >
-                  Tutti i link
+                  Socials
                 </a>
               </motion.div>
               </div>

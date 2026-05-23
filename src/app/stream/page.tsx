@@ -157,7 +157,7 @@ export default function StreamPage() {
               <h3 className="font-mono text-[10px] uppercase tracking-widest text-zinc-400">Note dalla regia</h3>
             </div>
             <div className="space-y-2 font-mono text-[11px] text-zinc-500 overflow-hidden">
-              <p className="text-[#FF914D]/70 leading-none">Video collegato all'archivio UTTF.</p>
+              <p className="text-[#FF914D]/70 leading-none">Video collegato all&apos;archivio UTTF.</p>
               <p>Fonte video: YouTube.</p>
               <p>Player pronto per la visione.</p>
               <p className="text-white/40">La prossima live verra comunicata appena fissata.</p>
