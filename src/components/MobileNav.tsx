@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Rss, FlaskConical, ArrowLeft, Menu, X } from 'lucide-react'; 
+import { Home, ArrowLeft, Menu, Share2, X } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MobileNav() {
@@ -19,8 +19,7 @@ export default function MobileNav() {
   // Definiamo i pulsanti standard (escluso il tasto back che gestiamo a parte)
   const allNavItems = [
     { href: '/', icon: <Home size={22} strokeWidth={2} />, label: 'HOME' },
-    { href: '/feed', icon: <Rss size={22} strokeWidth={2} />, label: 'POST' },
-    { href: '/labs', icon: <FlaskConical size={22} strokeWidth={2} />, label: 'LIVE' },
+    { href: 'https://linktr.ee/underthetower', icon: <Share2 size={22} strokeWidth={2} />, label: 'SOCIALS', external: true },
   ];
 
   // La logica per dashboard e login rimane intatta:
@@ -33,7 +32,7 @@ export default function MobileNav() {
   const isCollapsed = !showAsDashboard && !isOpen;
 
   return (
-    <div className={`fixed bottom-4 left-0 right-0 z-[100] flex justify-center px-6 pointer-events-none ${!isDashboard ? 'md:hidden' : ''}`}>
+    <div className="fixed bottom-4 left-0 right-0 z-[100] flex justify-center px-6 pointer-events-none">
       <motion.nav 
         layout
         initial={{ y: 100 }}
@@ -89,9 +88,12 @@ export default function MobileNav() {
                 const isDashboardHomeButton = showAsDashboard && item.href === '/';
 
                 return (
-                  <Link 
-                    key={item.href} 
+                  <Link
+                    key={item.href}
                     href={item.href}
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noopener noreferrer' : undefined}
+                    aria-label={item.label}
                     className={`relative flex min-w-[58px] flex-col items-center justify-center rounded-full p-3.5 transition-all ${
                       isDashboardHomeButton ? 'bg-[#FF914D] text-white shadow-[0_0_20px_rgba(255,145,77,0.35)]' : ''
                     }`}
@@ -114,6 +116,11 @@ export default function MobileNav() {
                           : 'text-zinc-500 hover:text-white'
                     }`}>
                       {item.icon}
+                    </span>
+                    <span className={`relative z-10 mt-1 font-mono text-[7px] font-bold uppercase leading-none tracking-[0.16em] ${
+                      isDashboardHomeButton || isActive ? 'text-white' : 'text-zinc-400'
+                    }`}>
+                      {item.label}
                     </span>
                   </Link>
                 );

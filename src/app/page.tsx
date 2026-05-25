@@ -482,15 +482,6 @@ export default function HomePage() {
                     ease: 'easeInOut',
                   }}
                 />
-                <a
-                  href="https://linktr.ee/underthetower"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Socials UTTF"
-                  className="absolute left-1/2 top-[70%] z-20 inline-flex -translate-x-1/2 items-center justify-center rounded-full border border-white/30 bg-[#FF914D] px-5 py-2.5 text-[10px] font-black uppercase italic tracking-[0.2em] text-black shadow-[0_0_34px_rgba(255,145,77,0.48),0_10px_26px_rgba(0,0,0,0.52)] backdrop-blur-md transition-all duration-300 hover:border-[#FF914D] hover:bg-white sm:top-[71%] sm:px-6 sm:text-[11px]"
-                >
-                  Socials
-                </a>
               </motion.div>
               </div>
             </div>
