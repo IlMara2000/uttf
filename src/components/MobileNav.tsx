@@ -18,8 +18,8 @@ export default function MobileNav() {
 
   // Definiamo i pulsanti standard (escluso il tasto back che gestiamo a parte)
   const allNavItems = [
-    { href: '/', icon: <Home size={22} strokeWidth={2} />, label: 'HOME' },
-    { href: 'https://linktr.ee/underthetower', icon: <Share2 size={22} strokeWidth={2} />, label: 'SOCIALS', external: true },
+    { href: '/', icon: <Home size={25} strokeWidth={2} />, label: 'HOME' },
+    { href: 'https://linktr.ee/underthetower', icon: <Share2 size={25} strokeWidth={2} />, label: 'SOCIALS', external: true },
   ];
 
   // La logica per dashboard e login rimane intatta:
@@ -41,7 +41,7 @@ export default function MobileNav() {
         className={`pointer-events-auto rounded-full flex items-center justify-center transition-colors duration-300 ${
           isCollapsed 
             ? 'bg-[#FF914D] shadow-[0_0_20px_rgba(255,145,77,0.4)]' 
-            : 'glass-panel p-2 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl bg-black/80'
+            : 'glass-panel p-[9px] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl bg-black/80'
         }`}
       >
         <AnimatePresence mode="popLayout">
@@ -55,10 +55,10 @@ export default function MobileNav() {
               animate={{ opacity: 1, rotate: 0, scale: 1 }}
               exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
               transition={{ duration: 0.2 }}
-              className="w-12 h-12 flex items-center justify-center text-white rounded-full"
+              className="w-14 h-14 flex items-center justify-center text-white rounded-full"
               aria-label="Apri menu"
             >
-              <Menu size={22} strokeWidth={2.5} />
+              <Menu size={25} strokeWidth={2.5} />
             </motion.button>
           ) : (
             /* NAVBAR ESTESA (Glassmorphism e Bottoni) */
@@ -69,16 +69,16 @@ export default function MobileNav() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2 }}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1.5"
             >
               {/* TASTO BACK: Sempre presente come prima opzione a sinistra */}
               <button 
                 onClick={() => router.back()}
-                className="relative p-3.5 rounded-full transition-all flex flex-col items-center justify-center min-w-[58px] text-zinc-500 hover:text-white"
+                className="relative flex min-w-[67px] items-center justify-center rounded-full p-4 text-zinc-500 transition-all hover:text-white"
                 aria-label="Torna indietro"
               >
                 <span className="relative z-10 transition-all duration-300 hover:scale-110">
-                  <ArrowLeft size={22} strokeWidth={2} />
+                  <ArrowLeft size={25} strokeWidth={2} />
                 </span>
               </button>
 
@@ -94,7 +94,7 @@ export default function MobileNav() {
                     target={item.external ? '_blank' : undefined}
                     rel={item.external ? 'noopener noreferrer' : undefined}
                     aria-label={item.label}
-                    className={`relative flex min-w-[58px] flex-col items-center justify-center rounded-full p-3.5 transition-all ${
+                    className={`relative flex min-w-[67px] items-center justify-center rounded-full p-4 transition-all ${
                       isDashboardHomeButton ? 'bg-[#FF914D] text-white shadow-[0_0_20px_rgba(255,145,77,0.35)]' : ''
                     }`}
                   >
@@ -102,7 +102,7 @@ export default function MobileNav() {
                     {isActive && (
                       <motion.div 
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-orange-600 rounded-full"
+                        className="absolute inset-0 bg-[#FF914D] rounded-full"
                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       />
                     )}
@@ -117,11 +117,6 @@ export default function MobileNav() {
                     }`}>
                       {item.icon}
                     </span>
-                    <span className={`relative z-10 mt-1 font-mono text-[7px] font-bold uppercase leading-none tracking-[0.16em] ${
-                      isDashboardHomeButton || isActive ? 'text-white' : 'text-zinc-400'
-                    }`}>
-                      {item.label}
-                    </span>
                   </Link>
                 );
               })}
@@ -130,11 +125,11 @@ export default function MobileNav() {
               {!showAsDashboard && (
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="relative p-3.5 rounded-full transition-all flex flex-col items-center justify-center min-w-[58px] text-[#FF914D] hover:bg-white/10"
+                  className="relative flex min-w-[67px] items-center justify-center rounded-full p-4 text-[#FF914D] transition-all hover:bg-white/10"
                   aria-label="Chiudi menu"
                 >
                   <span className="relative z-10 transition-all duration-300 hover:scale-110">
-                    <X size={22} strokeWidth={2.5} />
+                    <X size={25} strokeWidth={2.5} />
                   </span>
                 </button>
               )}
