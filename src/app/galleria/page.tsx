@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -76,10 +76,20 @@ export default function GalleryPage() {
   const [proposalEmail, setProposalEmail] = useState('');
   const [proposalSubject, setProposalSubject] = useState('');
   const [proposalBody, setProposalBody] = useState('');
+  const [proposalStatus, setProposalStatus] = useState<'idle' | 'opening' | 'ready'>('idle');
 
   const proposalHref = `mailto:ass.uttf@gmail.com?subject=${encodeURIComponent(proposalSubject)}&body=${encodeURIComponent(
     `Mail utente: ${proposalEmail}\n\n${proposalBody}`
   )}`;
+
+  const handleProposalSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setProposalStatus('opening');
+    window.setTimeout(() => {
+      window.location.href = proposalHref;
+      setProposalStatus('ready');
+    }, 350);
+  };
 
   return (
     <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40">
@@ -203,10 +213,7 @@ export default function GalleryPage() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-8 grid gap-3 text-left"
-              onSubmit={(event) => {
-                event.preventDefault();
-                window.location.href = proposalHref;
-              }}
+              onSubmit={handleProposalSubmit}
             >
               <input
                 type="email"
@@ -233,11 +240,33 @@ export default function GalleryPage() {
               />
               <button
                 type="submit"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF914D] px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-white"
+                disabled={proposalStatus === 'opening'}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF914D] px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-white disabled:cursor-wait disabled:opacity-70"
               >
                 <Send size={14} />
-                Genera mail
+                {proposalStatus === 'opening' ? 'Apro la mail...' : 'Genera mail'}
               </button>
+              {proposalStatus !== 'idle' && (
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  role="status"
+                  aria-live="polite"
+                  className="rounded-xl border border-[#FF914D]/25 bg-[#FF914D]/10 px-4 py-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-[#FF914D]"
+                >
+                  {proposalStatus === 'opening' ? (
+                    'Sto aprendo il client mail del dispositivo.'
+                  ) : (
+                    <>
+                      Mail generata. Se non si è aperta,{' '}
+                      <a href={proposalHref} className="underline decoration-[#FF914D]/60 underline-offset-4">
+                        clicca qui
+                      </a>
+                      .
+                    </>
+                  )}
+                </motion.p>
+              )}
             </motion.form>
           )}
         </div>

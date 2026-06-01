@@ -1,10 +1,11 @@
 'use client'
 
-import { useRef } from 'react';
+import { type ReactNode, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FlaskConical, ArrowLeft, Users, Music, Mic2, Palette, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, FlaskConical, Info, Mic2, Music, Palette, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { labCategories } from './lab-data';
 
 const labImages = [
   "/labs/foto1.jpeg",
@@ -13,32 +14,12 @@ const labImages = [
   "/labs/foto4.jpeg",
 ];
 
-const labCategories = [
-  {
-    title: "RAP_F*CKTORY",
-    icon: <Mic2 size={24} />,
-    description: "Sessioni di scrittura creativa e tecnica del flow. Un laboratorio dove il rap diventa strumento di espressione e narrazione del quotidiano.",
-    tags: ["WRITING", "FLOW", "LIVE"]
-  },
-  {
-    title: "BEAT MAKING",
-    icon: <Music size={24} />,
-    description: "Dalla creazione del sample alla struttura del beat. I ragazzi imparano a produrre le proprie basi utilizzando software professionali.",
-    tags: ["PRODUCTION", "DAW", "SOUND"]
-  },
-  {
-    title: "URBAN ARTS",
-    icon: <Palette size={24} />,
-    description: "Non solo musica. Esploriamo il mondo dei graffiti, della grafica e della fotografia per dare un'identità visiva ai progetti della Factory.",
-    tags: ["GRAFFITI", "GRAPHIC", "PHOTO"]
-  },
-  {
-    title: "COMMUNITY HUB",
-    icon: <Users size={24} />,
-    description: "Incontri aperti, dibattiti e momenti di aggregazione. Il laboratorio fisico dove le idee circolano e nascono nuove collaborazioni.",
-    tags: ["MEETING", "ROZZANO", "CO-WORKING"]
-  }
-];
+const labIconMap: Record<string, ReactNode> = {
+  'rap-fcktory': <Mic2 size={24} />,
+  'beat-making': <Music size={24} />,
+  'urban-arts': <Palette size={24} />,
+  'community-hub': <Users size={24} />,
+};
 
 export default function LabsPage() {
   const subscribeRef = useRef<HTMLDivElement>(null);
@@ -116,16 +97,15 @@ export default function LabsPage() {
               whileTap={{ scale: 0.95 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              onClick={scrollToSubscribe}
-              className="glass-panel p-8 md:p-10 border-white/5 hover:border-[#FF914D]/40 transition-all group relative overflow-hidden cursor-pointer bg-zinc-900/20"
+              className="glass-panel p-8 md:p-10 border-white/5 hover:border-[#FF914D]/40 transition-all group relative overflow-hidden bg-zinc-900/20"
             >
               <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity text-[#FF914D]">
-                {lab.icon}
+                {labIconMap[lab.slug]}
               </div>
 
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-3 bg-white/5 rounded-xl text-[#FF914D] group-hover:bg-[#FF914D] group-hover:text-black transition-colors">
-                  {lab.icon}
+                  {labIconMap[lab.slug]}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">
                   {lab.title}
@@ -144,8 +124,23 @@ export default function LabsPage() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 text-[#FF914D] text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-all">
-                Voglio iscrivermi! <ChevronDown size={14} className="group-hover:translate-y-1 transition-transform" />
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href={`/labs/${lab.slug}`}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-all hover:border-[#FF914D]/70 hover:bg-white/10"
+                >
+                  <Info size={14} />
+                  Dettagli
+                  <ChevronRight size={14} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={scrollToSubscribe}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#FF914D] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black shadow-[0_0_24px_rgba(255,145,77,0.24)] transition-all hover:bg-white hover:shadow-[0_0_34px_rgba(255,145,77,0.42)]"
+                >
+                  Voglio iscrivermi
+                  <ChevronDown size={14} />
+                </button>
               </div>
             </motion.div>
           ))}
