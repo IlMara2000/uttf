@@ -51,6 +51,69 @@ type RevealActionProps = {
   delay?: number;
 };
 
+type GlassHubActionProps = {
+  href: string;
+  icon: ReactNode;
+  eyebrow: string;
+  title: string;
+  description: string;
+  delay?: number;
+};
+
+function GlassHubAction({
+  href,
+  icon,
+  eyebrow,
+  title,
+  description,
+  delay = 0,
+}: GlassHubActionProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 22, scale: 0.96 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.5 }}
+      transition={{ delay, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -4, scale: 1.015 }}
+      whileTap={{ scale: 0.98 }}
+      className="min-w-0"
+    >
+      <Link
+        href={href}
+        aria-label={`${title}: ${description}`}
+        className="group relative isolate flex min-h-[6.7rem] w-full items-center gap-3 overflow-hidden rounded-[1.45rem] border border-[#FF914D]/36 bg-black/68 px-3.5 py-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.52),0_0_28px_rgba(255,145,77,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all duration-500 hover:border-[#FF914D]/72 hover:bg-[#2a1208]/72 hover:shadow-[0_22px_54px_rgba(0,0,0,0.62),0_0_38px_rgba(255,145,77,0.22),inset_0_0_28px_rgba(255,145,77,0.14)] sm:min-h-[7.2rem] sm:gap-4 sm:px-5 sm:py-5 md:min-h-[8.4rem] md:rounded-[1.75rem] md:px-7"
+      >
+        <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_22%_20%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_78%_74%,rgba(255,145,77,0.2),transparent_34%),radial-gradient(circle_at_center,rgba(255,145,77,0.08),rgba(18,10,7,0.78)_60%,rgba(0,0,0,0.92))]" />
+        <span className="pointer-events-none absolute inset-2 rounded-[1.1rem] border border-white/10 shadow-[inset_0_0_30px_rgba(255,255,255,0.04)] md:inset-3 md:rounded-[1.35rem]" />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[120%] w-[72%] rounded-full border border-[#FF914D]/14"
+          style={{ transform: 'translate(-50%, -50%) rotateX(66deg) rotateZ(-10deg)' }}
+        />
+        <motion.span
+          className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#FF914D]/58 bg-[#FF914D]/18 text-[#FF914D] shadow-[0_0_22px_rgba(255,145,77,0.2),inset_0_0_20px_rgba(255,145,77,0.14)] sm:h-14 sm:w-14"
+          animate={{ rotate: [0, -4, 4, 0], scale: [1, 1.035, 1] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay }}
+        >
+          <span className="absolute inset-1.5 rounded-full bg-white/10 blur-[2px]" />
+          <span className="relative z-10">{icon}</span>
+        </motion.span>
+        <span className="relative z-10 flex min-w-0 flex-1 flex-col">
+          <span className="mb-1 truncate whitespace-nowrap font-mono text-[7.5px] uppercase tracking-[0.34em] text-[#FF914D] sm:text-[8px] md:text-[9px]">
+            {eyebrow}
+          </span>
+          <span className="truncate whitespace-nowrap text-[14px] font-black uppercase italic leading-none tracking-tight text-white sm:text-[16px] md:text-[20px]">
+            {title}
+          </span>
+          <span className="mt-1.5 line-clamp-2 font-mono text-[7.5px] uppercase leading-relaxed tracking-[0.12em] text-white/64 transition-colors duration-500 group-hover:text-white/82 sm:text-[8px] md:text-[9px]">
+            {description}
+          </span>
+        </span>
+      </Link>
+    </motion.div>
+  );
+}
+
 function RevealAction({
   href,
   onClick,
@@ -286,6 +349,25 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
 
+            <div className="relative z-[110] mt-5 grid w-full max-w-5xl grid-cols-2 gap-3 sm:mt-6 sm:gap-5 md:mt-8 md:gap-6">
+              <GlassHubAction
+                href="/feed"
+                icon={<Radio size={21} />}
+                eyebrow="hub"
+                title="Feed UTTF"
+                description="Post e stream"
+                delay={0.08}
+              />
+              <GlassHubAction
+                href="/labs"
+                icon={<FlaskConical size={22} />}
+                eyebrow="workshop"
+                title="Labs"
+                description="Workshop e attività"
+                delay={0.16}
+              />
+            </div>
+
           </motion.div>
         </section>
         
@@ -402,29 +484,6 @@ export default function HomePage() {
                 className="absolute right-[2%] top-[10%] z-40 sm:right-[7%] md:right-[5%] md:top-[20%]"
                 reverse
                 delay={1.2}
-              />
-
-              <RevealAction
-                href="/feed"
-                icon={<Radio size={20} />}
-                eyebrow="hub"
-                label="Under The Tower"
-                compactLabel="Feed UTTF"
-                hint="post + stream"
-                className="absolute bottom-[22%] left-[3%] z-40 sm:left-[8%] md:bottom-[22%] md:left-[4%]"
-                delay={1.35}
-              />
-
-              <RevealAction
-                href="/labs"
-                icon={<FlaskConical size={20} />}
-                eyebrow="workshop"
-                label="Laboratori UTTF"
-                compactLabel="Labs"
-                hint="workshop e attivita"
-                className="absolute bottom-[22%] right-[3%] z-40 sm:right-[8%] md:bottom-[22%] md:right-[4%]"
-                reverse
-                delay={1.48}
               />
 
               <RevealAction
