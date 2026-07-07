@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Unbounded, Space_Grotesk, Geist_Mono } from 'next/font/google';
 import MobileNav from '@/components/MobileNav';
+import SiteAtmosphere from '@/components/SiteAtmosphere';
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_OG_IMAGE,
@@ -131,6 +132,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="relative min-h-screen z-10">
+          <SiteAtmosphere />
           {children}
           <MobileNav />
         </div>

@@ -81,9 +81,16 @@ function GlassHubAction({
       <Link
         href={href}
         aria-label={`${title}: ${description}`}
-        className="group relative isolate flex min-h-[6.7rem] w-full items-center gap-3 overflow-hidden rounded-[1.45rem] border border-[#FF914D]/36 bg-black/68 px-3.5 py-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.52),0_0_28px_rgba(255,145,77,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all duration-500 hover:border-[#FF914D]/72 hover:bg-[#2a1208]/72 hover:shadow-[0_22px_54px_rgba(0,0,0,0.62),0_0_38px_rgba(255,145,77,0.22),inset_0_0_28px_rgba(255,145,77,0.14)] sm:min-h-[7.2rem] sm:gap-4 sm:px-5 sm:py-5 md:min-h-[8.4rem] md:rounded-[1.75rem] md:px-7"
+        className="group relative isolate flex min-h-[6.7rem] w-full transform-gpu items-center gap-3 overflow-hidden rounded-[1.45rem] border border-[#FF914D]/36 bg-black/68 px-3.5 py-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.52),0_0_28px_rgba(255,145,77,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all duration-500 hover:border-[#FF914D]/72 hover:bg-[#2a1208]/72 hover:shadow-[0_22px_54px_rgba(0,0,0,0.62),0_0_38px_rgba(255,145,77,0.22),inset_0_0_28px_rgba(255,145,77,0.14)] sm:min-h-[7.2rem] sm:gap-4 sm:px-5 sm:py-5 md:min-h-[8.4rem] md:rounded-[1.75rem] md:px-7"
       >
         <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_22%_20%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_78%_74%,rgba(255,145,77,0.2),transparent_34%),radial-gradient(circle_at_center,rgba(255,145,77,0.08),rgba(18,10,7,0.78)_60%,rgba(0,0,0,0.92))]" />
+        <motion.span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-10 bottom-[-2.5rem] w-24 rotate-[24deg] bg-gradient-to-r from-transparent via-white/24 to-transparent blur-sm"
+          initial={{ x: '-160%', opacity: 0 }}
+          animate={{ x: ['-160%', '420%'], opacity: [0, 0.8, 0] }}
+          transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: delay + 0.35 }}
+        />
         <span className="pointer-events-none absolute inset-2 rounded-[1.1rem] border border-white/10 shadow-[inset_0_0_30px_rgba(255,255,255,0.04)] md:inset-3 md:rounded-[1.35rem]" />
         <span
           aria-hidden="true"
@@ -304,7 +311,7 @@ export default function HomePage() {
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             className="w-full flex flex-col items-center"
           >
-            <h1 className="hero-title text-[13vw] leading-[0.86] text-center mb-10 font-black uppercase italic tracking-tighter sm:text-[14vw] md:mb-16 md:text-[8vw]">
+            <h1 className="hero-title animate-shine text-[13vw] leading-[0.86] text-center mb-10 font-black uppercase italic tracking-tighter sm:text-[14vw] md:mb-16 md:text-[8vw]">
               Under The<br />
               Tower<br />
               <span style={{ color: '#FF914D' }}>Factory</span>
@@ -318,6 +325,8 @@ export default function HomePage() {
               viewport={{ once: true, amount: 0.5 }}
               variants={pulseGlow}
               animate="animate"
+              whileHover={{ y: -4, rotateX: 1.2, rotateY: -1.2 }}
+              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
             >
               {/* Grain Texture Overlay */}
               <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(circle_at_34%_24%,rgba(255,255,255,0.2),transparent_18%),radial-gradient(circle_at_74%_72%,rgba(255,145,77,0.22),transparent_31%),radial-gradient(circle_at_center,rgba(255,145,77,0.1),rgba(42,22,18,0.72)_56%,rgba(0,0,0,0.9))]" />
@@ -326,6 +335,12 @@ export default function HomePage() {
               <div className="pointer-events-none absolute -left-24 -top-28 hidden h-72 w-72 rounded-full bg-white/8 blur-2xl md:block" />
               <div className="pointer-events-none absolute -right-28 bottom-0 hidden h-80 w-80 rounded-full bg-[#FF914D]/14 blur-2xl md:block" />
               <div className="pointer-events-none absolute inset-2 rounded-[1.25rem] border border-white/12 shadow-[inset_0_0_38px_rgba(255,255,255,0.05)] md:inset-4 md:rounded-[1.55rem]" />
+              <motion.div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-[-20%] left-[-25%] w-[42%] rotate-[18deg] bg-gradient-to-r from-transparent via-white/16 to-transparent blur-md"
+                animate={{ x: ['0%', '330%'], opacity: [0, 0.85, 0] }}
+                transition={{ duration: 5.6, repeat: Infinity, ease: 'easeInOut' }}
+              />
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute left-1/2 top-1/2 h-[135%] w-[66%] rounded-full border border-[#FF914D]/16"
@@ -349,23 +364,33 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
 
-            <div className="relative z-[110] mt-5 grid w-full max-w-5xl grid-cols-2 gap-3 sm:mt-6 sm:gap-5 md:mt-8 md:gap-6">
-              <GlassHubAction
-                href="/feed"
-                icon={<Radio size={21} />}
-                eyebrow="hub"
-                title="Feed UTTF"
-                description="Post e stream"
-                delay={0.08}
+            <div className="relative z-[110] mt-2 w-full max-w-5xl pt-9 sm:pt-10 md:mt-0 md:pt-12">
+              <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-9 w-px -translate-x-1/2 bg-gradient-to-b from-[#FF914D]/65 to-[#FF914D]/10 sm:h-10 md:h-12" />
+              <div aria-hidden="true" className="pointer-events-none absolute left-[25%] right-[25%] top-9 h-px bg-gradient-to-r from-transparent via-[#FF914D]/38 to-transparent sm:top-10 md:top-12" />
+              <motion.div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-7 h-2 w-2 -translate-x-1/2 rounded-full bg-[#FF914D] shadow-[0_0_22px_rgba(255,145,77,0.9)] sm:top-8 md:top-10"
+                animate={{ scale: [0.8, 1.35, 0.8], opacity: [0.45, 1, 0.45] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
               />
-              <GlassHubAction
-                href="/labs"
-                icon={<FlaskConical size={22} />}
-                eyebrow="workshop"
-                title="Labs"
-                description="Workshop e attività"
-                delay={0.16}
-              />
+              <div className="grid w-full grid-cols-2 gap-3 sm:gap-5 md:gap-6">
+                <GlassHubAction
+                  href="/feed"
+                  icon={<Radio size={21} />}
+                  eyebrow="hub"
+                  title="Feed UTTF"
+                  description="Post e stream"
+                  delay={0.08}
+                />
+                <GlassHubAction
+                  href="/labs"
+                  icon={<FlaskConical size={22} />}
+                  eyebrow="workshop"
+                  title="Labs"
+                  description="Workshop e attività"
+                  delay={0.16}
+                />
+              </div>
             </div>
 
           </motion.div>
