@@ -40,7 +40,7 @@ export default function MobileNav() {
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={`pointer-events-auto rounded-full flex items-center justify-center transition-colors duration-300 ${
           isCollapsed 
-            ? 'bg-[#FF914D] shadow-[0_0_20px_rgba(255,145,77,0.4)]' 
+            ? 'bg-[#FF914D]' 
             : 'glass-panel p-[9px] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-3xl bg-black/80'
         }`}
       >
