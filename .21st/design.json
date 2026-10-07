@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "project": {
+    "name": "uttf-crm",
+    "productType": "Associazione di promozione sociale; cultura hip-hop, educazione e comunità a Rozzano",
+    "stack": [
+      "nextjs",
+      "react",
+      "shadcn",
+      "tailwind-v4"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "src/app/globals.css"
+    ],
+    "components": [
+      "src/components/ui"
+    ],
+    "assets": [
+      "public/images"
+    ],
+    "instructions": [
+      "AGENTS.md",
+      "CLAUDE.md"
+    ]
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "--color-uttf-orange": {
+        "value": "#FF914D",
+        "source": "src/app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-display": {
+        "value": "var(--font-display), ui-sans-serif, system-ui",
+        "source": "src/app/globals.css"
+      },
+      "--font-sans": {
+        "value": "var(--font-sans), ui-sans-serif, system-ui",
+        "source": "src/app/globals.css"
+      },
+      "--font-mono": {
+        "value": "var(--font-mono), ui-monospace, SFMono-Regular",
+        "source": "src/app/globals.css"
+      }
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {},
+    "density": "editorial"
+  },
+  "components": {
+    "installed": [
+      "button",
+      "calendar",
+      "card",
+      "dialog",
+      "input",
+      "textarea"
+    ],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [
+      "Preserve #FF914D, black and white palette",
+      "Preserve all original photos and both UTTF logos",
+      "Foreground community, education, local roots and participation",
+      "Retain existing functional forms and staff tools"
+    ],
+    "avoid": [
+      "Glassmorphism, neon glow, orbit effects",
+      "Invented statistics, events, or social proof",
+      "Corporate or technical system copy in public flows"
+    ]
+  },
+  "decisions": [
+    {
+      "date": "2026-10-08",
+      "decision": "User-directed complete brutalism × claymorphism restyle: bold editorial hierarchy, solid borders and offset shadows, softly sculpted orange icons and buttons, real photos and association-focused navigation."
+    }
+  ],
+  "evidence": [
+    {
+      "fact": "components.installed",
+      "source": "src/components/ui"
+    },
+    {
+      "fact": "design.colorMode:light",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "AGENTS.md"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "CLAUDE.md"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:shadcn",
+      "source": "components.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-10-07T23:15:00.873Z"
+}

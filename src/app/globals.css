@@ -1,270 +1,141 @@
 @import "tailwindcss";
 
 @theme {
-  --color-uttf-orange: #FF914D;
+  --color-uttf-orange: #ff914d;
   --font-display: var(--font-display), ui-sans-serif, system-ui;
   --font-sans: var(--font-sans), ui-sans-serif, system-ui;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular;
 }
 
-/* =========================================
-   KEYFRAMES (Animazioni fluide e professionali)
-   ========================================= */
 @layer base {
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-
-  @keyframes pulse-soft {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(0.98); }
-  }
-
-  @keyframes text-shine {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-
-  @keyframes ambient-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 145, 77, 0.08); }
-    50% { box-shadow: 0 0 32px 0 rgba(255, 145, 77, 0.12); }
-  }
-
-  @keyframes uttf-bg-drift {
-    0%, 100% {
-      transform: translate3d(-0.7%, -0.5%, 0) scale(1.035);
-    }
-    50% {
-      transform: translate3d(0.7%, 0.55%, 0) scale(1.055);
-    }
-  }
-
   body {
-    /* Gradiente Radiale Ellittico per l'effetto "Sfumatura dai lati" */
-    background-color: #000000;
-    background-image: 
-      radial-gradient(ellipse at -20% 50%, rgba(255, 145, 77, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 120% 50%, rgba(255, 145, 77, 0.15) 0%, transparent 50%);
-    background-attachment: fixed;
-    color: #ffffff;
     margin: 0;
-    padding: 0;
     min-height: 100vh;
-    overflow-x: hidden;
+    background: #161616;
+    color: #fff;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-
   html {
     scroll-behavior: smooth;
   }
-
   ::selection {
-    background: rgba(255, 145, 77, 0.2);
-    color: #ffffff;
+    background: #ff914d;
+    color: #161616;
   }
-
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 145, 77, 0.35) rgba(255, 255, 255, 0.04);
+    scrollbar-color: #ff914d #27272a;
   }
-
   *:focus-visible {
-    outline: 2px solid rgba(255, 145, 77, 0.55);
-    outline-offset: 2px;
+    outline: 3px solid #ff914d;
+    outline-offset: 4px;
   }
-
-  img,
-  video {
-    backface-visibility: hidden;
-    transform: translateZ(0);
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.85;
+    }
   }
 }
 
-/* =========================================
-   UTILITY CLASSES & COMPONENTI
-   ========================================= */
-
+/* Shared staff primitives retain their API and use the new solid surfaces. */
 @utility hero-title {
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 11vw, 8rem);
-  font-weight: 900;
-  font-style: italic;
+  font-family: var(--font-sans), sans-serif;
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 700;
+  font-style: normal;
   text-transform: uppercase;
-  line-height: 0.8;
-  letter-spacing: -0.05em;
-  text-align: center;
-  background: linear-gradient(to bottom, #ffffff 60%, rgba(255, 255, 255, 0.2) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: #fff;
 }
-
-/* Effetto shine opzionale per testi: aggiungi "animate-shine" nel className html */
 @utility animate-shine {
-  background: linear-gradient(
-    to right, 
-    #ffffff 20%, 
-    #FF914D 50%, 
-    #ffffff 80%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: text-shine 4s linear infinite;
+  color: #ff914d;
 }
-
 @utility glass-panel {
-  background-color: rgba(10, 10, 10, 0.5);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 2.5rem;
+  background-color: #202020;
+  border: 2px solid #555;
+  border-radius: 22px;
   position: relative;
   overflow: hidden;
-  /* Transizione morbidissima per l'hover */
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              border-color 0.4s ease,
-              background-color 0.4s ease;
+  box-shadow:
+    5px 6px 0 #000,
+    inset 2px 2px 3px #ffffff08;
 }
-
-.glass-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 18%),
-    radial-gradient(circle at top, rgba(255, 145, 77, 0.08), transparent 40%);
-  opacity: 0.65;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.glass-panel:hover {
-  transform: translateY(-4px) scale(1.005);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 
-              0 0 30px rgba(255, 145, 77, 0.15);
-  border-color: rgba(255, 145, 77, 0.3);
-  background-color: rgba(12, 12, 12, 0.58);
-}
-
-.glass-panel:hover::before {
-  opacity: 1;
-  transform: scale(1.02);
-}
-
-.glass-panel::after {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  pointer-events: none;
-  border-radius: inherit;
-  background:
-    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.06) 28%, transparent 48%),
-    radial-gradient(circle at 80% 18%, rgba(255, 145, 77, 0.08), transparent 30%);
-  opacity: 0;
-  transition: opacity 0.45s ease;
-}
-
-.glass-panel:hover::after {
-  opacity: 1;
-}
-
 @utility nav-tag {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.6em;
-  color: #FF914D;
-  border: 1px solid rgba(255, 145, 77, 0.3);
-  padding: 0.6rem 1.5rem;
-  border-radius: 9999px;
-  background-color: rgba(255, 145, 77, 0.05);
-  /* Transizione reattiva */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.nav-tag:hover {
-  background-color: rgba(255, 145, 77, 0.15);
-  box-shadow: 0 0 15px rgba(255, 145, 77, 0.2);
-  transform: translateY(-2px);
-  color: #ffffff;
-}
-
-@utility btn-urban {
-  font-family: var(--font-sans);
-  background-color: #ffffff;
-  color: #000000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  padding: 1.5rem 3.5rem;
-  border-radius: 9999px;
-  letter-spacing: 0.2em;
-  font-size: 12px;
+  color: #ff914d;
+  border: 2px solid #ff914d;
+  padding: 0.7rem 1.25rem;
+  border-radius: 12px;
+  background: #202020;
+  transition: transform 180ms;
+}
+.nav-tag:hover {
+  transform: translateY(-2px);
+}
+@utility btn-urban {
+  font-family: var(--font-sans), sans-serif;
+  background-color: #ff914d;
+  color: #161616;
+  font-weight: 700;
+  padding: 1rem 1.7rem;
+  border: 2px solid #161616;
+  border-radius: 14px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-  /* Effetto molla elegante sull'hover */
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  overflow: hidden;
+  box-shadow:
+    4px 5px 0 #000,
+    inset 3px 3px 5px #ffffff60,
+    inset -3px -4px 7px #00000014;
+  transition: transform 180ms;
 }
-
 .btn-urban:hover {
-  background-color: #FF914D;
-  color: #ffffff;
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px -5px rgba(255, 145, 77, 0.4);
+  transform: translateY(-2px);
 }
-
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 9999px;
+  background: #27272a;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(255, 145, 77, 0.55), rgba(255, 145, 77, 0.25));
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #ff914d;
+  border-radius: 5px;
 }
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(255, 145, 77, 0.75), rgba(255, 145, 77, 0.35));
-}
-
 .interactive-surface {
-  transition:
-    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 220ms ease,
-    background-color 220ms ease,
-    box-shadow 220ms ease;
+  transition: transform 180ms;
 }
-
 .interactive-surface:hover {
   transform: translateY(-2px);
 }
-
-.ambient-glow {
-  animation: ambient-glow 5s ease-in-out infinite;
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
 }
-
-.uttf-bg-motion {
-  animation: uttf-bg-drift 28s ease-in-out infinite;
-  transform: translate3d(0, 0, 0) scale(1.04);
-  transform-origin: center;
-  will-change: transform;
+@utility animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
 }
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -274,15 +145,4 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* =========================================
-   UTILITY ANIMATIONS (Da usare sui tag HTML)
-   ========================================= */
-@utility animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@utility animate-pulse-soft {
-  animation: pulse-soft 3s ease-in-out infinite;
 }

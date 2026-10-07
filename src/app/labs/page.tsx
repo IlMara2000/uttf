@@ -1,178 +1,102 @@
-'use client'
-
-import { type ReactNode, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, ChevronDown, ChevronRight, FlaskConical, Info, Mic2, Music, Palette, Users } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { labCategories } from './lab-data';
-
-const labImages = [
-  "/labs/foto1.jpeg",
-  "/labs/foto2.jpeg",
-  "/labs/foto3.jpeg",
-  "/labs/foto4.jpeg",
-];
-
-const labIconMap: Record<string, ReactNode> = {
-  'rap-fcktory': <Mic2 size={24} />,
-  'beat-making': <Music size={24} />,
-  'urban-arts': <Palette size={24} />,
-  'community-hub': <Users size={24} />,
-};
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight, Mic2, Music2, Palette, Users } from "lucide-react";
+import PublicPageIntro from "@/components/PublicPageIntro";
+import { labCategories } from "./lab-data";
+const icons = [Mic2, Music2, Palette, Users];
 
 export default function LabsPage() {
-  const subscribeRef = useRef<HTMLDivElement>(null);
-
-  const scrollToSubscribe = () => {
-    subscribeRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
-    <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40 selection:bg-[#FF914D]/30">
-      
-      {/* HEADER */}
-      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-center gap-12">
-        <div className="w-full flex justify-start">
-          
-        {/* TASTO BACK CON TESTO ARANCIONE */}
-          <Link href="/" className="nav-tag flex items-center gap-2 !text-[#FF914D] border-[#FF914D]/20">
-            <ArrowLeft size={14} className="text-[#FF914D]" /> INDIETRO
-          </Link>
-        </div>
-        
-        <div className="text-center flex flex-col items-center">
-          {/* PALLINO ARANCIONE SOPRA LA SCRITTA */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 bg-[#FF914D] blur-xl opacity-20 rounded-full animate-pulse"></div>
-            <div className="relative p-4 bg-[#FF914D]/10 border border-[#FF914D]/20 rounded-full text-[#FF914D]">
-              <FlaskConical size={32} strokeWidth={2.5} />
+    <main className="public-page">
+      <PublicPageIntro
+        number="01"
+        eyebrow="I laboratori"
+        title={
+          <>
+            Il tuo spazio
+            <br />
+            per <span>provare.</span>
+          </>
+        }
+        description="La cultura urbana diventa un’occasione per esprimersi, imparare e incontrare altre persone. Nei laboratori della Factory si cresce mettendosi in gioco, insieme."
+      >
+        <a href="#iscrizioni" className="text-link">
+          Come partecipare <ArrowUpRight size={17} />
+        </a>
+      </PublicPageIntro>
+      <div className="content-width">
+        <section
+          className="photo-ribbon"
+          aria-label="Momenti dai laboratori Under The Tower"
+        >
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i}>
+              <Image
+                src={`/labs/foto${i}.jpeg`}
+                alt={`Persone e attività della Factory, foto ${i}`}
+                fill
+                sizes="(min-width: 800px) 25vw, 50vw"
+              />
             </div>
-          </div>
-          
-          {/* TITOLO RIMPICCIOLITO */}
-          <h1 className="hero-title text-[10vw] md:text-6xl leading-none italic uppercase font-black tracking-tighter">
-            UTTF_<span className="text-[#FF914D]">LABS<br /></span>
-          </h1>
-          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-4">
-            Attivita per la comunita
-          </p>
-        </div>
-      </header>
-
-      <main className="w-full max-w-7xl px-6 flex flex-col gap-16">
-        
-        {/* CAROUSEL */}
-        <section className="w-full overflow-hidden relative py-10">
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-black to-transparent z-10"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-black to-transparent z-10"></div>
-          
-          <motion.div 
-            className="flex gap-4"
-            animate={{ x: [0, -1200] }} 
-            transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
-          >
-            {[...labImages, ...labImages, ...labImages].map((img, idx) => (
-              <div key={idx} className="relative min-w-[300px] md:min-w-[500px] aspect-video rounded-[2rem] overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl">
-                <Image
-                  src={img} 
-                  alt="Lab Session" 
-                  fill
-                  sizes="(min-width: 768px) 500px, 300px"
-                  className="w-full h-full object-cover grayscale-[40%] hover:grayscale-0 transition-all duration-700 hover:scale-105" 
-                />
-              </div>
-            ))}
-          </motion.div>
-        </section>
-
-        {/* LAB DESCRIPTIONS BOXES */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {labCategories.map((lab, index) => (
-            <motion.div
-              key={lab.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 0.98 }}
-              whileTap={{ scale: 0.95 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="glass-panel p-8 md:p-10 border-white/5 hover:border-[#FF914D]/40 transition-all group relative overflow-hidden bg-zinc-900/20"
-            >
-              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-20 transition-opacity text-[#FF914D]">
-                {labIconMap[lab.slug]}
-              </div>
-
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-white/5 rounded-xl text-[#FF914D] group-hover:bg-[#FF914D] group-hover:text-black transition-colors">
-                  {labIconMap[lab.slug]}
-                </div>
-                <h3 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter">
-                  {lab.title}
-                </h3>
-              </div>
-
-              <p className="text-zinc-400 text-sm md:text-base leading-relaxed mb-8 uppercase font-medium">
-                {lab.description}
-              </p>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                {lab.tags.map(tag => (
-                  <span key={tag} className="text-[9px] font-mono border border-white/10 px-3 py-1 rounded-full text-zinc-500 uppercase">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href={`/labs/${lab.slug}`}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white transition-all hover:border-[#FF914D]/70 hover:bg-white/10"
-                >
-                  <Info size={14} />
-                  Dettagli
-                  <ChevronRight size={14} />
-                </Link>
-                <button
-                  type="button"
-                  onClick={scrollToSubscribe}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#FF914D] px-5 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-black shadow-[0_0_24px_rgba(255,145,77,0.24)] transition-all hover:bg-white hover:shadow-[0_0_34px_rgba(255,145,77,0.42)]"
-                >
-                  Voglio iscrivermi
-                  <ChevronDown size={14} />
-                </button>
-              </div>
-            </motion.div>
           ))}
         </section>
-          
-        {/* CALL TO ACTION */}
-        <section ref={subscribeRef} className="flex justify-center scroll-mt-20">
-          <div className="glass-panel p-8 md:p-12 border-[#FF914D]/10 bg-[#FF914D]/5 flex flex-col items-center text-center rounded-[2.5rem] max-w-2xl w-full">
-            <h2 className="text-2xl md:text-4xl font-black italic uppercase mb-3 tracking-tighter text-white">
-              Vuoi partecipare anche tu?
-            </h2>
-            <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.2em] mb-8">
-              I nostri laboratori sono aperti ai ragazzi del territorio. Scrivici e capiamo insieme qual e il percorso giusto per entrare nella Factory.
-            </p>
-            <a 
-              href="https://forms.gle/gbkbEvaavFaHFkkG9" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="nav-tag px-10 py-4 bg-[#FF914D] text-black border-none font-black uppercase tracking-widest text-xs rounded-full hover:scale-110 hover:shadow-[0_0_20px_rgba(255,145,77,0.4)] transition-all inline-block"
-            >
-              ISCRIVITI
-            </a>
-          </div>
+        <section className="lab-list" aria-label="I nostri percorsi">
+          {labCategories.map((lab, index) => {
+            const Icon = icons[index];
+            return (
+              <article className="lab-card" key={lab.slug}>
+                <div className="activity-top">
+                  <span className="clay-icon">
+                    <Icon size={29} />
+                  </span>
+                  <span className="card-index">PERCORSO 0{index + 1}</span>
+                </div>
+                <h2>{lab.title}</h2>
+                <p>{lab.description}</p>
+                <div className="tags">
+                  {lab.tags.map((tag) => (
+                    <span key={tag}>{tag}</span>
+                  ))}
+                </div>
+                <div className="lab-actions">
+                  <Link
+                    className="clay-button light"
+                    href={`/labs/${lab.slug}`}
+                  >
+                    Scopri il percorso <ArrowUpRight size={17} />
+                  </Link>
+                  <a href="#iscrizioni" className="text-link">
+                    Voglio partecipare <ArrowUpRight size={16} />
+                  </a>
+                </div>
+              </article>
+            );
+          })}
         </section>
-
-      </main>
-
-      <footer className="py-24 text-center opacity-20">
-        <p className="text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
-          UTTF labs / Rozzano / 2026
-        </p>
-      </footer>
-    </div>
+        <section id="iscrizioni" className="association-cta">
+          <div>
+            <span className="eyebrow">Cominciamo da qui</span>
+            <h2>
+              La curiosità basta
+              <br />
+              per fare il primo passo.
+            </h2>
+            <p>
+              I nostri laboratori sono aperti ai ragazzi del territorio. Compila
+              il modulo: capiamo insieme qual è il percorso giusto per entrare
+              nella Factory.
+            </p>
+          </div>
+          <a
+            href="https://forms.gle/gbkbEvaavFaHFkkG9"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="clay-button light"
+          >
+            Iscriviti a un laboratorio <ArrowUpRight size={19} />
+          </a>
+        </section>
+      </div>
+    </main>
   );
 }

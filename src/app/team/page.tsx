@@ -1,16 +1,13 @@
-'use client'
-
-import { motion } from 'framer-motion';
-import { 
-  User, 
-  Camera, 
-  Music, 
-  Scissors, 
-  Settings, 
-  ArrowLeft, 
-  ExternalLink 
-} from 'lucide-react';
-import Link from 'next/link';
+import {
+  User,
+  Camera,
+  Music,
+  Scissors,
+  Settings,
+  ArrowUpRight,
+} from "lucide-react";
+import Image from "next/image";
+import PublicPageIntro from "@/components/PublicPageIntro";
 
 const teamMembers = [
   {
@@ -18,185 +15,131 @@ const teamMembers = [
     role: "Presidente & Founder",
     icon: <User size={20} />,
     image: "/team/elle-pio.jpg",
-    description: "Presidente e fondatore, porta avanti con tenacia una visione nata da bambino e trasformata in UTTF: un punto di riferimento che accoglie, orienta e fa crescere un gruppo di ragazzi attraverso arte, disciplina e comunità.",
+    description:
+      "Presidente e fondatore, porta avanti con tenacia una visione nata da bambino e trasformata in UTTF: un punto di riferimento che accoglie, orienta e fa crescere un gruppo di ragazzi attraverso arte, disciplina e comunità.",
     skills: ["Leadership", "Creative Direction", "Education"],
-    tags: ["FOUNDER", "RAP ARTIST", "LVL_ADMIN"]
+    tags: ["FOUNDER", "RAP ARTIST", "EDUCAZIONE"],
   },
   {
     name: "Drew",
     role: "Video Maker",
     icon: <Camera size={20} />,
     image: "/team/drew.jpg",
-    description: "Cresciuto professionalmente dentro UTTF, ha trasformato la passione per l'immagine in un mestiere. Oggi lavora come videomaker con artisti riconosciuti, portando tecnica, visione e affidabilità in ogni produzione.",
+    description:
+      "Cresciuto professionalmente dentro UTTF, ha trasformato la passione per l'immagine in un mestiere. Oggi lavora come videomaker con artisti riconosciuti, portando tecnica, visione e affidabilità in ogni produzione.",
     skills: ["Video Editing", "Directing", "Color Grading"],
-    tags: ["FILMMAKER", "VISUALS", "RAP ARTIST"]
+    tags: ["FILMMAKER", "VISUALS", "RAP ARTIST"],
   },
   {
     name: "Sarso",
     role: "Educatore / Vocalist",
     icon: <Music size={20} />,
-    image: "/team/sarso.jpg",
-    description: "Artista tenace, crede profondamente nel valore della propria arte. Nato oltre 15 anni fa con il beatbox, è diventato MC, presentatore live e giudice di contest hip-hop, con collaborazioni e featuring importanti nella scena.",
+    image: "/team/placeholder.svg",
+    description:
+      "Artista tenace, crede profondamente nel valore della propria arte. Nato oltre 15 anni fa con il beatbox, è diventato MC, presentatore live e giudice di contest hip-hop, con collaborazioni e featuring importanti nella scena.",
     skills: ["Vocal Coaching", "Social Work", "Stage Presence"],
-    tags: ["VOCALIST", "EDUCATOR", "ENERGY"]
+    tags: ["VOCALIST", "EDUCATOR", "ENERGY"],
   },
   {
     name: "Gioitz",
     role: "Produttore / DJ",
     icon: <Scissors size={20} />,
     image: "/team/gioitz.jpg",
-    description: "Studia musica da sempre, cercandone struttura, suono e dettagli. Diplomato come produttore musicale, unisce orecchio preciso e creatività naturale per costruire beat, atmosfere e identità sonore.",
+    description:
+      "Studia musica da sempre, cercandone struttura, suono e dettagli. Diplomato come produttore musicale, unisce orecchio preciso e creatività naturale per costruire beat, atmosfere e identità sonore.",
     skills: ["Music Production", "DJing", "Sound Design"],
-    tags: ["PRODUCER", "MUSICIAN", "STYLE"]
+    tags: ["PRODUCER", "MUSICIAN", "STYLE"],
   },
   {
     name: "Geo",
     role: "Operatrice / Creative Support",
     icon: <User size={20} />,
     image: "/team/geo.jpg",
-    description: "Determinata e caparbia, si mette continuamente in gioco. Lavora nel mondo della moda e porta in UTTF visione estetica, presenza operativa e competenze da social media manager dell'associazione.",
+    description:
+      "Determinata e caparbia, si mette continuamente in gioco. Lavora nel mondo della moda e porta in UTTF visione estetica, presenza operativa e competenze da social media manager dell'associazione.",
     skills: ["Team Support", "Creative Coordination", "Operational Flow"],
-    tags: ["OPERATOR", "CREATIVE SUPPORT", "TEAM FLOW"]
+    tags: ["OPERATOR", "CREATIVE SUPPORT", "TEAM FLOW"],
   },
   {
     name: "Den",
     role: "Fonico / SMM",
     icon: <Settings size={20} />,
     image: "/team/den.jpg",
-    description: "Diplomato in grafica e comunicazione, fotografo, fonico certificato e project manager. È il profilo trasversale che entra dove serve: tecnico, creativo, problem solver e sviluppatore web, creatore di questo sito.",
+    description:
+      "Diplomato in grafica e comunicazione, fotografo, fonico certificato e project manager. È il profilo trasversale che entra dove serve: tecnico, creativo, problem solver e sviluppatore web, creatore di questo sito.",
     skills: ["Audio Engineering", "Social Media", "Graphic Design"],
-    tags: ["AUDIO TECH", "SMM", "PROBLEM SOLVER"]
+    tags: ["AUDIO TECH", "SMM", "PROBLEM SOLVER"],
   },
 ];
 
 export default function TeamPage() {
   return (
-    <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40">
-      
-      {/* HEADER */}
-      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-start gap-12">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+    <main className="public-page">
+      <PublicPageIntro
+        number="02"
+        eyebrow="L’associazione"
+        title={
+          <>
+            Le persone.
+            <br />
+            La nostra <span>forza.</span>
+          </>
+        }
+        description="Siamo artisti, educatori e persone che credono nel territorio. Condividiamo competenze e passioni per accompagnare i ragazzi in un percorso di crescita attraverso l’arte e la cultura hip-hop."
+      />
+      <div className="content-width">
+        <section
+          className="people-grid"
+          aria-label="Il team Under The Tower Factory"
         >
-          <Link href="/" className="nav-tag flex items-center gap-2 group border-white/10 hover:border-[#FF914D]/50 transition-all">
-            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> 
-            <span className="font-mono tracking-widest text-[10px]">INDIETRO</span>
-          </Link>
-        </motion.div>
-
-        <div className="flex flex-col gap-4">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none"
-          >
-            IL <span className="text-[#FF914D]">TEAM</span> OPERATIVO
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-zinc-500 text-sm md:text-lg max-w-xl uppercase font-mono tracking-tight leading-tight"
-          >
-            Task force creativa specializzata in cultura urbana e hip-hop.
-          </motion.p>
-        </div>
-      </header>
-
-      {/* TEAM GRID */}
-      <main className="w-full max-w-7xl px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {teamMembers.map((member, index) => (
-            <motion.div
-              key={member.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="glass-panel group border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden flex flex-col rounded-[2rem]"
-            >
-              <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
-                {/* eslint-disable-next-line @next/next/no-img-element -- Team cards keep an inline fallback for missing profile photos. */}
-                <img 
-                  src={member.image} 
+          {teamMembers.map((member) => (
+            <article className="person-card" key={member.name}>
+              <div className="person-photo">
+                <Image
+                  src={member.image}
                   alt={member.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://placehold.co/600x800/0a0a0a/FF914D?text=FACTORY_MEMBER";
-                  }}
+                  fill
+                  sizes="(min-width: 1100px) 33vw, (min-width: 520px) 50vw, 100vw"
                 />
-                <div className="absolute top-4 right-4 p-2 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-[#FF914D]">
-                  {member.icon}
-                </div>
-                <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black via-black/60 to-transparent">
-                  <h3 className="text-3xl font-black italic uppercase tracking-tighter">
-                    {member.name}
-                  </h3>
-                  <p className="text-[#FF914D] font-mono text-[10px] tracking-[0.3em] uppercase">
-                    {member.role}
-                  </p>
-                </div>
+                <span>{member.icon}</span>
               </div>
-
-              <div className="p-8 flex-grow flex flex-col justify-between bg-zinc-950/50">
-                <div>
-                  <p className="text-zinc-400 text-[11px] leading-relaxed mb-8 uppercase tracking-tight font-medium">
-                    {member.description}
-                  </p>
-
-                  <div className="space-y-4 mb-8">
-                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Cosa porta nel team</p>
-                    <div className="flex flex-wrap gap-2">
-                      {member.skills.map(skill => (
-                        <span key={skill} className="px-3 py-1 bg-white/5 border border-white/5 rounded text-[9px] font-black uppercase text-zinc-300">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 pt-6 border-t border-white/5">
-                  {member.tags.map(tag => (
-                    <span key={tag} className="text-[8px] font-mono text-[#FF914D]/70 uppercase tracking-tighter">
-                      #{tag}
-                    </span>
+              <div className="person-copy">
+                <h2>{member.name}</h2>
+                <span className="eyebrow">{member.role}</span>
+                <p>{member.description}</p>
+                <div className="tags">
+                  {member.skills.map((skill) => (
+                    <span key={skill}>{skill}</span>
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </article>
           ))}
-        </div>
-      </main>
-
-      {/* FOOTER / CALL TO ACTION */}
-      <footer className="mt-32 w-full max-w-3xl px-6 text-center">
-        <div className="glass-panel p-12 border-white/5 rounded-[3rem] relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FF914D]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          
-          <h2 className="text-2xl font-black uppercase italic mb-6 tracking-tighter">
-            Vorresti entrare nella <span className="text-[#FF914D]">SQUADRA</span>?
-          </h2>
-          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8 leading-relaxed">
-            Cerchiamo persone volenterose, con grinta e voglia di mettersi in gioco: gente pronta ad aiutare gli altri a migliorarsi e a crescere insieme dentro una community creativa.
-          </p>
-          
-          <a 
+        </section>
+        <section id="collabora" className="association-cta">
+          <div>
+            <span className="eyebrow">Facciamo comunità</span>
+            <h2>
+              C’è posto anche
+              <br />
+              per il tuo contributo.
+            </h2>
+            <p>
+              Cerchiamo persone con voglia di mettersi in gioco e aiutare gli
+              altri a crescere. Porta le tue competenze, il tuo tempo e le tue
+              idee nell’associazione.
+            </p>
+          </div>
+          <a
             href="https://docs.google.com/forms/d/e/1FAIpQLSerjf1xGTrj08wmLSJhbrqwDV2Czc5Kd6OatIyvdlSwJsRNrw/viewform"
             target="_blank"
             rel="noopener noreferrer"
-            className="nav-tag inline-flex items-center gap-2 px-10 py-4 border-[#FF914D]/20 text-[#FF914D] hover:bg-[#FF914D] hover:text-black transition-all font-black uppercase tracking-widest text-xs cursor-pointer group/btn"
+            className="clay-button light"
           >
-            COMPILA IL FORM
-            <ExternalLink size={14} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+            Collabora con noi <ArrowUpRight size={18} />
           </a>
-        </div>
-        
-        <p className="mt-20 text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
-          UTTF staff / 2026
-        </p>
-      </footer>
-    </div>
+        </section>
+      </div>
+    </main>
   );
 }

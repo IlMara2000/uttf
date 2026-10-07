@@ -1,280 +1,231 @@
-'use client'
-
-import { type FormEvent, useState } from 'react';
-import { motion } from 'framer-motion';
+"use client";
+import { type FormEvent, useState } from "react";
 import {
-  ArrowLeft,
+  ArrowUpRight,
   Brush,
   ImageIcon,
   MapPin,
   Mail,
   Palette,
   Send,
-  Sparkles
-} from 'lucide-react';
-import Link from 'next/link';
+  Sparkles,
+} from "lucide-react";
+import Image from "next/image";
+import PublicPageIntro from "@/components/PublicPageIntro";
 
 const artworks = [
   {
-    title: 'Muro Vivo',
-    type: 'Urban Canvas',
+    title: "Muro Vivo",
+    type: "Urban Canvas",
     icon: <Palette size={20} />,
-    image: '/instagram/post1.jpeg',
-    description: 'Opera nata dal territorio, tra segni rapidi, materia urbana e identita locale. Un frammento visivo della factory lasciato respirare a pochi passi da casa.',
-    techniques: ['Street Art', 'Mixed Media', 'Local Roots'],
-    tags: ['KM0', 'URBAN', 'COMMUNITY']
+    image: "/instagram/post1.jpeg",
+    description:
+      "Opera nata dal territorio, tra segni rapidi, materia urbana e identita locale. Un frammento visivo della factory lasciato respirare a pochi passi da casa.",
+    techniques: ["Street Art", "Mixed Media", "Local Roots"],
+    tags: ["KM0", "URBAN", "COMMUNITY"],
   },
   {
-    title: 'Factory Signs',
-    type: 'Visual Archive',
+    title: "Factory Signs",
+    type: "Visual Archive",
     icon: <ImageIcon size={20} />,
-    image: '/instagram/post2.jpeg',
-    description: 'Tracce, dettagli e simboli raccolti dentro il flusso creativo UTTF. Ogni immagine conserva il rumore buono delle idee nate sul posto.',
-    techniques: ['Photography', 'Archive', 'Composition'],
-    tags: ['ARCHIVE', 'DETAILS', 'UTTF']
+    image: "/instagram/post2.jpeg",
+    description:
+      "Tracce, dettagli e simboli raccolti dentro il flusso creativo UTTF. Ogni immagine conserva il rumore buono delle idee nate sul posto.",
+    techniques: ["Photography", "Archive", "Composition"],
+    tags: ["ARCHIVE", "DETAILS", "UTTF"],
   },
   {
-    title: 'Linea Locale',
-    type: 'Handmade Piece',
+    title: "Linea Locale",
+    type: "Handmade Piece",
     icon: <Brush size={20} />,
-    image: '/instagram/post3.jpeg',
-    description: 'Un lavoro costruito con mani vicine, materiali accessibili e visione diretta. Arte a km0 significa partire da quello che abbiamo intorno.',
-    techniques: ['Handmade', 'Texture', 'Color Study'],
-    tags: ['HANDMADE', 'LOCAL', 'RAW']
+    image: "/instagram/post3.jpeg",
+    description:
+      "Un lavoro costruito con mani vicine, materiali accessibili e visione diretta. Arte a km0 significa partire da quello che abbiamo intorno.",
+    techniques: ["Handmade", "Texture", "Color Study"],
+    tags: ["HANDMADE", "LOCAL", "RAW"],
   },
   {
-    title: 'Sotto La Torre',
-    type: 'Community Work',
+    title: "Sotto La Torre",
+    type: "Community Work",
     icon: <MapPin size={20} />,
-    image: '/instagram/post4.jpeg',
-    description: 'Un pezzo che tiene insieme luogo, persone e memoria. La galleria diventa mappa emotiva di quello che succede sotto la torre.',
-    techniques: ['Community Art', 'Storytelling', 'Visual Map'],
-    tags: ['PLACE', 'PEOPLE', 'MEMORY']
+    image: "/instagram/post4.jpeg",
+    description:
+      "Un pezzo che tiene insieme luogo, persone e memoria. La galleria diventa mappa emotiva di quello che succede sotto la torre.",
+    techniques: ["Community Art", "Storytelling", "Visual Map"],
+    tags: ["PLACE", "PEOPLE", "MEMORY"],
   },
   {
-    title: 'Lab Session 01',
-    type: 'Creative Process',
+    title: "Lab Session 01",
+    type: "Creative Process",
     icon: <Sparkles size={20} />,
-    image: '/labs/foto1.jpeg',
-    description: 'Scatto dal processo creativo: prove, tentativi, strumenti e intuizioni. Qui la galleria mostra anche quello che arriva prima del risultato.',
-    techniques: ['Process', 'Workshop', 'Experiment'],
-    tags: ['LAB', 'PROCESS', 'SESSION']
+    image: "/labs/foto1.jpeg",
+    description:
+      "Scatto dal processo creativo: prove, tentativi, strumenti e intuizioni. Qui la galleria mostra anche quello che arriva prima del risultato.",
+    techniques: ["Process", "Workshop", "Experiment"],
+    tags: ["LAB", "PROCESS", "SESSION"],
   },
   {
-    title: 'Lab Session 02',
-    type: 'Local Experiment',
+    title: "Lab Session 02",
+    type: "Local Experiment",
     icon: <Brush size={20} />,
-    image: '/labs/foto2.jpeg',
-    description: 'Esperimento visivo nato in laboratorio, con energia diretta e spirito artigianale. Nessuna distanza: solo idee lavorate vicino alla community.',
-    techniques: ['Experiment', 'Craft', 'Culture'],
-    tags: ['LOCAL', 'CRAFT', 'CULTURE']
+    image: "/labs/foto2.jpeg",
+    description:
+      "Esperimento visivo nato in laboratorio, con energia diretta e spirito artigianale. Nessuna distanza: solo idee lavorate vicino alla community.",
+    techniques: ["Experiment", "Craft", "Culture"],
+    tags: ["LOCAL", "CRAFT", "CULTURE"],
   },
 ];
 
 export default function GalleryPage() {
   const [showProposalForm, setShowProposalForm] = useState(false);
-  const [proposalEmail, setProposalEmail] = useState('');
-  const [proposalSubject, setProposalSubject] = useState('');
-  const [proposalBody, setProposalBody] = useState('');
-  const [proposalStatus, setProposalStatus] = useState<'idle' | 'opening' | 'ready'>('idle');
+  const [proposalEmail, setProposalEmail] = useState("");
+  const [proposalSubject, setProposalSubject] = useState("");
+  const [proposalBody, setProposalBody] = useState("");
+  const [proposalStatus, setProposalStatus] = useState<
+    "idle" | "opening" | "ready"
+  >("idle");
 
   const proposalHref = `mailto:ass.uttf@gmail.com?subject=${encodeURIComponent(proposalSubject)}&body=${encodeURIComponent(
-    `Mail utente: ${proposalEmail}\n\n${proposalBody}`
+    `Mail utente: ${proposalEmail}\n\n${proposalBody}`,
   )}`;
 
   const handleProposalSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setProposalStatus('opening');
+    setProposalStatus("opening");
     window.setTimeout(() => {
       window.location.href = proposalHref;
-      setProposalStatus('ready');
+      setProposalStatus("ready");
     }, 350);
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-white flex flex-col items-center overflow-x-hidden pb-40">
-      <header className="w-full max-w-7xl px-6 pt-12 pb-16 flex flex-col items-start gap-12">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <Link href="/" className="nav-tag flex items-center gap-2 group border-white/10 hover:border-[#FF914D]/50 transition-all">
-            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="font-mono tracking-widest text-[10px]">INDIETRO</span>
-          </Link>
-        </motion.div>
-
-        <div className="flex flex-col gap-4">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none"
-          >
-            GALLERIA <span className="text-[#FF914D]">KM0</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-zinc-500 text-sm md:text-lg max-w-xl uppercase font-mono tracking-tight leading-tight"
-          >
-            Arte locale, processi creativi e frammenti visuali nati dentro Under The Tower Factory.
-          </motion.p>
-        </div>
-      </header>
-
-      <main className="w-full max-w-7xl px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {artworks.map((artwork, index) => (
-            <motion.div
-              key={artwork.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="glass-panel group border-white/5 hover:border-[#FF914D]/30 transition-all duration-500 overflow-hidden flex flex-col rounded-[2rem]"
-            >
-              <div className="relative h-64 w-full overflow-hidden bg-zinc-900">
-                {/* eslint-disable-next-line @next/next/no-img-element -- Local gallery assets use existing public folders and need the same inline fallback as team cards. */}
-                <img
+    <main className="public-page">
+      <PublicPageIntro
+        number="03"
+        eyebrow="Arte a km 0"
+        title={
+          <>
+            L’arte nasce
+            <br />
+            <span>qui vicino.</span>
+          </>
+        }
+        description="Immagini, processi e frammenti creativi dal territorio. La nostra galleria racconta quello che nasce quando le persone hanno lo spazio per esprimersi."
+      />
+      <div className="content-width">
+        <section className="people-grid" aria-label="Galleria della Factory">
+          {artworks.map((artwork) => (
+            <article className="person-card" key={artwork.title}>
+              <div className="person-photo">
+                <Image
                   src={artwork.image}
                   alt={artwork.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  onError={(e) => {
-                    e.currentTarget.src = 'https://placehold.co/600x800/0a0a0a/FF914D?text=KM0_ART';
-                  }}
+                  fill
+                  sizes="(min-width: 1100px) 33vw, (min-width: 520px) 50vw, 100vw"
                 />
-                <div className="absolute top-4 right-4 p-2 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 text-[#FF914D]">
-                  {artwork.icon}
-                </div>
-                <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black via-black/60 to-transparent">
-                  <h3 className="text-3xl font-black italic uppercase tracking-tighter">
-                    {artwork.title}
-                  </h3>
-                  <p className="text-[#FF914D] font-mono text-[10px] tracking-[0.3em] uppercase">
-                    {artwork.type}
-                  </p>
-                </div>
+                <span>{artwork.icon}</span>
               </div>
-
-              <div className="p-8 flex-grow flex flex-col justify-between bg-zinc-950/50">
-                <div>
-                  <p className="text-zinc-400 text-[11px] leading-relaxed mb-8 uppercase tracking-tight font-medium">
-                    {artwork.description}
-                  </p>
-
-                  <div className="space-y-4 mb-8">
-                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Come nasce</p>
-                    <div className="flex flex-wrap gap-2">
-                      {artwork.techniques.map((technique) => (
-                        <span key={technique} className="px-3 py-1 bg-white/5 border border-white/5 rounded text-[9px] font-black uppercase text-zinc-300">
-                          {technique}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 pt-6 border-t border-white/5">
-                  {artwork.tags.map((tag) => (
-                    <span key={tag} className="text-[8px] font-mono text-[#FF914D]/70 uppercase tracking-tighter">
-                      #{tag}
-                    </span>
+              <div className="person-copy">
+                <span className="eyebrow">{artwork.type}</span>
+                <h2>{artwork.title}</h2>
+                <p>{artwork.description}</p>
+                <div className="tags">
+                  {artwork.techniques.map((tag) => (
+                    <span key={tag}>{tag}</span>
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </article>
           ))}
-        </div>
-      </main>
-
-      <footer className="mt-32 w-full max-w-3xl px-6 text-center">
-        <div className="glass-panel p-12 border-white/5 rounded-[3rem] relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FF914D]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-          <h2 className="text-2xl font-black uppercase italic mb-6 tracking-tighter">
-            Vuoi proporre un <span className="text-[#FF914D]">progetto o un&apos;idea</span>?
-          </h2>
-          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest mb-8">
-            La galleria cresce con artisti, idee e contributi che arrivano dal territorio.
-          </p>
-
+        </section>
+        <section className="association-cta">
+          <div>
+            <span className="eyebrow">La galleria cresce con te</span>
+            <h2>
+              Hai un’idea?
+              <br />
+              Diamole spazio.
+            </h2>
+            <p>
+              Artisti, progetti e contributi dal territorio: raccontaci cosa
+              vorresti costruire insieme.
+            </p>
+          </div>
           <button
-            type="button"
-            onClick={() => setShowProposalForm((current) => !current)}
-            className="nav-tag inline-flex items-center gap-2 px-10 py-4 border-[#FF914D]/20 text-[#FF914D] hover:bg-[#FF914D] hover:text-black transition-all font-black uppercase tracking-widest text-xs cursor-pointer group/btn"
+            className="clay-button light"
+            aria-expanded={showProposalForm}
+            aria-controls="proposal-form"
+            onClick={() => setShowProposalForm((value) => !value)}
           >
-            PROPONICI LE TUE IDEE QUI
-            <Mail size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+            Proponi un progetto <Mail size={18} />
           </button>
-
-          {showProposalForm && (
-            <motion.form
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8 grid gap-3 text-left"
-              onSubmit={handleProposalSubmit}
+        </section>
+        {showProposalForm && (
+          <form
+            id="proposal-form"
+            className="editorial-form proposal-form"
+            onSubmit={handleProposalSubmit}
+          >
+            <h2>Raccontaci la tua idea.</h2>
+            <p>
+              Il modulo prepara un’email da inviare con la tua applicazione di
+              posta.
+            </p>
+            <label htmlFor="proposal-email">La tua email</label>
+            <input
+              id="proposal-email"
+              type="email"
+              required
+              autoComplete="email"
+              value={proposalEmail}
+              onChange={(event) => setProposalEmail(event.target.value)}
+              placeholder="nome@esempio.it"
+            />
+            <label htmlFor="proposal-subject">Oggetto</label>
+            <input
+              id="proposal-subject"
+              required
+              value={proposalSubject}
+              onChange={(event) => setProposalSubject(event.target.value)}
+              placeholder="Il nome del tuo progetto"
+            />
+            <label htmlFor="proposal-body">La tua proposta</label>
+            <textarea
+              id="proposal-body"
+              required
+              rows={6}
+              value={proposalBody}
+              onChange={(event) => setProposalBody(event.target.value)}
+              placeholder="Da quale idea partiamo?"
+            />
+            <button
+              type="submit"
+              disabled={proposalStatus === "opening"}
+              className="clay-button"
             >
-              <input
-                type="email"
-                required
-                value={proposalEmail}
-                onChange={(event) => setProposalEmail(event.target.value)}
-                placeholder="LA TUA MAIL"
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xs uppercase text-white outline-none placeholder:text-zinc-600 focus:border-[#FF914D]/60"
-              />
-              <input
-                type="text"
-                required
-                value={proposalSubject}
-                onChange={(event) => setProposalSubject(event.target.value)}
-                placeholder="OGGETTO"
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xs uppercase text-white outline-none placeholder:text-zinc-600 focus:border-[#FF914D]/60"
-              />
-              <textarea
-                required
-                value={proposalBody}
-                onChange={(event) => setProposalBody(event.target.value)}
-                placeholder="TESTO MAIL"
-                className="min-h-36 w-full resize-none rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-xs uppercase text-white outline-none placeholder:text-zinc-600 focus:border-[#FF914D]/60"
-              />
-              <button
-                type="submit"
-                disabled={proposalStatus === 'opening'}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF914D] px-6 py-3 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-white disabled:cursor-wait disabled:opacity-70"
-              >
-                <Send size={14} />
-                {proposalStatus === 'opening' ? 'Apro la mail...' : 'Genera mail'}
-              </button>
-              {proposalStatus !== 'idle' && (
-                <motion.p
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  role="status"
-                  aria-live="polite"
-                  className="rounded-xl border border-[#FF914D]/25 bg-[#FF914D]/10 px-4 py-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-[#FF914D]"
-                >
-                  {proposalStatus === 'opening' ? (
-                    'Sto aprendo il client mail del dispositivo.'
-                  ) : (
-                    <>
-                      Mail generata. Se non si è aperta,{' '}
-                      <a href={proposalHref} className="underline decoration-[#FF914D]/60 underline-offset-4">
-                        clicca qui
-                      </a>
-                      .
-                    </>
-                  )}
-                </motion.p>
-              )}
-            </motion.form>
-          )}
-        </div>
-
-        <p className="mt-20 text-[9px] font-mono uppercase tracking-[1em] text-zinc-600 italic">
-          UTTF arte a km 0 / 2026
-        </p>
-      </footer>
-    </div>
+              {proposalStatus === "opening"
+                ? "Apro la mail…"
+                : "Prepara l’email"}{" "}
+              <Send size={17} />
+            </button>
+            {proposalStatus !== "idle" && (
+              <p role="status">
+                {proposalStatus === "opening" ? (
+                  "Sto aprendo la tua applicazione di posta."
+                ) : (
+                  <>
+                    Email preparata. Se l’applicazione non si è aperta,{" "}
+                    <a href={proposalHref}>
+                      apri l’email qui <ArrowUpRight size={15} />
+                    </a>
+                    .
+                  </>
+                )}
+              </p>
+            )}
+          </form>
+        )}
+      </div>
+    </main>
   );
 }

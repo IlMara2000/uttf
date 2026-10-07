@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800" role="img" aria-label="Foto del membro del team non disponibile">
+  <defs>
+    <radialGradient id="background"><stop stop-color="#392216"/><stop offset="1" stop-color="#0a0a0a"/></radialGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#background)"/>
+  <circle cx="300" cy="285" r="105" fill="#ff914d" opacity=".2"/>
+  <path d="M130 690c10-140 75-210 170-210s160 70 170 210" fill="#ff914d" opacity=".2"/>
+  <text x="300" y="744" text-anchor="middle" fill="#ff914d" font-size="34" font-family="Arial,sans-serif" font-weight="700" letter-spacing="8">UTTF TEAM</text>
+</svg>

@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { Star } from 'lucide-react';
+import { Star } from "lucide-react";
 
 type ReviewStarsProps = {
   rating: number;
@@ -23,7 +23,7 @@ export default function ReviewStars({
         return (
           <div
             key={index}
-            className={`relative ${interactive ? 'cursor-pointer' : ''}`}
+            className={`relative ${interactive ? "cursor-pointer" : ""}`}
             style={{ width: size, height: size }}
           >
             {interactive && onChange ? (
@@ -31,6 +31,7 @@ export default function ReviewStars({
                 type="button"
                 aria-label={`Assegna ${index + 1} stelle su 5`}
                 className="absolute inset-0 z-20 h-full w-full"
+                aria-pressed={rating === index + 1}
                 onClick={() => onChange(index + 1)}
               />
             ) : null}
@@ -47,7 +48,7 @@ export default function ReviewStars({
             >
               <Star
                 size={size}
-                className="fill-[#FF914D] text-[#FF914D] drop-shadow-[0_0_10px_rgba(255,145,77,0.15)]"
+                className="fill-[#FF914D] text-[#161616]"
                 strokeWidth={1.8}
               />
             </div>
