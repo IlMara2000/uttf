@@ -1,9 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Mic2, Music2, Palette, Users } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import PublicPageIntro from "@/components/PublicPageIntro";
 import { labCategories } from "./lab-data";
-const icons = [Mic2, Music2, Palette, Users];
 
 export default function LabsPage() {
   return (
@@ -13,9 +12,9 @@ export default function LabsPage() {
         eyebrow="I laboratori"
         title={
           <>
-            Il tuo spazio
+            Sbaglia pure.
             <br />
-            per <span>provare.</span>
+            Poi <span>riprova.</span>
           </>
         }
         description="La cultura urbana diventa un’occasione per esprimersi, imparare e incontrare altre persone. Nei laboratori della Factory si cresce mettendosi in gioco, insieme."
@@ -42,13 +41,9 @@ export default function LabsPage() {
         </section>
         <section className="lab-list" aria-label="I nostri percorsi">
           {labCategories.map((lab, index) => {
-            const Icon = icons[index];
             return (
               <article className="lab-card" key={lab.slug}>
                 <div className="activity-top">
-                  <span className="clay-icon">
-                    <Icon size={29} />
-                  </span>
                   <span className="card-index">PERCORSO 0{index + 1}</span>
                 </div>
                 <h2>{lab.title}</h2>

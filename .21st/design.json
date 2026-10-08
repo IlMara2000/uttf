@@ -2,7 +2,7 @@
   "version": 1,
   "project": {
     "name": "uttf-crm",
-    "productType": "Associazione di promozione sociale; cultura hip-hop, educazione e comunità a Rozzano",
+    "productType": "Associazione; cultura hip-hop, educazione e comunità a Rozzano",
     "stack": [
       "nextjs",
       "react",
@@ -50,7 +50,11 @@
     "spacing": {},
     "radius": {},
     "shadows": {},
-    "motion": {},
+    "motion": {
+      "reveal": "650ms cubic-bezier(.22,1,.36,1)",
+      "hover": "320ms cubic-bezier(.22,1,.36,1)",
+      "ticker": "32s, user-pausable, suspended offscreen and for reduced motion"
+    },
     "density": "editorial"
   },
   "components": {
@@ -70,18 +74,29 @@
       "Preserve #FF914D, black and white palette",
       "Preserve all original photos and both UTTF logos",
       "Foreground community, education, local roots and participation",
-      "Retain existing functional forms and staff tools"
+      "Retain existing functional forms and staff tools",
+      "Do not publish a legal-status label or acronym. User correction supersedes previous assumptions; use Under The Tower Factory or generic associazione in visible copy, metadata and structured data."
     ],
     "avoid": [
       "Glassmorphism, neon glow, orbit effects",
       "Invented statistics, events, or social proof",
-      "Corporate or technical system copy in public flows"
+      "Corporate or technical system copy in public flows",
+      "Emoji, pictographic ornaments, decorative stars or illustrative icon tiles",
+      "Cute sticker styling and excessive rounded cards"
     ]
   },
   "decisions": [
     {
       "date": "2026-10-08",
       "decision": "User-directed complete brutalism × claymorphism restyle: bold editorial hierarchy, solid borders and offset shadows, softly sculpted orange icons and buttons, real photos and association-focused navigation."
+    },
+    {
+      "date": "2026-10-08",
+      "decision": "Hip-hop editorial refinement requested by user: concert-poster typography, photo collage, dark hero, numbered activity rows, scroll reveals and pausable typographic ticker. Remove emoji and decorative icons; retain only functional navigation controls. Respect reduced motion and preserve association content, original palette, photos and logos."
+    },
+    {
+      "date": "2026-10-08",
+      "decision": "User-selected street/simple redesign preserving the existing page structure, sections, original palette, photographs, logos, association identity and no-emoji constraint. Flat surfaces, Space Grotesk headlines, white hero, straight photo framing, restrained motion. Quietly irreverent copy challenges labels and conformity while preserving mutual respect and inclusive participation."
     }
   ],
   "evidence": [

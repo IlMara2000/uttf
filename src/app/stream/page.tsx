@@ -1,4 +1,4 @@
-import { ArrowUpRight, CalendarDays } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import VideoEmbed from "@/components/VideoEmbed";
 import PublicPageIntro from "@/components/PublicPageIntro";
@@ -51,9 +51,7 @@ export default function StreamPage() {
         </section>
         <section className="association-cta">
           <div>
-            <span className="eyebrow">
-              <CalendarDays size={16} /> I prossimi incontri
-            </span>
+            <span className="eyebrow">I prossimi incontri</span>
             <h2>Ci rivediamo sotto la torre.</h2>
             <p>
               Stiamo aggiornando il programma. Trovi le nuove date nel diario e

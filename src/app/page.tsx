@@ -3,17 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowDown,
-  ArrowUpRight,
-  HandHeart,
-  MapPin,
-  Mic2,
-  Music2,
-  Palette,
-  Users,
-  X,
-} from "lucide-react";
+import { ArrowDown, ArrowUpRight, X } from "lucide-react";
+import FactoryScene from "@/components/FactoryScene";
+import FactoryTicker from "@/components/FactoryTicker";
 import { Dialog } from "radix-ui";
 
 type Publication = {
@@ -39,28 +31,24 @@ const activities = [
     title: "Rap F*cktory",
     label: "Trova la tua voce",
     text: "Scrittura, flow e microfoni aperti. Le tue storie diventano parole, le parole diventano musica.",
-    icon: Mic2,
   },
   {
     slug: "beat-making",
     title: "Beat making",
     label: "Dai forma al suono",
     text: "Dal primo sample alla tua base. Sperimentiamo, ascoltiamo e produciamo insieme.",
-    icon: Music2,
   },
   {
     slug: "urban-arts",
     title: "Urban arts",
     label: "Lascia il tuo segno",
     text: "Graffiti, fotografia e grafica. Nuovi linguaggi per raccontare quello che ci circonda.",
-    icon: Palette,
   },
   {
     slug: "community-hub",
     title: "Community hub",
     label: "Fai spazio alle idee",
     text: "Un luogo per incontrarsi, confrontarsi e costruire progetti che partono dal territorio.",
-    icon: Users,
   },
 ];
 
@@ -113,75 +101,39 @@ export default function HomePage() {
 
   return (
     <main className="home-page">
-      <section className="home-hero content-width">
-        <div className="hero-copy">
-          <span className="eyebrow">
-            <span className="status-dot" /> Cultura urbana. Impegno sociale.
-          </span>
-          <h1>
-            Qui si cresce.
-            <br />
-            <span>Insieme.</span>
-          </h1>
-          <p>
-            Siamo Under The Tower Factory, un’associazione di promozione sociale
-            a Rozzano. Mettiamo al centro i ragazzi, le loro idee e la forza di
-            fare comunità attraverso l’arte.
-          </p>
-          <div className="hero-actions">
-            <Link href="/labs" className="clay-button">
-              Scopri i laboratori <ArrowUpRight size={19} />
-            </Link>
-            <a href="#associazione" className="text-link">
-              La nostra storia <ArrowDown size={17} />
-            </a>
-          </div>
-          <div className="hero-footnote">
-            <span>RADICI NEL QUARTIERE.</span>
-            <span>SPAZIO ALLE POSSIBILITÀ.</span>
-          </div>
-        </div>
-        <div className="hero-visual">
-          <div className="hero-photo">
-            <Image
-              src="/labs/foto1.jpeg"
-              alt="Il gruppo Under The Tower Factory allo stand dell’associazione"
-              fill
-              preload
-              sizes="(min-width: 900px) 48vw, 100vw"
-            />
-            <span className="photo-caption">
-              <MapPin size={13} /> Dalla nostra parte di città.
+      <div className="hero-stage">
+        <section className="home-hero content-width">
+          <div className="hero-copy">
+            <span className="eyebrow">
+              Rozzano / Cultura urbana / Impegno sociale
             </span>
+            <h1 aria-label="Non stare al tuo posto.">
+              <span className="hero-line">Non stare</span>
+              <span className="hero-line">al tuo</span>
+              <span className="hero-line hero-line-accent">posto.</span>
+            </h1>
+            <p>
+              Siamo Under The Tower Factory, a Rozzano. Mettiamo al centro i
+              ragazzi, le loro idee e la forza di fare comunità attraverso
+              l’arte.
+            </p>
+            <div className="hero-actions">
+              <Link href="/labs" className="clay-button">
+                Scopri i laboratori <ArrowUpRight size={19} />
+              </Link>
+              <a href="#associazione" className="text-link">
+                La nostra storia <ArrowDown size={17} />
+              </a>
+            </div>
+            <div className="hero-footnote">
+              <span>LE ETICHETTE, FUORI.</span>
+              <span>LE PERSONE, DENTRO.</span>
+            </div>
           </div>
-          <div className="hero-sticker">
-            <span>
-              HIP-HOP
-              <br />È COMUNITÀ
-            </span>
-            <ArrowUpRight size={25} />
-          </div>
-          <div className="logo-clay">
-            <Image
-              src="/icons/homelogo.png"
-              alt="Under The Tower Factory"
-              width={190}
-              height={190}
-            />
-          </div>
-          <span className="photo-index">01 — PERSONE, PRIMA DI TUTTO.</span>
-        </div>
-      </section>
-      <div className="values-strip" aria-label="I nostri valori">
-        <span>RADICI URBANE</span>
-        <span aria-hidden="true">✳</span>
-        <span>SPAZIO ALLE IDEE</span>
-        <span aria-hidden="true">✳</span>
-        <span>CRESCITA CONDIVISA</span>
-        <span aria-hidden="true">✳</span>
-        <span>ROZZANO, CASA NOSTRA</span>
-        <span aria-hidden="true">✳</span>
+          <FactoryScene />
+        </section>
       </div>
+      <FactoryTicker />
       <section id="associazione" className="mission-section">
         <div className="content-width">
           <div className="section-kicker">
@@ -190,20 +142,17 @@ export default function HomePage() {
           </div>
           <div className="mission-grid">
             <h2>
-              Sotto la torre,
+              Nessuno da
               <br />
-              c’è spazio
+              rimettere
               <br />
-              <span>anche per te.</span>
+              <span>in riga.</span>
             </h2>
             <div>
-              <span className="clay-icon">
-                <HandHeart size={34} strokeWidth={1.7} />
-              </span>
               <p>
-                Crediamo nell’arte come occasione per incontrarsi, esprimersi e
-                crescere. Il rap, la musica e la cultura urbana sono il nostro
-                modo di aprire possibilità.
+                Non ci interessa mettere un’etichetta ai ragazzi. Ci interessa
+                quello che hanno da dire. Rap, musica e cultura urbana sono
+                gli strumenti: per esprimersi, incontrarsi e crescere.
               </p>
               <p>
                 Artisti, educatori e ragazzi condividono esperienze e
@@ -224,9 +173,9 @@ export default function HomePage() {
         </div>
         <div className="section-heading">
           <h2>
-            Le idee escono.
+            Meno prediche.
             <br />
-            Le persone crescono.
+            Più pratica.
           </h2>
           <Link href="/labs" className="text-link">
             Tutti i laboratori <ArrowUpRight size={18} />
@@ -240,9 +189,6 @@ export default function HomePage() {
               key={activity.slug}
             >
               <div className="activity-top">
-                <span className="clay-icon">
-                  <activity.icon size={29} strokeWidth={1.8} />
-                </span>
                 <span className="card-index">0{index + 1}</span>
               </div>
               <span className="eyebrow">{activity.label}</span>
@@ -265,11 +211,11 @@ export default function HomePage() {
           />
         </div>
         <div className="community-copy">
-          <span className="eyebrow">La cultura si fa, insieme.</span>
+          <span className="eyebrow">Il rispetto non si abbassa.</span>
           <h2>
-            Una voce.
+            Alza la voce.
             <br />
-            Tante storie.
+            Poi ascolta.
           </h2>
           <p>
             Un microfono che passa di mano. Un’idea che prende forma. Un gruppo
@@ -345,11 +291,11 @@ export default function HomePage() {
             <Link href="/feed" className="diary-invite">
               <span className="eyebrow">Ci trovi anche qui</span>
               <h3>
-                La nostra
+                La Factory.
                 <br />
-                quotidianità,
+                Senza
                 <br />
-                senza filtri.
+                bella copia.
               </h3>
               <p>
                 Foto, racconti e voci da dentro la Factory. Segui quello che
@@ -375,7 +321,7 @@ export default function HomePage() {
               che <span>sei.</span>
             </h2>
             <p>
-              La curiosità è un buon inizio.
+              Il personaggio puoi lasciarlo a casa.
               <br />
               C’è più di un modo per entrare nella Factory.
             </p>
@@ -386,7 +332,7 @@ export default function HomePage() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Mic2 size={25} />
+              <span className="participate-number">01</span>
               <h3>Partecipa a un lab</h3>
               <p>
                 Scopri un linguaggio, coltiva una passione, mettiti in gioco.
@@ -396,7 +342,7 @@ export default function HomePage() {
               </span>
             </a>
             <Link href="/team#collabora">
-              <HandHeart size={26} />
+              <span className="participate-number">02</span>
               <h3>Dai una mano</h3>
               <p>Metti tempo, idee e competenze al servizio della comunità.</p>
               <span>
@@ -404,7 +350,7 @@ export default function HomePage() {
               </span>
             </Link>
             <a href="mailto:ass.uttf@gmail.com">
-              <Users size={26} />
+              <span className="participate-number">03</span>
               <h3>Costruiamo qualcosa</h3>
               <p>Sei una realtà del territorio? Parliamo del tuo progetto.</p>
               <span>
@@ -416,9 +362,7 @@ export default function HomePage() {
       </section>
       <section className="visit-section content-width">
         <div>
-          <span className="eyebrow">
-            <MapPin size={15} /> Ci vediamo a Rozzano
-          </span>
+          <span className="eyebrow">Ci vediamo a Rozzano</span>
           <h2>
             Il nostro punto
             <br />

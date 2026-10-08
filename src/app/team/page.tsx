@@ -1,11 +1,4 @@
-import {
-  User,
-  Camera,
-  Music,
-  Scissors,
-  Settings,
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import PublicPageIntro from "@/components/PublicPageIntro";
 
@@ -13,7 +6,6 @@ const teamMembers = [
   {
     name: "Elle Piò",
     role: "Presidente & Founder",
-    icon: <User size={20} />,
     image: "/team/elle-pio.jpg",
     description:
       "Presidente e fondatore, porta avanti con tenacia una visione nata da bambino e trasformata in UTTF: un punto di riferimento che accoglie, orienta e fa crescere un gruppo di ragazzi attraverso arte, disciplina e comunità.",
@@ -23,7 +15,6 @@ const teamMembers = [
   {
     name: "Drew",
     role: "Video Maker",
-    icon: <Camera size={20} />,
     image: "/team/drew.jpg",
     description:
       "Cresciuto professionalmente dentro UTTF, ha trasformato la passione per l'immagine in un mestiere. Oggi lavora come videomaker con artisti riconosciuti, portando tecnica, visione e affidabilità in ogni produzione.",
@@ -33,7 +24,6 @@ const teamMembers = [
   {
     name: "Sarso",
     role: "Educatore / Vocalist",
-    icon: <Music size={20} />,
     image: "/team/placeholder.svg",
     description:
       "Artista tenace, crede profondamente nel valore della propria arte. Nato oltre 15 anni fa con il beatbox, è diventato MC, presentatore live e giudice di contest hip-hop, con collaborazioni e featuring importanti nella scena.",
@@ -43,7 +33,6 @@ const teamMembers = [
   {
     name: "Gioitz",
     role: "Produttore / DJ",
-    icon: <Scissors size={20} />,
     image: "/team/gioitz.jpg",
     description:
       "Studia musica da sempre, cercandone struttura, suono e dettagli. Diplomato come produttore musicale, unisce orecchio preciso e creatività naturale per costruire beat, atmosfere e identità sonore.",
@@ -53,7 +42,6 @@ const teamMembers = [
   {
     name: "Geo",
     role: "Operatrice / Creative Support",
-    icon: <User size={20} />,
     image: "/team/geo.jpg",
     description:
       "Determinata e caparbia, si mette continuamente in gioco. Lavora nel mondo della moda e porta in UTTF visione estetica, presenza operativa e competenze da social media manager dell'associazione.",
@@ -63,7 +51,6 @@ const teamMembers = [
   {
     name: "Den",
     role: "Fonico / SMM",
-    icon: <Settings size={20} />,
     image: "/team/den.jpg",
     description:
       "Diplomato in grafica e comunicazione, fotografo, fonico certificato e project manager. È il profilo trasversale che entra dove serve: tecnico, creativo, problem solver e sviluppatore web, creatore di questo sito.",
@@ -101,7 +88,6 @@ export default function TeamPage() {
                   fill
                   sizes="(min-width: 1100px) 33vw, (min-width: 520px) 50vw, 100vw"
                 />
-                <span>{member.icon}</span>
               </div>
               <div className="person-copy">
                 <h2>{member.name}</h2>

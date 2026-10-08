@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Loader2, Send } from "lucide-react";
+import { ArrowUpRight, Loader2 } from "lucide-react";
 import PublicPageIntro from "@/components/PublicPageIntro";
 import { supabase } from "@/lib/supabase";
 import ReviewStars from "@/components/ReviewStars";
@@ -90,9 +90,7 @@ export default function ReviewsPage() {
                 size={40}
               />
               <span aria-live="polite">
-                {rating === 0
-                  ? "Scegli un voto da 1 a 5"
-                  : `${rating} stelle su 5`}
+                {rating === 0 ? "Scegli un voto da 1 a 5" : `${rating} su 5`}
               </span>
             </div>
           </fieldset>
@@ -135,9 +133,7 @@ export default function ReviewsPage() {
                 <Loader2 className="animate-spin" size={17} /> Invio in corso…
               </>
             ) : (
-              <>
-                <Send size={17} /> Pubblica la recensione
-              </>
+              <>Pubblica la recensione</>
             )}
           </button>
         </form>

@@ -5,9 +5,10 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, Instagram, MapPin, Menu, X } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import { MotionConfig } from "framer-motion";
 import MobileNav from "./MobileNav";
+import FactoryMotion from "./FactoryMotion";
 
 const links = [
   { href: "/team", label: "Chi siamo" },
@@ -41,11 +42,9 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
         </a>
         <div className="site-topline">
           <span>
-            UNDER THE TOWER FACTORY · ASSOCIAZIONE DI PROMOZIONE SOCIALE
+            UNDER THE TOWER FACTORY
           </span>
-          <span>
-            <MapPin size={12} /> Rozzano, Milano
-          </span>
+          <span>Rozzano, Milano</span>
         </div>
         <header className="site-header">
           <Link
@@ -125,7 +124,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
             pathname === "/" ? "public-content" : "public-content inner-page"
           }
         >
-          {children}
+          <FactoryMotion>{children}</FactoryMotion>
         </div>
         <footer className="site-footer">
           <div className="footer-main">
@@ -170,7 +169,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Instagram size={16} /> Instagram <ArrowUpRight size={15} />
+                Instagram <ArrowUpRight size={15} />
               </a>
               <a
                 href="https://linktr.ee/underthetower"
@@ -186,7 +185,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
           </div>
           <div className="footer-bottom">
             <span>
-              © {new Date().getFullYear()} Under The Tower Factory · APS
+              © {new Date().getFullYear()} Under The Tower Factory
             </span>
             <div>
               <Link href="/privacy">Privacy</Link>

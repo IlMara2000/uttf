@@ -12,7 +12,7 @@ export const SOCIAL_LINKS = [
   'https://open.spotify.com',
 ];
 export const DEFAULT_DESCRIPTION =
-  'Under The Tower Factory è un’associazione di promozione sociale a Rozzano: laboratori rap, beat making, arte urbana, galleria a km 0, eventi e progetti per il territorio.';
+  'Under The Tower Factory, a Rozzano: laboratori rap, beat making, arte urbana, galleria a km 0, eventi e progetti per il territorio.';
 export const DEFAULT_OG_IMAGE = '/bg-uttf.jpg';
 
 export type PublicRoute = {

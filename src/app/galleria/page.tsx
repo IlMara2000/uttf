@@ -1,15 +1,6 @@
 "use client";
 import { type FormEvent, useState } from "react";
-import {
-  ArrowUpRight,
-  Brush,
-  ImageIcon,
-  MapPin,
-  Mail,
-  Palette,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import PublicPageIntro from "@/components/PublicPageIntro";
 
@@ -17,7 +8,6 @@ const artworks = [
   {
     title: "Muro Vivo",
     type: "Urban Canvas",
-    icon: <Palette size={20} />,
     image: "/instagram/post1.jpeg",
     description:
       "Opera nata dal territorio, tra segni rapidi, materia urbana e identita locale. Un frammento visivo della factory lasciato respirare a pochi passi da casa.",
@@ -27,7 +17,6 @@ const artworks = [
   {
     title: "Factory Signs",
     type: "Visual Archive",
-    icon: <ImageIcon size={20} />,
     image: "/instagram/post2.jpeg",
     description:
       "Tracce, dettagli e simboli raccolti dentro il flusso creativo UTTF. Ogni immagine conserva il rumore buono delle idee nate sul posto.",
@@ -37,7 +26,6 @@ const artworks = [
   {
     title: "Linea Locale",
     type: "Handmade Piece",
-    icon: <Brush size={20} />,
     image: "/instagram/post3.jpeg",
     description:
       "Un lavoro costruito con mani vicine, materiali accessibili e visione diretta. Arte a km0 significa partire da quello che abbiamo intorno.",
@@ -47,7 +35,6 @@ const artworks = [
   {
     title: "Sotto La Torre",
     type: "Community Work",
-    icon: <MapPin size={20} />,
     image: "/instagram/post4.jpeg",
     description:
       "Un pezzo che tiene insieme luogo, persone e memoria. La galleria diventa mappa emotiva di quello che succede sotto la torre.",
@@ -57,7 +44,6 @@ const artworks = [
   {
     title: "Lab Session 01",
     type: "Creative Process",
-    icon: <Sparkles size={20} />,
     image: "/labs/foto1.jpeg",
     description:
       "Scatto dal processo creativo: prove, tentativi, strumenti e intuizioni. Qui la galleria mostra anche quello che arriva prima del risultato.",
@@ -67,7 +53,6 @@ const artworks = [
   {
     title: "Lab Session 02",
     type: "Local Experiment",
-    icon: <Brush size={20} />,
     image: "/labs/foto2.jpeg",
     description:
       "Esperimento visivo nato in laboratorio, con energia diretta e spirito artigianale. Nessuna distanza: solo idee lavorate vicino alla community.",
@@ -123,7 +108,6 @@ export default function GalleryPage() {
                   fill
                   sizes="(min-width: 1100px) 33vw, (min-width: 520px) 50vw, 100vw"
                 />
-                <span>{artwork.icon}</span>
               </div>
               <div className="person-copy">
                 <span className="eyebrow">{artwork.type}</span>
@@ -157,7 +141,7 @@ export default function GalleryPage() {
             aria-controls="proposal-form"
             onClick={() => setShowProposalForm((value) => !value)}
           >
-            Proponi un progetto <Mail size={18} />
+            Proponi un progetto <ArrowUpRight size={18} />
           </button>
         </section>
         {showProposalForm && (
@@ -206,7 +190,7 @@ export default function GalleryPage() {
               {proposalStatus === "opening"
                 ? "Apro la mail…"
                 : "Prepara l’email"}{" "}
-              <Send size={17} />
+              <ArrowUpRight size={17} />
             </button>
             {proposalStatus !== "idle" && (
               <p role="status">

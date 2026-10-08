@@ -1,16 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowUpRight,
-  Instagram,
-  Mail,
-  X,
-  CheckCircle2,
-  Loader2,
-  Send,
-  Star,
-  Radio,
-} from "lucide-react";
+import { ArrowUpRight, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Dialog } from "radix-ui";
@@ -27,18 +17,18 @@ const instagramPosts = [
       <>
         <span className="font-bold mr-2">uttf_factory</span>
         RAP F*CKTORY nasce per chi il rap lo vive, anche quando non sa ancora da
-        dove partire. 🎤
+        dove partire.
         <br />
         <br />
         Non è un laboratorio. È uno spazio dove incontrarsi, scrivere, provare.
         <br />
         <br />
-        📍 Barrio’s Live – Milano
+        Barrio’s Live – Milano
         <br />
-        🗓 12/01 | ⏰ 18–20 | 💸 Gratis
+        12/01 | 18–20 | Gratis
         <br />
         <br />
-        Passa, ascolta, fai due barre. 🔥
+        Passa, ascolta, fai due barre.
         <br />
         <br />
         #RapMilano #HipHopMilano #BarriosLive #RapUnderground #RapItaliano
@@ -53,12 +43,12 @@ const instagramPosts = [
     caption: (
       <>
         <span className="font-bold mr-2">uttf_factory</span>
-        [FIELD_REPORT] 📍 Rozzano, Piazza Foglia.
+        Rozzano, Piazza Foglia.
         <br />
         <br />
         Oggi la Factory è scesa in strada per la Festa delle Associazioni.
         Energia pura, connessioni urbane e la prova che la cultura nasce dal
-        cemento della nostra città. 🏙️⚡️
+        cemento della nostra città.
         <br />
         <br />
         #UTTF #Rozzano #UrbanCulture #StreetUnit #Community
@@ -73,14 +63,14 @@ const instagramPosts = [
     caption: (
       <>
         <span className="font-bold mr-2">uttf_factory</span>
-        Official Video 🔥 NO LIMIT JAM 2025 🔥
+        Official Video NO LIMIT JAM 2025
         <br />
         <br />
         Un evento organizzato da @comunebuccinasco in collaborazione con
-        @werunthestreetsmilano e molti altri. 💪
+        @werunthestreetsmilano e molti altri.
         <br />
         <br />
-        Check full video on YouTube: https://youtu.be/pnL4b4Xhaxg 📺
+        Check full video on YouTube: https://youtu.be/pnL4b4Xhaxg
         <br />
         <br />
         #nolimitjam #buccinasco #werunthestreets #graffiti #musica #trap #milano
@@ -195,7 +185,7 @@ export default function FeedPage() {
       <div className="content-width">
         <section className="diary-actions" aria-label="Esplora e partecipa">
           <Link href="/stream">
-            <Radio size={24} />
+            <span className="diary-action-index">01</span>
             <span>Video e live</span>
             <ArrowUpRight size={19} />
           </Link>
@@ -203,12 +193,12 @@ export default function FeedPage() {
             ref={newsletterTrigger}
             onClick={() => setIsNewsletterOpen(true)}
           >
-            <Mail size={24} />
+            <span className="diary-action-index">02</span>
             <span>Ricevi aggiornamenti</span>
             <ArrowUpRight size={19} />
           </button>
           <Link href="/feed/recensioni">
-            <Star size={24} />
+            <span className="diary-action-index">03</span>
             <span>Racconta la tua esperienza</span>
             <ArrowUpRight size={19} />
           </Link>
@@ -226,8 +216,7 @@ export default function FeedPage() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Instagram size={18} /> Seguici su Instagram{" "}
-              <ArrowUpRight size={17} />
+              Seguici su Instagram <ArrowUpRight size={17} />
             </a>
           </div>
           <div className="people-grid">
@@ -305,7 +294,7 @@ export default function FeedPage() {
             </Dialog.Close>
             {isSuccess ? (
               <div className="newsletter-success">
-                <CheckCircle2 size={48} />
+                <span className="eyebrow">Iscrizione confermata</span>
                 <Dialog.Title>Ci sei anche tu.</Dialog.Title>
                 <Dialog.Description>
                   Abbiamo salvato il tuo contatto. Ti scriveremo quando ci
@@ -314,9 +303,6 @@ export default function FeedPage() {
               </div>
             ) : (
               <>
-                <span className="clay-icon">
-                  <Mail size={26} />
-                </span>
                 <Dialog.Title>Restiamo in contatto.</Dialog.Title>
                 <Dialog.Description>
                   Le novità della Factory, i laboratori e i prossimi incontri.
@@ -391,9 +377,7 @@ export default function FeedPage() {
                         corso…
                       </>
                     ) : (
-                      <>
-                        <Send size={17} /> Iscrivimi alla newsletter
-                      </>
+                      <>Iscrivimi alla newsletter</>
                     )}
                   </button>
                 </form>

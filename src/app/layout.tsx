@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./public-site.css";
+import "./public-street.css";
 import type { Metadata } from "next";
 import { Unbounded, Space_Grotesk, Geist_Mono } from "next/font/google";
 import PublicSiteShell from "@/components/PublicSiteShell";
