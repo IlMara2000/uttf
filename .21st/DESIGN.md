@@ -1,11 +1,11 @@
 # Under The Tower Factory — design direction
 
-Current user-selected direction: street / simple. The latest direction supersedes the earlier sculpted brutalism styling.
+Current user-selected direction: street art. Textured walls, pasted posters, rough paint and torn paper supersede the earlier flat street/simple styling.
 
 - Identity: Under The Tower Factory in Rozzano; hip-hop, education, local culture, growth and community.
 - Palette: existing orange #FF914D, black and white; neutral grays only.
 - Structure: editorial headings, numbered sections and simple dividing rules.
-- Current surfaces: flat controls and open cards; typography and original photography carry the visual identity.
+- Current surfaces: painted accents, torn paper and pasted poster framing; original photography carries the identity.
 - Preserve original photos, logos, forms and staff functionality.
 - Navigation: association, labs, local art, diary, participation; staff access in footer.
 - Reuse Next Image, Lucide icons, existing VideoEmbed and ReviewStars; Radix Dialog for accessible modal focus management.
@@ -38,3 +38,14 @@ Street/simple validation: final production build and TypeScript passed; targeted
 ## Identity correction — user priority
 
 The user clarified the organization’s legal status. Do not publish a legal classification or acronym on the site. Use “Under The Tower Factory” or the generic “associazione”; preserve the focus on Rozzano, people, art and community. This instruction supersedes all earlier identity assumptions, including historical design decisions. Applies to visible copy, metadata and structured data.
+
+## Street art refinement
+
+- Dark textured hero, orange paint swash behind the final headline, outlined middle line and italic poster lettering.
+- Original photographs sit in torn paper frames with subtle pasted tape details; no edited photos, new illustrations, icons or emoji.
+- Carry the treatment into section labels, laboratory rows, community photographs, cards and internal page titles. Keep paragraph copy and interactive controls readable and preserve reduced motion.
+- Existing structure, destinations, palette and legal-status correction remain unchanged.
+
+Street-art visual validation: home checked at 1440, 768, 390 and 320px with the new stylesheet; labs, team and gallery checked at 390px. No horizontal overflow. Original photographs remain unchanged. 21st review reports informational pre-existing color literals only.
+
+Final verification (2026-10-09): production build completed successfully, including TypeScript and all 25 generated routes. Live backend data is not part of this styling verification.
