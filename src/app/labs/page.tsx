@@ -39,12 +39,12 @@ export default function LabsPage() {
             </div>
           ))}
         </section>
-        <section className="lab-list" aria-label="I nostri percorsi">
+        <section className="lab-list" aria-label="Laboratori e iniziative">
           {labCategories.map((lab, index) => {
             return (
               <article className="lab-card" key={lab.slug}>
                 <div className="activity-top">
-                  <span className="card-index">PERCORSO 0{index + 1}</span>
+                  <span className="card-index">ATTIVITÀ 0{index + 1}</span>
                 </div>
                 <h2>{lab.title}</h2>
                 <p>{lab.description}</p>
@@ -58,7 +58,7 @@ export default function LabsPage() {
                     className="clay-button light"
                     href={`/labs/${lab.slug}`}
                   >
-                    Scopri il percorso <ArrowUpRight size={17} />
+                    Scopri di più <ArrowUpRight size={17} />
                   </Link>
                   <a href="#iscrizioni" className="text-link">
                     Voglio partecipare <ArrowUpRight size={16} />
@@ -77,9 +77,9 @@ export default function LabsPage() {
               per fare il primo passo.
             </h2>
             <p>
-              I nostri laboratori sono aperti ai ragazzi del territorio. Compila
-              il modulo: capiamo insieme qual è il percorso giusto per entrare
-              nella Factory.
+              I nostri laboratori sono aperti a tutti. Compila il modulo per
+              manifestare il tuo interesse: ti rispondiamo con le informazioni
+              sulle attività disponibili.
             </p>
           </div>
           <a
@@ -88,7 +88,7 @@ export default function LabsPage() {
             rel="noopener noreferrer"
             className="clay-button light"
           >
-            Iscriviti a un laboratorio <ArrowUpRight size={19} />
+            Chiedi informazioni <ArrowUpRight size={19} />
           </a>
         </section>
       </div>

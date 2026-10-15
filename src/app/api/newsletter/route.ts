@@ -97,6 +97,9 @@ export async function POST(request: Request) {
       .from('newsletter_subscribers')
       .insert([{ name, email, phone: phone || null }]);
 
+    if (error?.code === '23505') {
+      return NextResponse.json({ error: 'Questa email risulta già iscritta.' }, { status: 409 });
+    }
     if (error) throw error;
 
     return NextResponse.json({ success: true });
@@ -127,14 +130,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Sessione staff non valida.' }, { status: 401 });
     }
 
-    const { data, error } = await getAdminSupabase()
+    const summary = new URL(request.url).searchParams.get('summary') === '1';
+    let query = getAdminSupabase()
       .from('newsletter_subscribers')
-      .select('created_at, name, email, phone')
+      .select('created_at, name, email, phone', { count: summary ? 'exact' : undefined })
       .order('created_at', { ascending: false });
+
+    if (summary) query = query.limit(3);
+    const { data, count, error } = await query;
 
     if (error) throw error;
 
-    return NextResponse.json({ subscribers: (data ?? []) as NewsletterSubscriber[] });
+    return NextResponse.json({ subscribers: (data ?? []) as NewsletterSubscriber[], total: count ?? data?.length ?? 0 });
   } catch (error) {
     console.error('NEWSLETTER_READ_ERROR', error);
     return NextResponse.json(

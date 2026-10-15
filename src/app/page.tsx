@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowDown, ArrowUpRight, X } from "lucide-react";
+import VisitSection from "@/components/VisitSection";
+import { labCategories } from "./labs/lab-data";
 import FactoryScene from "@/components/FactoryScene";
 import FactoryTicker from "@/components/FactoryTicker";
 import { Dialog } from "radix-ui";
@@ -25,32 +27,12 @@ const fallback: Publication[] = [
     image_url: "/instagram/post2.jpeg",
   },
 ];
-const activities = [
-  {
-    slug: "rap-fcktory",
-    title: "Rap F*cktory",
-    label: "Trova la tua voce",
-    text: "Scrittura, flow e microfoni aperti. Le tue storie diventano parole, le parole diventano musica.",
-  },
-  {
-    slug: "beat-making",
-    title: "Beat making",
-    label: "Dai forma al suono",
-    text: "Dal primo sample alla tua base. Sperimentiamo, ascoltiamo e produciamo insieme.",
-  },
-  {
-    slug: "urban-arts",
-    title: "Urban arts",
-    label: "Lascia il tuo segno",
-    text: "Graffiti, fotografia e grafica. Nuovi linguaggi per raccontare quello che ci circonda.",
-  },
-  {
-    slug: "community-hub",
-    title: "Community hub",
-    label: "Fai spazio alle idee",
-    text: "Un luogo per incontrarsi, confrontarsi e costruire progetti che partono dal territorio.",
-  },
-];
+const activities = labCategories.map((lab) => ({
+  slug: lab.slug,
+  title: lab.title,
+  label: lab.tags[0],
+  text: lab.description,
+}));
 
 export default function HomePage() {
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -134,104 +116,9 @@ export default function HomePage() {
         </section>
       </div>
       <FactoryTicker />
-      <section id="associazione" className="mission-section">
-        <div className="content-width">
-          <div className="section-kicker">
-            <span>01 / L’associazione</span>
-            <span>Dal territorio, per il territorio.</span>
-          </div>
-          <div className="mission-grid">
-            <h2>
-              Nessuno da
-              <br />
-              rimettere
-              <br />
-              <span>in riga.</span>
-            </h2>
-            <div>
-              <p>
-                Non ci interessa mettere un’etichetta ai ragazzi. Ci interessa
-                quello che hanno da dire. Rap, musica e cultura urbana sono
-                gli strumenti: per esprimersi, incontrarsi e crescere.
-              </p>
-              <p>
-                Artisti, educatori e ragazzi condividono esperienze e
-                competenze. Un laboratorio, un incontro, un progetto alla volta:
-                così costruiamo la nostra comunità.
-              </p>
-              <Link href="/team" className="text-link">
-                Conosci le persone della Factory <ArrowUpRight size={18} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section className="activities-section content-width">
-        <div className="section-kicker">
-          <span>02 / Cosa facciamo</span>
-          <span>Imparare facendo. Farlo insieme.</span>
-        </div>
-        <div className="section-heading">
-          <h2>
-            Meno prediche.
-            <br />
-            Più pratica.
-          </h2>
-          <Link href="/labs" className="text-link">
-            Tutti i laboratori <ArrowUpRight size={18} />
-          </Link>
-        </div>
-        <div className="activity-grid">
-          {activities.map((activity, index) => (
-            <Link
-              href={`/labs/${activity.slug}`}
-              className="activity-card"
-              key={activity.slug}
-            >
-              <div className="activity-top">
-                <span className="card-index">0{index + 1}</span>
-              </div>
-              <span className="eyebrow">{activity.label}</span>
-              <h3>{activity.title}</h3>
-              <p>{activity.text}</p>
-              <span className="card-bottom">
-                Entra nel laboratorio <ArrowUpRight size={20} />
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <section className="community-section content-width">
-        <div className="community-photo">
-          <Image
-            src="/labs/foto3.jpeg"
-            alt="Un momento di confronto durante un laboratorio rap della Factory"
-            fill
-            sizes="(min-width: 900px) 50vw, 100vw"
-          />
-        </div>
-        <div className="community-copy">
-          <span className="eyebrow">Il rispetto non si abbassa.</span>
-          <h2>
-            Alza la voce.
-            <br />
-            Poi ascolta.
-          </h2>
-          <p>
-            Un microfono che passa di mano. Un’idea che prende forma. Un gruppo
-            che ti ascolta. La Factory vive in questi momenti.
-          </p>
-          <Link href="/galleria" className="clay-button light">
-            Guarda cosa nasce qui <ArrowUpRight size={18} />
-          </Link>
-          <Link href="/stream" className="text-link">
-            Video e live dalla Factory <ArrowUpRight size={17} />
-          </Link>
-        </div>
-      </section>
       <section ref={newsRef} className="news-section content-width">
         <div className="section-kicker">
-          <span>03 / Diario della Factory</span>
+          <span>01 / Diario della Factory</span>
           <span>Storie, incontri, prossimi passi.</span>
         </div>
         <div className="section-heading">
@@ -308,6 +195,101 @@ export default function HomePage() {
           )}
         </div>
       </section>
+      <section id="associazione" className="mission-section">
+        <div className="content-width">
+          <div className="section-kicker">
+            <span>02 / L’associazione</span>
+            <span>Dal territorio, per il territorio.</span>
+          </div>
+          <div className="mission-grid">
+            <h2>
+              Nessuno da
+              <br />
+              rimettere
+              <br />
+              <span>in riga.</span>
+            </h2>
+            <div>
+              <p>
+                Non ci interessa mettere un’etichetta ai ragazzi. Ci interessa
+                quello che hanno da dire. Rap, musica e cultura urbana sono
+                gli strumenti: per esprimersi, incontrarsi e crescere.
+              </p>
+              <p>
+                Artisti, volontari e partecipanti condividono esperienze e
+                competenze. Un laboratorio, un incontro, un progetto alla volta:
+                così costruiamo la nostra comunità.
+              </p>
+              <Link href="/team" className="text-link">
+                Conosci le persone della Factory <ArrowUpRight size={18} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="activities-section content-width">
+        <div className="section-kicker">
+          <span>03 / Cosa facciamo</span>
+          <span>Imparare facendo. Farlo insieme.</span>
+        </div>
+        <div className="section-heading">
+          <h2>
+            Meno prediche.
+            <br />
+            Più pratica.
+          </h2>
+          <Link href="/labs" className="text-link">
+            Tutti i laboratori <ArrowUpRight size={18} />
+          </Link>
+        </div>
+        <div className="activity-grid">
+          {activities.map((activity, index) => (
+            <Link
+              href={`/labs/${activity.slug}`}
+              className="activity-card"
+              key={activity.slug}
+            >
+              <div className="activity-top">
+                <span className="card-index">0{index + 1}</span>
+              </div>
+              <span className="eyebrow">{activity.label}</span>
+              <h3>{activity.title}</h3>
+              <p>{activity.text}</p>
+              <span className="card-bottom">
+                Scopri di più <ArrowUpRight size={20} />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+      <section className="community-section content-width">
+        <div className="community-photo">
+          <Image
+            src="/labs/foto3.jpeg"
+            alt="Un momento di confronto durante un laboratorio rap della Factory"
+            fill
+            sizes="(min-width: 900px) 50vw, 100vw"
+          />
+        </div>
+        <div className="community-copy">
+          <span className="eyebrow">Il rispetto non si abbassa.</span>
+          <h2>
+            Alza la voce.
+            <br />
+            Poi ascolta.
+          </h2>
+          <p>
+            Un microfono che passa di mano. Un’idea che prende forma. Un gruppo
+            che ti ascolta. La Factory vive in questi momenti.
+          </p>
+          <Link href="/galleria" className="clay-button light">
+            Guarda cosa nasce qui <ArrowUpRight size={18} />
+          </Link>
+          <Link href="/stream" className="text-link">
+            Video e live dalla Factory <ArrowUpRight size={17} />
+          </Link>
+        </div>
+      </section>
       <section id="partecipa" className="participate-section">
         <div className="content-width">
           <div className="section-kicker">
@@ -360,36 +342,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <section className="visit-section content-width">
-        <div>
-          <span className="eyebrow">Ci vediamo a Rozzano</span>
-          <h2>
-            Il nostro punto
-            <br />
-            di incontro.
-          </h2>
-          <p>Via dei Biancospini, 4 · Rozzano (MI)</p>
-          <a className="text-link" href="mailto:ass.uttf@gmail.com">
-            Scrivici per venire a conoscerci <ArrowUpRight size={17} />
-          </a>
-        </div>
-        <div className="visit-art">
-          <Image
-            src="/bg-uttf.jpg"
-            alt="Identità visiva Under The Tower Factory"
-            fill
-            sizes="(min-width: 900px) 45vw, 100vw"
-          />
-          <a
-            className="clay-button light"
-            href="https://www.google.com/maps/search/?api=1&query=Via+dei+Biancospini+4+Rozzano"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Come raggiungerci <ArrowUpRight size={18} />
-          </a>
-        </div>
-      </section>
+      <VisitSection />
       <Dialog.Root
         open={Boolean(selected)}
         onOpenChange={(open) => {

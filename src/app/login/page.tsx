@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Loader2, Shield } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 function getSafeNextPath() {
   const requestedPath = new URLSearchParams(window.location.search).get('next');
 
-  if (requestedPath?.startsWith('/') && !requestedPath.startsWith('//')) {
+  if (requestedPath?.startsWith('/') && !requestedPath.startsWith('//') && !requestedPath.includes('\\')) {
     return requestedPath;
   }
 
@@ -56,7 +58,7 @@ export default function LoginPage() {
       router.replace(getSafeNextPath());
     } catch {
       // Se l'account non esiste o la password è errata, finisce qui
-      alert("ACCESSO_NEGATO: Verifica le credenziali inserite.");
+      alert("Accesso non riuscito. Verifica email e password.");
       setLoading(false);
     }
   };
@@ -67,54 +69,34 @@ export default function LoginPage() {
       <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6 gap-4">
         <Loader2 className="animate-spin text-[#FF914D]" size={40} />
         <p className="text-zinc-500 font-mono text-[10px] tracking-widest uppercase animate-pulse">
-          VERIFICA_AUTORIZZAZIONI_IN_CORSO...
+          Verifica della sessione…
         </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-black italic tracking-tighter text-white uppercase">
-            UTTF_<span className="text-[#FF914D]">AUTH</span>
-          </h1>
-          <p className="text-zinc-500 font-mono text-[10px] mt-2 tracking-widest uppercase">
-            ACCESSO_RISERVATO_STAFF
-          </p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input 
-            type="email" 
-            placeholder="EMAIL_ADDRESS" 
-            className="w-full bg-zinc-900 border border-white/5 p-4 rounded-xl font-mono text-[10px] outline-none focus:border-[#FF914D]/40 text-white"
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
-          />
-          <input 
-            type="password" 
-            placeholder="SECURITY_KEY" 
-            className="w-full bg-zinc-900 border border-white/5 p-4 rounded-xl font-mono text-[10px] outline-none focus:border-[#FF914D]/40 text-white"
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
-          />
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full py-4 bg-[#FF914D] text-black font-black uppercase italic text-xs hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
-          >
-            {loading ? (
-              <Loader2 className="animate-spin" size={16} />
-            ) : (
-              <><Shield size={16} />ACCEDI</>
-            )}
-          </button>
+    <main className="staff-login">
+      <section className="staff-login-intro">
+        <Link href="/" aria-label="Under The Tower Factory, torna al sito"><Image src="/icons/homelogo.png" alt="Under The Tower Factory" width={150} height={150} /></Link>
+        <span className="staff-kicker">Under The Tower Factory / Staff</span>
+        <h1>Dietro<br />le quinte.<br /><span>Dentro<br />la Factory.</span></h1>
+        <p>Lo spazio di chi dà una mano a far succedere le cose.</p>
+        <Link href="/" className="staff-back">Torna al sito</Link>
+      </section>
+      <section className="staff-login-panel" aria-labelledby="login-title">
+        <span className="staff-kicker">Area riservata</span>
+        <h2 id="login-title">Ci sei. Entra.</h2>
+        <p>Accedi con il tuo account staff.</p>
+        <form onSubmit={handleLogin}>
+          <label htmlFor="staff-email">Email</label>
+          <input id="staff-email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <label htmlFor="staff-password">Password</label>
+          <input id="staff-password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <button type="submit" disabled={loading}>{loading ? <><Loader2 className="animate-spin" size={18} /> Accesso in corso…</> : 'Accedi'}</button>
         </form>
-      </div>
-    </div>
+        <p className="staff-login-note">L’accesso è riservato agli account autorizzati della Factory.</p>
+      </section>
+    </main>
   );
 }

@@ -98,11 +98,11 @@ export default function AccountSettings() {
       // Gestione dei messaggi di successo in base a cosa è stato aggiornato
       let successMessage = "DATI_AGGIORNATI con successo.";
       if (newPassword) {
-        successMessage += "\n🔑 Password modificata.";
+        successMessage += "\nPassword modificata.";
       }
       // NOTA BENE: Supabase per motivi di sicurezza, quando si cambia email, manda una mail di conferma al VECCHIO e al NUOVO indirizzo. 
       // L'aggiornamento reale dell'email avviene solo dopo aver cliccato il link in entrambe le mail (comportamento standard).
-      successMessage += "\n📧 Se hai modificato la mail, controlla la tua posta per confermare la modifica.";
+      successMessage += "\nSe hai modificato la mail, controlla la tua posta per confermare la modifica.";
       
       alert(successMessage);
       setIsOpen(false);

@@ -1556,3 +1556,49 @@
 @media (prefers-reduced-motion: reduce) {
   .public-site .activity-card:hover h3 { transform: none; }
 }
+
+/* Straight photographic borders: the paint remains in typography, not on faces. */
+.public-site .factory-scene .hero-photo,
+.public-site .scene-inset,
+.public-site .community-photo,
+.public-site .community-copy,
+.public-site .news-photo,
+.public-site .person-photo,
+.public-site .diary-invite,
+.public-site .photo-ribbon > div,
+.public-site .photo-ribbon > div:nth-child(even) {
+  clip-path: none;
+  rotate: 0deg;
+  border-radius: 0;
+}
+.public-site .factory-scene .hero-photo {
+  border: 1px solid #ffffff80;
+  box-shadow: 8px 8px 0 -7px var(--orange);
+  transform: none;
+}
+.public-site .scene-inset { border: 3px solid var(--paper); transform: none; }
+.public-site .scene-inset::before,
+.public-site .mission-section::before { display: none; }
+.public-site .scene-statement { clip-path: none; rotate: 0deg; right: 0; }
+.public-site .photo-ribbon > div { border: 1px solid var(--ink); }
+.public-site .topline-access { display: flex; align-items: center; gap: 24px; }
+.public-site .topline-access a { border-left: 1px solid currentColor; padding-left: 24px; text-decoration: underline; text-underline-offset: 3px; }
+.public-site .visit-stage { position: relative; isolation: isolate; background: #161616; color: white; }
+.public-site .visit-background { object-fit: cover; z-index: -2; }
+.public-site .visit-stage::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #101010e8, #10101065); z-index: -1; }
+.public-site .visit-stage .visit-section { position: relative; gap: 60px; }
+.public-site .visit-stage h2 { color: white; }
+.public-site .visit-stage .eyebrow { color: var(--orange); }
+.public-site .visit-stage p { color: #eee; }
+.public-site .visit-map { min-width: 0; border: 1px solid #ffffff80; background: #161616; }
+.public-site .visit-map iframe { display: block; width: 100%; height: 310px; border: 0; background: #eee; }
+.public-site .visit-map-actions { display: flex; justify-content: center; padding: 18px; border-top: 3px solid var(--orange); }
+.public-site .visit-map .clay-button { background: white; color: #161616; box-shadow: none; }
+@media (max-width: 800px) {
+  .public-site .visit-stage .visit-section { gap: 32px; }
+}
+@media (max-width: 520px) {
+  .public-site .topline-access > span { display: none; }
+  .public-site .topline-access a { padding-left: 12px; }
+  .public-site .visit-map iframe { height: 280px; }
+}

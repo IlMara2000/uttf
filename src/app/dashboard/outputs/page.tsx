@@ -13,6 +13,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ManagementBottomLogo from '@/components/ManagementBottomLogo';
+import { getErrorMessage } from '@/lib/errors';
+import Image from 'next/image';
 
 type OutputPost = {
   id: string;
@@ -48,12 +50,17 @@ export default function OutputsPage() {
 
     setDeletingId(id);
     try {
-      const path = url.split('/').pop();
-      if (path) {
-        await supabase.storage.from('factory-assets').remove([`publications/${path}`]);
+      const { data, error } = await supabase.from('publications').delete().eq('id', id).select('id');
+      if (error) throw error;
+      if (!data?.length) throw new Error('Post non trovato o cancellazione non autorizzata.');
+      const path = new URL(url, window.location.origin).pathname.split('/').pop();
+      if (url.includes('/factory-assets/publications/') && path) {
+        const { error: storageError } = await supabase.storage.from('factory-assets').remove([`publications/${decodeURIComponent(path)}`]);
+        if (storageError) console.warn('Post eliminato; file ancora presente nello storage:', storageError);
       }
-      await supabase.from('publications').delete().eq('id', id);
       await fetchPosts();
+    } catch (error) {
+      alert(getErrorMessage(error, 'Cancellazione non riuscita.'));
     } finally {
       setDeletingId(null);
     }
@@ -74,7 +81,7 @@ export default function OutputsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center font-mono text-[#FF914D]">
-        FETCHING_DATABASE...
+        Caricamento dei post…
       </div>
     );
   }
@@ -94,7 +101,7 @@ export default function OutputsPage() {
 
             <div>
               <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">
-                Output <span className="text-[#FF914D]">Archive</span>
+                Archivio <span className="text-[#FF914D]">post</span>
               </h1>
               <p className="text-sm text-zinc-500 mt-3 max-w-2xl">
                 Archivio operativo dei post caricati: controllo rapido, ricerca e cancellazione diretta.
@@ -161,13 +168,19 @@ export default function OutputsPage() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-zinc-900/40 border border-white/5 rounded-3xl p-4 hover:border-[#FF914D]/30 transition-all group"
               >
-                <div className="aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- Staff archive previews remote Supabase media without forcing optimizer allowlists. */}
-                  <img
-                    src={post.image_url}
-                    className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"
-                    alt={post.title}
-                  />
+                <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5">
+                  {post.image_url.match(/\.(mp4|webm|ogg|mov)(?:\?|$)/i) ? (
+                    <video src={post.image_url} muted playsInline preload="none" className="h-full w-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
+                  ) : (
+                    <Image
+                      src={post.image_url}
+                      alt={post.title}
+                      fill
+                      sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      unoptimized={!post.image_url.startsWith('/') && !post.image_url.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://oieqtrfeoyfabyjirrqa.supabase.co'}/storage/v1/object/public/`)}
+                      className="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"
+                    />
+                  )}
                 </div>
                 <div className="space-y-3 px-1">
                   <span className="text-[10px] font-black uppercase block truncate text-zinc-300">

@@ -23,12 +23,12 @@ const teamMembers = [
   },
   {
     name: "Sarso",
-    role: "Educatore / Vocalist",
+    role: "Vocalist",
     image: "/team/placeholder.svg",
     description:
       "Artista tenace, crede profondamente nel valore della propria arte. Nato oltre 15 anni fa con il beatbox, è diventato MC, presentatore live e giudice di contest hip-hop, con collaborazioni e featuring importanti nella scena.",
     skills: ["Vocal Coaching", "Social Work", "Stage Presence"],
-    tags: ["VOCALIST", "EDUCATOR", "ENERGY"],
+    tags: ["VOCALIST", "ENERGY"],
   },
   {
     name: "Gioitz",
@@ -72,7 +72,7 @@ export default function TeamPage() {
             La nostra <span>forza.</span>
           </>
         }
-        description="Siamo artisti, educatori e persone che credono nel territorio. Condividiamo competenze e passioni per accompagnare i ragazzi in un percorso di crescita attraverso l’arte e la cultura hip-hop."
+        description="Siamo artisti, volontari e persone che condividono la passione per l’arte e la cultura hip-hop. Ci incontriamo a Rozzano e mettiamo in comune esperienze e idee."
       />
       <div className="content-width">
         <section

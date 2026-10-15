@@ -2,7 +2,7 @@
   "version": 1,
   "project": {
     "name": "uttf-crm",
-    "productType": "Associazione; cultura hip-hop, educazione e comunità a Rozzano",
+    "productType": "Associazione; cultura hip-hop, arte e comunità a Rozzano",
     "stack": [
       "nextjs",
       "react",

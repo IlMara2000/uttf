@@ -1,0 +1,81 @@
+/* Staff surfaces share the public palette while keeping operational controls clear. */
+.management-site {
+  --color-zinc-950: #141414;
+  --color-zinc-900: #222;
+  --color-zinc-800: #424242;
+  --color-zinc-700: #555;
+  --color-zinc-600: #999;
+  --color-zinc-500: #aaa;
+  --color-zinc-400: #c4c4c4;
+  min-height: 100vh;
+  background: #141414;
+  color: #fff;
+  font-family: var(--font-sans), sans-serif;
+  color-scheme: dark;
+}
+.management-site :where(section, article, aside, form, input, textarea, select, button, div[class*="rounded"]) { border-radius: 4px; }
+.management-site :where(input, textarea, select) { font-size: 16px; line-height: 1.5; }
+.management-site :where(button, a, input, textarea, select):focus-visible { outline: 2px solid #ff914d; outline-offset: 4px; }
+.management-site :where(button, a) { touch-action: manipulation; }
+.management-site :where(button:disabled) { cursor: not-allowed; }
+.management-site :where([class*="backdrop-blur"]) { backdrop-filter: none; }
+.management-site :where([class*="shadow-"]) { box-shadow: none; }
+.management-site :where([class*="text-[10px]"], [class*="text-[9px]"]) { font-size: 11px; letter-spacing: .06em; }
+.management-site :where(h1, h2, h3) { font-style: normal; }
+.management-site .staff-header { background: #141414; border-bottom: 3px solid #ff914d; }
+.management-site .staff-header > div { min-height: 82px; }
+.management-site .staff-header h1 { font-size: 20px; letter-spacing: -.05em; }
+.management-site .staff-sidebar { border: 1px solid #424242; background: #1c1c1c; padding: 12px; }
+.management-site .staff-sidebar > div { border: 0; border-bottom: 1px solid #424242; background: transparent; padding: 18px 12px 24px; }
+.management-site .staff-sidebar h2 { font-size: 23px; letter-spacing: -.04em; }
+.management-site .staff-sidebar nav button { min-height: 68px; border: 0; border-left: 3px solid transparent; }
+.management-site .staff-sidebar nav button[aria-current="page"] { background: #ff914d; color: #141414; border-left-color: #fff; }
+.management-site .staff-sidebar nav button[aria-current="page"] span { color: #141414; background: transparent; }
+.management-site .staff-sidebar nav button > span:last-child > span:first-child { font-size: 14px; }
+.management-site .staff-sidebar nav button > span:last-child > span:last-child { font-size: 12px; }
+.management-site .staff-overview { background: #ff914d; color: #141414; border: 0; border-top: 5px solid white; }
+.management-site .staff-overview > div:first-child :where(h2, p) { color: #141414; }
+.management-site .staff-overview h2 { font-size: clamp(28px, 3.2vw, 48px); line-height: 1.04; letter-spacing: -.065em; max-width: 420px; }
+.management-site .staff-overview > div:first-child button { background: #141414; color: white; border-color: #141414; }
+.management-site .staff-overview > div:not(:first-child) { color: white; }
+.management-site .staff-overview > div:not(:first-child) > div { background: #141414; border-color: #141414; }
+.management-site .staff-footer { display: flex; align-items: center; gap: 20px; border-top: 1px solid #424242; padding: 28px 0 110px; margin-top: 40px; font-size: 12px; color: #bdbdbd; }
+.management-site .staff-footer a { margin-left: auto; color: #ff914d; text-decoration: underline; text-underline-offset: 4px; }
+.management-site .staff-login { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 100svh; }
+.management-site .staff-login-intro { display: flex; flex-direction: column; align-items: flex-start; padding: 48px clamp(24px, 6vw, 100px) 100px; background: #ff914d; color: #141414; border-radius: 0; }
+.management-site .staff-login-intro img { width: 110px; height: 110px; object-fit: contain; margin-bottom: 48px; }
+.management-site .staff-kicker { display: block; font-family: var(--font-mono), monospace; text-transform: uppercase; font-size: 11px; letter-spacing: .09em; }
+.management-site .staff-login h1 { font-size: clamp(48px, 5.4vw, 80px); line-height: .94; font-weight: 700; text-transform: uppercase; letter-spacing: -.065em; margin: 28px 0; }
+.management-site .staff-login h1 span { color: transparent; -webkit-text-stroke: 1px #141414; }
+.management-site .staff-login-intro p { max-width: 300px; font-size: 16px; line-height: 1.6; }
+.management-site .staff-back { margin-top: 40px; text-decoration: underline; text-underline-offset: 5px; font-size: 14px; }
+.management-site .staff-login-panel { align-self: center; width: min(100% - 64px, 420px); margin: 60px auto 120px; }
+.management-site .staff-login-panel .staff-kicker { color: #ff914d; }
+.management-site .staff-login-panel h2 { font-size: clamp(32px, 3vw, 46px); font-weight: 700; letter-spacing: -.05em; margin: 14px 0; }
+.management-site .staff-login-panel p { color: #bdbdbd; line-height: 1.6; }
+.management-site .staff-login-panel form { display: flex; flex-direction: column; margin-top: 32px; }
+.management-site .staff-login-panel label { margin-bottom: 9px; font-size: 14px; }
+.management-site .staff-login-panel input { background: #222; border: 1px solid #666; padding: 14px; margin-bottom: 24px; width: 100%; }
+.management-site .staff-login-panel button { background: #ff914d; color: #141414; min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; margin-top: 8px; }
+.management-site .staff-login-panel button:hover { background: #ffa56d; }
+.management-site .staff-login-panel button:disabled { opacity: .6; }
+.management-site .staff-login-note { font-size: 12px; margin-top: 24px; }
+@media (max-width: 1023px) {
+  .management-site .staff-sidebar nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .management-site .staff-sidebar nav button { padding: 10px; }
+  .management-site .staff-sidebar nav button > span:first-child { display: none; }
+  .management-site .staff-sidebar nav button > span:last-child > span:last-child { display: none; }
+  .management-site .staff-sidebar > div { padding: 6px 10px 16px; }
+}
+@media (max-width: 700px) {
+  .management-site .staff-login { grid-template-columns: 1fr; }
+  .management-site .staff-login-intro { padding: 28px 28px 36px; }
+  .management-site .staff-login-intro img { width: 70px; height: 70px; margin-bottom: 24px; }
+  .management-site .staff-login h1 { font-size: 48px; }
+  .management-site .staff-login h1 br { display: none; }
+  .management-site .staff-login h1 span { display: block; }
+  .management-site .staff-login-panel { margin-top: 40px; }
+  .management-site .staff-footer { flex-wrap: wrap; gap: 12px; }
+  .management-site .staff-footer span { max-width: 140px; }
+}
+.management-site .glass-panel { border: 1px solid #424242; border-radius: 4px; box-shadow: none; background: #222; }

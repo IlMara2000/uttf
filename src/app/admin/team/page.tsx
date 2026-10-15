@@ -55,7 +55,7 @@ export default function AdminTeamPage() {
     if (!profileError && !authError) {
       setFullName(''); setEmail(''); setRole(''); setSkills('');
       void fetchTeam()
-      alert("UNIT_AUTHORIZED: L'utente ora può registrarsi/accedere.");
+      alert("Accesso autorizzato: L'utente ora può registrarsi/accedere.");
     } else {
       alert('DATABASE_ERROR: Controlla che le tabelle authorized_users e profiles esistano.');
     }
@@ -75,9 +75,9 @@ export default function AdminTeamPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-orange-500 mb-4">
             <Fingerprint size={18} />
-            <span className="font-mono text-[9px] uppercase tracking-[0.5em]">Auth_Management_System</span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.5em]">Under The Tower / Staff</span>
           </div>
-          <h1 className="text-6xl font-black uppercase italic tracking-tighter">SQUAD <span className="text-orange-500">CONTROL</span></h1>
+          <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">Gestione <span className="text-orange-500">team</span></h1>
         </div>
       </header>
 
@@ -85,15 +85,15 @@ export default function AdminTeamPage() {
         <div className="lg:col-span-4">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass-panel p-8 bg-zinc-900/20 border-white/5 sticky top-24">
             <h2 className="text-xs font-black uppercase italic text-orange-500 mb-8 tracking-[0.3em] flex items-center gap-2">
-              <UserPlus size={14} /> _AUTHORIZE_NEW_ACCESS
+              <UserPlus size={14} /> Aggiungi una persona
             </h2>
             <form onSubmit={handleAddMember} className="space-y-5">
-              <input required placeholder="FULL NAME" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
-              <input required type="email" placeholder="EMAIL (FOR LOGIN)" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs font-mono" />
-              <input required placeholder="UNIT ROLE" value={role} onChange={e => setRole(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
-              <input placeholder="SKILLS (COMMAS)" value={skills} onChange={e => setSkills(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-[10px] font-mono" />
+              <input required placeholder="Nome completo" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
+              <input required type="email" placeholder="Email di accesso" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs font-mono" />
+              <input required placeholder="Ruolo" value={role} onChange={e => setRole(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
+              <input placeholder="Competenze, separate da virgole" value={skills} onChange={e => setSkills(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-[10px] font-mono" />
               <button disabled={loading} className="w-full bg-white text-black font-black uppercase italic text-[10px] py-4 hover:bg-orange-500 transition-all">
-                {loading ? 'SYNCING...' : 'AUTHORIZE_UNIT'}
+                {loading ? 'Salvataggio…' : 'Autorizza accesso'}
               </button>
             </form>
           </motion.div>
@@ -108,7 +108,7 @@ export default function AdminTeamPage() {
                   <p className="text-[9px] font-mono text-zinc-500 mb-2">{member.email}</p>
                   <span className="text-[9px] text-orange-500 font-black uppercase tracking-widest bg-orange-500/10 px-2 py-0.5">{member.role}</span>
                 </div>
-                <button onClick={() => deleteMember(member.id, member.email)} className="p-3 text-zinc-800 hover:text-red-500 transition-all">
+                <button aria-label={`Rimuovi ${member.full_name}`} onClick={() => deleteMember(member.id, member.email)} className="p-3 text-zinc-800 hover:text-red-500 transition-all">
                   <Trash2 size={16} />
                 </button>
               </div>

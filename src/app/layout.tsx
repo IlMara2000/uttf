@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./public-site.css";
 import "./public-street.css";
+import "./management.css";
 import type { Metadata } from "next";
 import { Unbounded, Space_Grotesk, Geist_Mono } from "next/font/google";
 import PublicSiteShell from "@/components/PublicSiteShell";
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
     "arte a km 0",
     "galleria arte Rozzano",
     "rap",
-    "beat making",
+    "RASTAPOWER",
     "laboratori rap",
     "hip hop Rozzano",
     "hip hop Milano",

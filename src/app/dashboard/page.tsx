@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @next/next/no-img-element -- Object URL previews are not served through the image optimizer. */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -24,13 +25,15 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import Planner from '@/components/Planner';
-import CalendarWidget from '@/components/CalendarWidget';
-import ShiftPlanner from '@/components/ShiftPlanner';
-import NotesManager from '@/components/NotesManager';
-import AccountSettings from '@/components/AccountSettings';
+import dynamic from 'next/dynamic';
 import ManagementBottomLogo from '@/components/ManagementBottomLogo';
 import type { Review } from '@/types/database';
+
+const Planner = dynamic(() => import('@/components/Planner'));
+const CalendarWidget = dynamic(() => import('@/components/CalendarWidget'));
+const ShiftPlanner = dynamic(() => import('@/components/ShiftPlanner'));
+const NotesManager = dynamic(() => import('@/components/NotesManager'));
+const AccountSettings = dynamic(() => import('@/components/AccountSettings'));
 
 type ActiveView = 'menu' | 'calendar' | 'publish' | 'notes' | 'newsletter' | 'reviews';
 
@@ -102,7 +105,7 @@ export default function Dashboard() {
   const [reviewFilter, setReviewFilter] = useState<'all' | 'high' | 'mid' | 'low'>('all');
   const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
 
-  const fetchNewsletterSubscribersFromApi = useCallback(async () => {
+  const fetchNewsletterSubscribersFromApi = useCallback(async (summary = false) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -111,13 +114,14 @@ export default function Dashboard() {
       throw new Error('Sessione staff non valida.');
     }
 
-    const response = await fetch('/api/newsletter', {
+    const response = await fetch(summary ? '/api/newsletter?summary=1' : '/api/newsletter', {
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },
     });
     const data = (await response.json().catch(() => ({}))) as {
       subscribers?: NewsletterSubscriber[];
+      total?: number;
       error?: string;
     };
 
@@ -125,7 +129,7 @@ export default function Dashboard() {
       throw new Error(data.error || 'Errore lettura newsletter.');
     }
 
-    return data.subscribers ?? [];
+    return { subscribers: data.subscribers ?? [], total: data.total ?? data.subscribers?.length ?? 0 };
   }, []);
 
   const fetchDashboardOverview = useCallback(async () => {
@@ -133,9 +137,9 @@ export default function Dashboard() {
     setNewsletterError(null);
 
     try {
-      const newsletterSubscribersPromise = fetchNewsletterSubscribersFromApi().catch((error) => {
+      const newsletterSubscribersPromise = fetchNewsletterSubscribersFromApi(true).catch((error) => {
         setNewsletterError(getErrorMessage(error, 'Errore lettura newsletter.'));
-        return [] as NewsletterSubscriber[];
+        return { subscribers: [] as NewsletterSubscriber[], total: 0 };
       });
 
       const [publicationsRes, subscribersData, reviewsRes, tasksRes] = await Promise.all([
@@ -151,12 +155,12 @@ export default function Dashboard() {
         ? reviewsData.reduce((sum, review) => sum + Number(review.rating), 0) / reviewsData.length
         : 0;
 
-      setRecentSubscribers(subscribersData.slice(0, 3) as NewsletterSubscriber[]);
+      setRecentSubscribers(subscribersData.subscribers);
       setRecentReviews(reviewsData.slice(0, 3) as Review[]);
 
       setOverview({
         publications: publicationsRes.count ?? publicationsRes.data?.length ?? 0,
-        subscribers: subscribersData.length,
+        subscribers: subscribersData.total,
         reviews: reviewsRes.count ?? reviewsData.length,
         averageRating,
         tasksOpen: tasksData.filter((task) => task.status !== 'done').length,
@@ -172,7 +176,7 @@ export default function Dashboard() {
     setNewsletterError(null);
 
     try {
-      setSubscribers(await fetchNewsletterSubscribersFromApi());
+      setSubscribers((await fetchNewsletterSubscribersFromApi()).subscribers);
     } catch (error) {
       setNewsletterError(getErrorMessage(error, 'Errore lettura newsletter.'));
     }
@@ -201,12 +205,16 @@ export default function Dashboard() {
       }
 
       setUserEmail(user.email ?? null);
-      await fetchDashboardOverview();
       setLoading(false);
+      void fetchDashboardOverview();
     }
 
     init();
   }, [fetchDashboardOverview, router]);
+
+  useEffect(() => () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   useEffect(() => {
     if (activeView === 'newsletter') fetchSubscribers();
@@ -274,28 +282,21 @@ export default function Dashboard() {
 
     setIsAiProcessing(true);
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Sessione staff non valida.');
+      const response = await fetch('/api/generate-post', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model: 'llama-3.1-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'Sei un assistente tecnico per UTTF. Trasforma i testi in descrizioni professionali, sintetiche e cyber-industrial.',
-            },
-            { role: 'user', content: `Ottimizza questa descrizione: ${description}` },
-          ],
-        }),
+        body: JSON.stringify({ title, description }),
       });
       const data = await response.json();
-      if (data.choices?.[0]?.message?.content) setDescription(data.choices[0].message.content);
-    } catch {
-      alert('AI_OFFLINE');
+      if (!response.ok) throw new Error(data.error || 'Generazione non riuscita.');
+      if (data.post) setDescription(data.post);
+    } catch (error) {
+      alert(getErrorMessage(error, 'AI non disponibile.'));
     } finally {
       setIsAiProcessing(false);
     }
@@ -307,10 +308,12 @@ export default function Dashboard() {
 
     setUploading(true);
     try {
-      const fileName = `${Date.now()}_${file.name}`;
+      const { optimizeUpload } = await import('@/lib/optimize-upload');
+      const uploadFile = await optimizeUpload(file);
+      const fileName = `${Date.now()}_${uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, '-')}`;
       const { error: upErr } = await supabase.storage
         .from('factory-assets')
-        .upload(`publications/${fileName}`, file);
+        .upload(`publications/${fileName}`, uploadFile);
       if (upErr) throw upErr;
 
       const {
@@ -324,7 +327,10 @@ export default function Dashboard() {
           image_url: publicUrl,
         },
       ]);
-      if (dbErr) throw dbErr;
+      if (dbErr) {
+        await supabase.storage.from('factory-assets').remove([`publications/${fileName}`]);
+        throw dbErr;
+      }
 
       setTitle('');
       setDescription('');
@@ -445,11 +451,11 @@ export default function Dashboard() {
         aria-hidden
       />
 
-      <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-zinc-950/70">
+      <header className="staff-header sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-zinc-950/70">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 md:h-16 md:px-6">
           <div className="min-w-0">
             <h1 className="text-base font-black italic tracking-tight uppercase md:text-lg">
-              UTTF_<span className="text-[#FF914D]">STAFF</span>
+              UTTF / <span className="text-[#FF914D]">STAFF</span>
             </h1>
             <span className="mt-0.5 block truncate text-xs text-zinc-500">{userEmail}</span>
           </div>
@@ -469,7 +475,7 @@ export default function Dashboard() {
 
       <main className="relative z-10 min-w-0 flex-1 overflow-x-hidden overflow-y-auto scroll-smooth p-4 pb-10 md:p-6 md:pb-12">
         <div className="mx-auto grid min-w-0 max-w-7xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
-          <aside className="h-fit min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-3 shadow-lg shadow-black/20 backdrop-blur-md lg:sticky lg:top-[4.5rem] lg:self-start">
+          <aside className="staff-sidebar h-fit min-w-0 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-3 shadow-lg shadow-black/20 backdrop-blur-md lg:sticky lg:top-[4.5rem] lg:self-start">
             <div className="mb-3 rounded-xl border border-zinc-800/60 bg-zinc-950/50 p-4">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Gestionale</p>
               <h2 className="mt-1 text-sm font-semibold text-white">Area operativa</h2>
@@ -478,13 +484,15 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <nav className="grid gap-1">
+            <nav className="grid gap-1" aria-label="Moduli del gestionale">
+              <a href="/link-in-bio" className="block p-4 text-sm font-semibold text-[#FF914D]">Gestisci link in bio ↗</a>
               {managementSections.map((section) => {
                 const isActive = activeView === section.key;
 
                 return (
                   <button
                     key={section.key}
+                    aria-current={isActive ? "page" : undefined}
                     type="button"
                     onClick={section.action}
                     className={`${NAV_ITEM} ease-out ${
@@ -575,16 +583,16 @@ export default function Dashboard() {
           <div className="flex flex-col gap-6">
 
 
-            <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm shadow-black/25 backdrop-blur-md md:p-8">
+            <section className="staff-overview rounded-2xl border border-zinc-800/80 bg-zinc-900/20 p-6 shadow-sm shadow-black/25 backdrop-blur-md md:p-8">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div className="space-y-2">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-[#FF914D]">Panoramica</p>
                   <div>
                     <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl lg:text-4xl">
-                      Dashboard operativa
+                      La Factory, al lavoro.
                     </h2>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
-                      Metriche sintetiche, attività recenti e accesso ai moduli.
+                      Post, appuntamenti e attività: tutto quello che serve, qui.
                     </p>
                   </div>
                 </div>
@@ -620,7 +628,7 @@ export default function Dashboard() {
                     { label: 'Iscritti', value: overview.subscribers },
                     { label: 'Review', value: overview.reviews },
                     {
-                      label: 'Media voto',
+                      label: 'Media ultime 4',
                       value: overview.averageRating ? overview.averageRating.toFixed(1) : '0.0',
                     },
                     {
@@ -761,13 +769,17 @@ export default function Dashboard() {
                       </div>
                       <label className="group relative flex min-h-[12rem] max-h-[16rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-800/80 bg-zinc-950/30 transition-colors hover:border-zinc-700 hover:bg-zinc-900/30 sm:min-h-[14rem]">
                         {previewUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element -- Object URLs from file inputs are not handled reliably by next/image.
-                          <img src={previewUrl} alt="Anteprima file selezionato" className="h-full w-full object-cover opacity-70" />
+                          file?.type.startsWith('video/') ? (
+                            <video src={previewUrl} muted playsInline preload="metadata" className="h-full w-full object-cover opacity-70" />
+                          ) : (
+                            <img src={previewUrl} alt="Anteprima file selezionato" className="h-full w-full object-cover opacity-70" />
+                          )
                         ) : (
                           <ImageIcon size={28} className="text-zinc-600 transition-colors group-hover:text-zinc-400" />
                         )}
                         <input
                           type="file"
+                          accept="image/*,video/mp4,video/webm,video/ogg"
                           className="hidden"
                           onChange={(e) => {
                             const selectedFile = e.target.files?.[0];

@@ -20,6 +20,9 @@ export default function MapSection({ isOpen, onClose }: MapSectionProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[150] p-4 md:p-10 flex items-center justify-center bg-black/90 backdrop-blur-xl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="map-title"
     >
       <motion.div
         initial={{ scale: 0.95, y: 20 }}
@@ -32,11 +35,11 @@ export default function MapSection({ isOpen, onClose }: MapSectionProps) {
               <MapPin size={22} />
             </div>
             <div>
-              <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+              <h2 id="map-title" className="text-xl font-black italic uppercase tracking-tighter text-white">
                 UTTF_<span className="text-[#FF914D]">MAP</span>
               </h2>
               <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-[0.3em]">
-                COORDINATE_SEDE_UTTF: 45&deg;23&apos;08.0&quot;N 9&deg;09&apos;02.9&quot;E
+                Via dei Biancospini, 4 · Rozzano (MI)
               </p>
             </div>
           </div>

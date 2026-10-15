@@ -2,8 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const dashboardPaths = ['/dashboard']
-const legacyProtectedPaths = ['/planner', '/admin']
+const protectedPaths = ['/dashboard', '/admin']
 
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL('/login', request.url)
@@ -19,16 +18,9 @@ function hasSupabaseAuthCookie(request: NextRequest) {
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  const isDashboardPath = dashboardPaths.some((path) => pathname.startsWith(path))
-  const isLegacyPath = legacyProtectedPaths.some((path) => pathname.startsWith(path))
-  const isProtected = isDashboardPath || isLegacyPath
+  const isProtected = protectedPaths.some((path) => pathname.startsWith(path))
 
   if (!isProtected) {
-    return NextResponse.next()
-  }
-
-  const legacyAuthCookie = request.cookies.get('uttf_session')
-  if (isLegacyPath && legacyAuthCookie?.value === 'authorized') {
     return NextResponse.next()
   }
 
@@ -73,5 +65,5 @@ export async function proxy(request: NextRequest) {
 
 // Applichiamo il proxy solo alle rotte che ci interessano
 export const config = {
-  matcher: ['/dashboard/:path*', '/planner/:path*', '/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*'],
 }

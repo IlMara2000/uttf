@@ -4,11 +4,13 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ArrowUpRight, Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowUpRight } from "lucide-react";
 import { MotionConfig } from "framer-motion";
 import MobileNav from "./MobileNav";
 import FactoryMotion from "./FactoryMotion";
+import FloatingMenuToggle from "./FloatingMenuToggle";
+import floatingMenuStyles from "./FloatingMenuToggle.module.css";
 
 const links = [
   { href: "/team", label: "Chi siamo" },
@@ -19,6 +21,7 @@ const links = [
 
 export default function PublicSiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuPath, setMenuPath] = useState<string | null>(null);
   const isManagement =
     pathname.startsWith("/dashboard") ||
@@ -26,12 +29,13 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
     pathname === "/login";
   const menuOpen = menuPath === pathname;
 
+  if (pathname === "/link-in-bio") return <div className="bio-surface">{children}</div>;
+
   if (isManagement)
     return (
-      <>
-        {children}
-        <MobileNav />
-      </>
+      <MotionConfig reducedMotion="user">
+        <div className="management-site">{children}<MobileNav /></div>
+      </MotionConfig>
     );
 
   return (
@@ -44,7 +48,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
           <span>
             UNDER THE TOWER FACTORY
           </span>
-          <span>Rozzano, Milano</span>
+          <div className="topline-access"><span>Rozzano, Milano</span><Link href="/login" prefetch={false}>Area staff</Link></div>
         </div>
         <header className="site-header">
           <Link
@@ -76,20 +80,20 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
           <Link href="/#partecipa" className="clay-button header-join">
             Partecipa <ArrowUpRight size={17} />
           </Link>
-          <button
-            className="menu-toggle"
-            aria-label={menuOpen ? "Chiudi menu" : "Apri menu"}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-site-nav"
-            onClick={() => setMenuPath(menuOpen ? null : pathname)}
-          >
-            {menuOpen ? <X /> : <Menu />}
-          </button>
         </header>
+        <FloatingMenuToggle
+          open={menuOpen}
+          onToggle={() => setMenuPath(menuOpen ? null : pathname)}
+          onBack={() => {
+            setMenuPath(null);
+            if (window.history.length > 1) router.back();
+            else router.push("/");
+          }}
+        />
         {menuOpen && (
           <nav
             id="mobile-site-nav"
-            className="mobile-site-nav"
+            className={`mobile-site-nav ${floatingMenuStyles.panel}`}
             aria-label="Navigazione mobile"
             onKeyDown={(event) => {
               if (event.key === "Escape") {
@@ -104,6 +108,8 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
               { href: "/", label: "Home" },
               ...links,
               { href: "/#partecipa", label: "Partecipa" },
+              { href: "/link-in-bio", label: "Link in bio" },
+              { href: "/login", label: "Area staff" },
             ].map((link) => (
               <Link
                 key={link.href}
@@ -172,9 +178,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
                 Instagram <ArrowUpRight size={15} />
               </a>
               <a
-                href="https://linktr.ee/underthetower"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/link-in-bio"
               >
                 Tutti i nostri canali <ArrowUpRight size={15} />
               </a>

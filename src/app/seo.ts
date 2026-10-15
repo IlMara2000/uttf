@@ -4,7 +4,6 @@ export const SITE_URL = 'https://uttf.vercel.app';
 export const SITE_NAME = 'Under The Tower Factory';
 export const ORGANIZATION_NAME = 'Under The Tower Factory';
 export const SOCIAL_LINKS = [
-  'https://linktr.ee/underthetower',
   'https://www.instagram.com/under_the_tower_factory',
   'https://www.instagram.com/rapfcktory',
   'https://www.tiktok.com',
@@ -12,7 +11,7 @@ export const SOCIAL_LINKS = [
   'https://open.spotify.com',
 ];
 export const DEFAULT_DESCRIPTION =
-  'Under The Tower Factory, a Rozzano: laboratori rap, beat making, arte urbana, galleria a km 0, eventi e progetti per il territorio.';
+  'Under The Tower Factory, a Rozzano: laboratori rap, RASTAPOWER e iniziative sporadiche sui graffiti, arte urbana, galleria a km 0, eventi e progetti per il territorio.';
 export const DEFAULT_OG_IMAGE = '/bg-uttf.jpg';
 
 export type PublicRoute = {
@@ -24,6 +23,7 @@ export type PublicRoute = {
 };
 
 export const publicRoutes: PublicRoute[] = [
+  { path: '/link-in-bio', title: 'Link in bio', description: 'Tutti i link di Under The Tower Factory: laboratori, social e novità da Rozzano.', changeFrequency: 'weekly', priority: 0.8 },
   {
     path: '/',
     title: 'Under The Tower Factory',
@@ -41,7 +41,7 @@ export const publicRoutes: PublicRoute[] = [
   {
     path: '/labs',
     title: 'Laboratori rap e creativi',
-    description: 'RAPF*CKTORY, scrittura, open mic, beat making, urban arts e laboratori creativi per ragazzi e community.',
+    description: 'RAPF*CKTORY e iniziative sporadiche RASTAPOWER e graffiti. Le attività della Factory sono aperte a tutti.',
     changeFrequency: 'monthly',
     priority: 0.8,
   },
@@ -53,16 +53,16 @@ export const publicRoutes: PublicRoute[] = [
     priority: 0.65,
   },
   {
-    path: '/labs/beat-making',
-    title: 'Beat Making',
-    description: 'Dettagli del laboratorio Beat Making: produzione musicale, campionamento, arrangiamento e sviluppo del suono.',
+    path: '/labs/rastapower',
+    title: 'RASTAPOWER',
+    description: 'RASTAPOWER: iniziative sporadiche. Contattaci per conoscere gli eventuali appuntamenti.',
     changeFrequency: 'monthly',
     priority: 0.65,
   },
   {
-    path: '/labs/urban-arts',
-    title: 'Urban Arts',
-    description: 'Dettagli del laboratorio Urban Arts: graffiti, grafica, fotografia e identita visiva dei progetti UTTF.',
+    path: '/labs/graffiti',
+    title: 'Graffiti',
+    description: 'Iniziative sporadiche dedicate ai graffiti. Informazioni e contatti della Factory.',
     changeFrequency: 'monthly',
     priority: 0.65,
   },
@@ -76,7 +76,7 @@ export const publicRoutes: PublicRoute[] = [
   {
     path: '/team',
     title: 'Team',
-    description: 'Il team creativo e operativo di Under The Tower Factory: artisti, educatori, tecnici e persone attive sul territorio.',
+    description: 'Il team creativo e operativo di Under The Tower Factory: artisti, volontari, tecnici e persone attive sul territorio.',
     changeFrequency: 'monthly',
     priority: 0.75,
   },
@@ -118,7 +118,7 @@ export const publicRoutes: PublicRoute[] = [
 ];
 
 export function metadataForPath(path: string): Metadata {
-  const route = publicRoutes.find((item) => item.path === path) ?? publicRoutes[0];
+  const route = publicRoutes.find((item) => item.path === path) ?? publicRoutes.find((item) => item.path === '/')!;
   const title = route.title;
   const description = route.description;
 
@@ -219,7 +219,7 @@ export const organizationJsonLd = {
     'rap',
     'hip hop',
     'open mic',
-    'beat making',
+    'RASTAPOWER e iniziative sporadiche sui graffiti',
     'RAPF*CKTORY',
     'laboratori creativi',
     'cultura giovanile',
@@ -233,7 +233,7 @@ export const organizationJsonLd = {
       itemOffered: {
         '@type': 'Service',
         name: 'Laboratori rap, musica e creativita urbana',
-        description: 'Percorsi di rap, scrittura, open mic, beat making, urban arts, galleria a km 0 e aggregazione culturale.',
+        description: 'Rap, scrittura, incontri e iniziative sporadiche RASTAPOWER e graffiti. Attività aperte a tutti.',
       },
     },
   ],

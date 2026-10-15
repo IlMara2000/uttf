@@ -2,7 +2,7 @@
 
 Current user-selected direction: street art. Textured walls, pasted posters, rough paint and torn paper supersede the earlier flat street/simple styling.
 
-- Identity: Under The Tower Factory in Rozzano; hip-hop, education, local culture, growth and community.
+- Identity: Under The Tower Factory in Rozzano; hip-hop, local culture and community.
 - Palette: existing orange #FF914D, black and white; neutral grays only.
 - Structure: editorial headings, numbered sections and simple dividing rules.
 - Current surfaces: painted accents, torn paper and pasted poster framing; original photography carries the identity.
@@ -29,7 +29,7 @@ Validation: production build, TypeScript and targeted lint passed. Browser check
 - Preserve existing section order, routes, forms and content structure.
 - White hero, black navigation, original orange accents. Flat buttons and cards; straight photo framing replaces rotated collage styling.
 - Use the existing Space Grotesk for clear, compact headlines; mono labels supply the street editorial rhythm.
-- Copy is quietly irreverent: “Non stare al tuo posto”, “Meno prediche. Più pratica.” and “Le etichette, fuori. Le persone, dentro.” Keep the association welcoming, rooted in Rozzano, and focused on art and education.
+- Copy is quietly irreverent: “Non stare al tuo posto”, “Meno prediche. Più pratica.” and “Le etichette, fuori. Le persone, dentro.” Keep the association welcoming, rooted in Rozzano, and focused on art and community.
 - Preserve original photos and logos, functional controls, reduced motion and the explicit no-emoji/no-decorative-icon rule.
 - 21st search returned HTTP 401; reused existing components without new dependencies.
 
@@ -49,3 +49,18 @@ The user clarified the organization’s legal status. Do not publish a legal cla
 Street-art visual validation: home checked at 1440, 768, 390 and 320px with the new stylesheet; labs, team and gallery checked at 390px. No horizontal overflow. Original photographs remain unchanged. 21st review reports informational pre-existing color literals only.
 
 Final verification (2026-10-09): production build completed successfully, including TypeScript and all 25 generated routes. Live backend data is not part of this styling verification.
+
+## Current corrections — 2026-10-10
+
+- Straight thin photographic frames replace torn paper and tape. Keep painted typography, original photography and orange/black/white.
+- Staff access in top strip and footer. Staff UI uses flat charcoal surfaces, orange overview, clear navigation and a two-column login. Preserve authentication and data workflows.
+- Location artwork fills the section background; an embedded address map and white navigation action replace the image card.
+- No educator identity or beat-making offering. RASTAPOWER, then graffiti, are explicitly occasional initiatives. Activities are open to all; do not invent future programs or schedules. This supersedes historical content assumptions.
+
+## Link in bio — 2026-10-15
+
+- Dedicated `/link-in-bio` page inspired by the existing underthetower Linktree: centered identity, a photographic first panel, stacked links and a share action. Reuse local photography, Next Image, the existing sans font and orange/black/white palette; no external UI dependency.
+- Public navigation and footer now lead to the internal page. Staff can open the editor from the dashboard or the page after an authenticated allowlist check. Add, edit, reorder, hide and remove panels before publishing atomically.
+- `bio_page` stores the document with RLS authorization through `authorized_users`; a version check prevents overwriting concurrent edits. Database setup is recorded in `link-in-bio-table.sql` and applied to UTTF HUB.
+- Home news now follow the hero/ticker, before the association and activities. Keep staff access in the top strip, mobile menu and footer.
+- 21st search unavailable (HTTP 401); 21st review reports one informational color literal finding. Production build, targeted lint and TypeScript pass. Database tests confirm public reading, blocked non-staff updates, authorized staff updates and invalid-URL rejection; test writes rolled back. Editor add/edit/reorder/hide/save/remove/cancel verified with browser mocks, separately from real database policy tests.

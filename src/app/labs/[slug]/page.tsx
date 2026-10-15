@@ -48,7 +48,7 @@ export default async function LabDetailPage({ params }: LabDetailPageProps) {
     <main className="public-page">
       <PublicPageIntro
         number="LAB"
-        eyebrow="Il percorso"
+        eyebrow="Laboratori e iniziative"
         title={lab.title}
         description={lab.description}
       >
@@ -81,7 +81,7 @@ export default async function LabDetailPage({ params }: LabDetailPageProps) {
             rel="noopener noreferrer"
             className="clay-button light"
           >
-            Voglio partecipare <ArrowUpRight size={17} />
+            Mi interessa <ArrowUpRight size={17} />
           </a>
         </aside>
       </div>

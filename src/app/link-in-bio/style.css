@@ -1,0 +1,200 @@
+.bio-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 24px 120px;
+  color: #fff;
+  min-height: 100svh;
+}
+.bio-surface {
+  background: #171717;
+  min-height: 100svh;
+}
+.bio-toolbar,
+.bio-staff,
+.bio-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.bio-page button,
+.bio-toolbar > a,
+.bio-staff > a {
+  border: 1px solid #555;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.bio-page button:hover {
+  border-color: #ff914d;
+}
+.bio-page button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.bio-page :focus-visible {
+  outline: 3px solid #ff914d;
+  outline-offset: 4px;
+}
+.bio-heading {
+  text-align: center;
+  margin: 36px 0 28px;
+}
+.bio-heading img {
+  margin: 0 auto 20px;
+}
+.bio-heading h1 {
+  font-family: var(--font-sans), sans-serif;
+  font-size: clamp(26px, 6vw, 38px);
+  font-weight: 900;
+  line-height: 1.12;
+  margin: 12px 0 18px;
+}
+.bio-heading h1 span,
+.bio-heading .eyebrow {
+  color: #ff914d;
+}
+.bio-heading p {
+  color: #d4d4d4;
+  font-size: 14px;
+}
+.bio-links {
+  display: grid;
+  gap: 14px;
+}
+.bio-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #555;
+  background: #232323;
+  padding: 20px 22px;
+  min-height: 80px;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+.bio-card:hover {
+  background: #303030;
+  border-color: #ff914d;
+}
+.bio-card strong {
+  display: block;
+  font-size: 17px;
+}
+.bio-card small {
+  display: block;
+  color: #bbb;
+  margin-top: 5px;
+  font-size: 13px;
+}
+.bio-card svg {
+  flex-shrink: 0;
+  color: #ff914d;
+}
+.bio-status {
+  font-size: 14px;
+  color: #ffb98c;
+  margin: 14px 0;
+  overflow-wrap: anywhere;
+}
+.bio-footer {
+  text-align: center;
+  color: #aaa;
+  font-size: 12px;
+  margin-top: 40px;
+}
+.bio-footer div {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 16px;
+}
+.bio-editor h2 {
+  font-size: 24px;
+  font-weight: 700;
+}
+.bio-editor p {
+  font-size: 14px;
+  color: #ccc;
+  margin: 12px 0 20px;
+}
+.bio-edit-card {
+  border: 1px solid #555;
+  padding: 16px;
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.bio-edit-card legend {
+  padding: 0 8px;
+  color: #ff914d;
+}
+.bio-edit-card label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.bio-page input:not([type="checkbox"]) {
+  display: block;
+  background: #111;
+  border: 1px solid #666;
+  padding: 10px;
+  width: 100%;
+  margin-top: 6px;
+  min-width: 0;
+}
+.bio-edit-card .bio-checkbox {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.bio-controls {
+  justify-content: flex-start;
+}
+.bio-save {
+  margin-top: 24px;
+}
+.bio-save button[type="submit"] {
+  background: #ff914d;
+  color: #111;
+  font-weight: 700;
+  border-color: #ff914d;
+}
+.bio-editor > fieldset {
+  min-width: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bio-card {
+    transition: none;
+  }
+}
+
+.bio-card span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.bio-featured {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  padding: 0 0 20px;
+  overflow: hidden;
+}
+.bio-featured > img {
+  grid-column: 1/-1;
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+.bio-featured > span {
+  padding-left: 22px;
+}
+.bio-featured > svg {
+  margin-right: 22px;
+}
+.bio-card {
+  border-radius: 8px;
+}
