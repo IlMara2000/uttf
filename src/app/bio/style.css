@@ -257,7 +257,7 @@
 .bio-heading h1 span {
   color: #ff914d;
   -webkit-text-stroke: 0;
-  text-shadow: none;
+  text-shadow: 3px 3px 0 #111;
 }
 .bio-heading > p:last-of-type {
   color: #eee;
