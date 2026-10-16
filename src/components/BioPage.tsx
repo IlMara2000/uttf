@@ -187,7 +187,7 @@ export default function BioPage({ section }: { section: BioSection }) {
   return (
     <main className={`bio-page bio-page-${section}`}>
       <div className="bio-toolbar">
-        <Link href={section === "main" ? "/" : "/link-in-bio"}>
+        <Link href={section === "main" ? "/" : "/bio"}>
           {section === "main" ? "Torna al sito" : "Tutti i link"}
         </Link>
         <button type="button" onClick={share}>

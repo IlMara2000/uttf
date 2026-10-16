@@ -191,7 +191,7 @@ export default function FloatingMenuToggle({
             </button>
             <a
               className={styles.action}
-              href="/link-in-bio"
+              href="/bio"
               aria-label="Condividi: apri il link in bio UTTF"
             >
               <Share2 size={20} aria-hidden="true" />

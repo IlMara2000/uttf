@@ -23,9 +23,9 @@ export type PublicRoute = {
 };
 
 export const publicRoutes: PublicRoute[] = [
-  { path: '/link-in-bio/socials', title: 'Socials', description: 'I canali social di Under The Tower Factory: Instagram, Facebook, YouTube e Spotify.', changeFrequency: 'weekly', priority: 0.6 },
-  { path: '/link-in-bio/contatti', title: 'Contatti', description: 'Contatta Under The Tower Factory su WhatsApp o via email.', changeFrequency: 'monthly', priority: 0.6 },
-  { path: '/link-in-bio', title: 'Link in bio', description: 'Tutti i link di Under The Tower Factory: laboratori, social e novità da Rozzano.', changeFrequency: 'weekly', priority: 0.8 },
+  { path: '/bio/socials', title: 'Socials', description: 'I canali social di Under The Tower Factory: Instagram, Facebook, YouTube e Spotify.', changeFrequency: 'weekly', priority: 0.6 },
+  { path: '/bio/contatti', title: 'Contatti', description: 'Contatta Under The Tower Factory su WhatsApp o via email.', changeFrequency: 'monthly', priority: 0.6 },
+  { path: '/bio', title: 'Link in bio', description: 'Tutti i link di Under The Tower Factory: laboratori, social e novità da Rozzano.', changeFrequency: 'weekly', priority: 0.8 },
   {
     path: '/',
     title: 'Under The Tower Factory',

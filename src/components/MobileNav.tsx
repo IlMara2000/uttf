@@ -40,7 +40,7 @@ export default function MobileNav() {
             </Link>
             {!isManagement && (
               <>
-                <Link href="/link-in-bio" aria-label="Link in bio" className="flex h-14 w-14 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-white">
+                <Link href="/bio" aria-label="Link in bio" className="flex h-14 w-14 items-center justify-center rounded-full text-zinc-400 transition-colors hover:text-white">
                   <Share2 size={25} strokeWidth={2} />
                 </Link>
                 <button type="button" onClick={() => setIsOpen(false)} className="flex h-14 w-14 items-center justify-center rounded-full text-[#FF914D] transition-colors hover:bg-white/10" aria-label="Chiudi menu" aria-expanded={true}>

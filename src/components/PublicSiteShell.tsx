@@ -29,7 +29,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
     pathname === "/login";
   const menuOpen = menuPath === pathname;
 
-  if ((pathname === "/link-in-bio" || pathname.startsWith("/link-in-bio/"))) return <div className="bio-surface">{children}</div>;
+  if ((pathname === "/bio" || pathname.startsWith("/bio/"))) return <div className="bio-surface">{children}</div>;
 
   if (isManagement)
     return (
@@ -108,7 +108,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
               { href: "/", label: "Home" },
               ...links,
               { href: "/#partecipa", label: "Partecipa" },
-              { href: "/link-in-bio", label: "Link in bio" },
+              { href: "/bio", label: "Link in bio" },
               { href: "/login", label: "Area staff" },
             ].map((link) => (
               <Link
@@ -178,7 +178,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
                 Instagram <ArrowUpRight size={15} />
               </a>
               <a
-                href="/link-in-bio"
+                href="/bio"
               >
                 Tutti i nostri canali <ArrowUpRight size={15} />
               </a>

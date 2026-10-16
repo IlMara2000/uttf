@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: '/link-in-bio/:path*', destination: '/bio/:path*', permanent: true }];
+  },
   serverExternalPackages: ['sharp'],
   images: {
     remotePatterns: [{

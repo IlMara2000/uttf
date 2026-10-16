@@ -1,8 +1,8 @@
 export type BioSection = "main" | "socials" | "contatti";
 export const bioSections = {
-  main: { label: "Sito e laboratori", path: "/link-in-bio" },
-  socials: { label: "Socials", path: "/link-in-bio/socials" },
-  contatti: { label: "Contatti", path: "/link-in-bio/contatti" },
+  main: { label: "Sito e laboratori", path: "/bio" },
+  socials: { label: "Socials", path: "/bio/socials" },
+  contatti: { label: "Contatti", path: "/bio/contatti" },
 };
 export type BioLink = {
   section?: BioSection;

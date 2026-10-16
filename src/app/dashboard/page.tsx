@@ -485,7 +485,7 @@ export default function Dashboard() {
             </div>
 
             <nav className="grid gap-1" aria-label="Moduli del gestionale">
-              <a href="/link-in-bio" className="block p-4 text-sm font-semibold text-[#FF914D]">Gestisci link in bio ↗</a>
+              <a href="/bio" className="block p-4 text-sm font-semibold text-[#FF914D]">Gestisci link in bio ↗</a>
               {managementSections.map((section) => {
                 const isActive = activeView === section.key;
 

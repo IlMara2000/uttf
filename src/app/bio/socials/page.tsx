@@ -1,6 +1,6 @@
 import BioPage from "@/components/BioPage";
 import { metadataForPath } from "../../seo";
-export const metadata = metadataForPath("/link-in-bio/contatti");
+export const metadata = metadataForPath("/bio/socials");
 export default function Page() {
-  return <BioPage key="contatti" section="contatti" />;
+  return <BioPage key="socials" section="socials" />;
 }
