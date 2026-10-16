@@ -201,7 +201,7 @@
 
 /* Poster typography, ink texture and high-contrast paper panels. */
 .bio-surface {
-  background: #ff914d url("/images/noise.svg");
+  background: #111 url("/images/uttf-bio-background.png") center / cover no-repeat fixed;
   color: #111;
   padding: 24px 0;
 }
