@@ -218,7 +218,7 @@
   content: "";
   position: absolute;
   inset: 84px 0 auto;
-  height: 190px;
+  height: 366px;
   z-index: -1;
   background: #ff914d;
   clip-path: polygon(0 12%, 100% 0, 100% 89%, 0 100%);
@@ -234,8 +234,8 @@
   margin: 28px 0 24px;
 }
 .bio-heading img {
-  width: 88px;
-  height: 88px;
+  width: 264px;
+  height: 264px;
   margin-bottom: 12px;
 }
 .bio-heading .eyebrow {
@@ -256,7 +256,8 @@
 }
 .bio-heading h1 span {
   color: #ff914d;
-  -webkit-text-stroke: 1px #111;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
 }
 .bio-heading > p:last-of-type {
   color: #eee;

@@ -198,8 +198,8 @@ export default function BioPage({ section }: { section: BioSection }) {
         <Image
           src="/icons/homelogo.png"
           alt=""
-          width={120}
-          height={120}
+          width={264}
+          height={264}
           priority
         />
         <p className="eyebrow">Rozzano / Cultura urbana</p>
