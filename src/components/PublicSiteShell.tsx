@@ -29,7 +29,7 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
     pathname === "/login";
   const menuOpen = menuPath === pathname;
 
-  if (pathname === "/link-in-bio") return <div className="bio-surface">{children}</div>;
+  if ((pathname === "/link-in-bio" || pathname.startsWith("/link-in-bio/"))) return <div className="bio-surface">{children}</div>;
 
   if (isManagement)
     return (

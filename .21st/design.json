@@ -101,6 +101,10 @@
     {
       "date": "2026-10-08",
       "decision": "User asks for visibly stronger street art: textured dark wall, rough orange paint stroke, outline typography, torn-paper photographic frames, pasted labels and expressive poster headings across public pages. Preserve original images, logos, structure, brand colors and the ban on emoji and legal classifications."
+    },
+    {
+      "date": "2026-10-16",
+      "decision": "Link in bio uses a high-contrast urban poster direction: orange painted band, ink texture, italic display typography and off-white panels with orange offset edges. Preserve panel UX and original stand photograph foto1. Split main/site/forms, socials and contacts into separate routes, each with staff-only editing."
     }
   ],
   "evidence": [

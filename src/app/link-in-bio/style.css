@@ -198,3 +198,190 @@
 .bio-card {
   border-radius: 8px;
 }
+
+/* Poster typography, ink texture and high-contrast paper panels. */
+.bio-surface {
+  background: #ff914d url("/images/noise.svg");
+  color: #111;
+  padding: 24px 0;
+}
+.bio-page {
+  position: relative;
+  isolation: isolate;
+  background: #111 url("/images/noise.svg");
+  border: 2px solid #111;
+  box-shadow: 10px 10px 0 #111;
+  padding-bottom: 44px;
+  min-height: calc(100svh - 48px);
+}
+.bio-page::before {
+  content: "";
+  position: absolute;
+  inset: 84px 0 auto;
+  height: 190px;
+  z-index: -1;
+  background: #ff914d;
+  clip-path: polygon(0 12%, 100% 0, 100% 89%, 0 100%);
+}
+.bio-toolbar a,
+.bio-toolbar button {
+  border-color: #ff914d;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.bio-heading {
+  margin: 28px 0 24px;
+}
+.bio-heading img {
+  width: 88px;
+  height: 88px;
+  margin-bottom: 12px;
+}
+.bio-heading .eyebrow {
+  color: #111;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.bio-heading h1 {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(23px, 5.6vw, 36px);
+  letter-spacing: -0.06em;
+  line-height: 1.15;
+  font-style: italic;
+  margin: 14px 0 20px;
+  text-shadow: 3px 3px 0 #111;
+}
+.bio-heading h1 span {
+  color: #ff914d;
+  -webkit-text-stroke: 1px #111;
+}
+.bio-heading > p:last-of-type {
+  color: #eee;
+}
+.bio-edition {
+  display: inline-block;
+  background: #eee9df;
+  color: #111;
+  padding: 5px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  margin-top: 18px;
+  transform: rotate(-2deg);
+}
+.bio-section-label {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 26px 0 16px;
+  border-top: 2px solid #ff914d;
+  padding-top: 14px;
+}
+.bio-section-label span {
+  font-family: var(--font-mono);
+  color: #ff914d;
+  font-size: 12px;
+}
+.bio-section-label h2 {
+  font-size: 19px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+}
+.bio-links {
+  gap: 16px;
+}
+.bio-card {
+  background: #eee9df;
+  color: #111;
+  border: 2px solid #111;
+  border-radius: 0;
+  box-shadow: 5px 5px 0 #ff914d;
+  padding: 20px;
+}
+.bio-card:hover {
+  background: #ff914d;
+  border-color: #111;
+}
+.bio-card strong {
+  font-weight: 700;
+  font-size: 18px;
+}
+.bio-card small {
+  color: #3b352e;
+}
+.bio-card svg {
+  color: #111;
+}
+.bio-featured {
+  padding: 0 0 20px;
+}
+.bio-featured > img {
+  height: auto;
+  aspect-ratio: 1280 / 853;
+  object-fit: contain;
+  object-position: center;
+}
+.bio-featured > span {
+  padding-left: 20px;
+}
+.bio-section-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 32px;
+}
+.bio-section-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #ff914d;
+  color: #111;
+  border: 2px solid #ff914d;
+  padding: 13px 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+.bio-section-nav a:hover {
+  background: #111;
+  color: #ff914d;
+}
+.bio-footer {
+  border-top: 1px solid #666;
+  padding-top: 24px;
+}
+.bio-edit-card {
+  background: #181818;
+  border-color: #ff914d;
+}
+.bio-edit-card select {
+  width: 100%;
+  background: #111;
+  color: #fff;
+  border: 1px solid #666;
+  padding: 10px;
+  margin-top: 6px;
+}
+.bio-page :focus-visible {
+  outline-color: #fff;
+}
+.bio-card:focus-visible,
+.bio-section-nav a:focus-visible {
+  outline-offset: 7px;
+}
+@media (max-width: 680px) {
+  .bio-surface {
+    padding: 0;
+  }
+  .bio-page {
+    border: 0;
+    box-shadow: none;
+    padding: 20px 20px 40px;
+    min-height: 100svh;
+  }
+}

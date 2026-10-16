@@ -64,3 +64,12 @@ Final verification (2026-10-09): production build completed successfully, includ
 - `bio_page` stores the document with RLS authorization through `authorized_users`; a version check prevents overwriting concurrent edits. Database setup is recorded in `link-in-bio-table.sql` and applied to UTTF HUB.
 - Home news now follow the hero/ticker, before the association and activities. Keep staff access in the top strip, mobile menu and footer.
 - 21st search unavailable (HTTP 401); 21st review reports one informational color literal finding. Production build, targeted lint and TypeScript pass. Database tests confirm public reading, blocked non-staff updates, authorized staff updates and invalid-URL rejection; test writes rolled back. Editor add/edit/reorder/hide/save/remove/cancel verified with browser mocks, separately from real database policy tests.
+
+## Link in bio sections — 2026-10-16
+
+- User asks for a stronger urban/hip-hop graphic treatment only. Orange ink band, existing noise texture, poster lettering and cream panels replace gray-on-gray. Reuse the stand photo `/labs/foto1.jpeg`, with UTTF branding visible.
+- `/link-in-bio` displays website and forms, followed by adjacent Socials and Contatti buttons. Separate routes retain the panel interaction and have their own filtered editor. New panels default to the current section and can move sections through a selector.
+- Normalize existing JSON documents without replacing saved titles, URLs or social visibility. The legacy diary panel is retained, hidden, in the main editor. Save merges the current section with untouched panels and keeps the existing optimistic version check and RLS. No database migration is needed.
+- Public checks at 320, 390, 768 and 1440px passed on all three routes: no overflow and no edit/cancel/publish controls without login. Build, TypeScript and targeted lint pass. 21st search returned HTTP 401; review findings are informational palette literals.
+- Final browser verification: mocked staff sessions pass section-local editing, new-panel defaults, moving a panel to Socials, preserving Contacts during save and cancelling edits. Real public reads preserve current saved titles/URLs/visibility; no production content was changed by the tests.
+- Final user correction: the featured website panel uses the supplied `/images/uttf-bio-cover.jpg` with the UTTF logo, displayed at its original aspect ratio without cropping. Login headings retain explicit spaces before responsive line breaks (Dietro le / Dentro la).

@@ -1,4 +1,11 @@
+export type BioSection = "main" | "socials" | "contatti";
+export const bioSections = {
+  main: { label: "Sito e laboratori", path: "/link-in-bio" },
+  socials: { label: "Socials", path: "/link-in-bio/socials" },
+  contatti: { label: "Contatti", path: "/link-in-bio/contatti" },
+};
 export type BioLink = {
+  section?: BioSection;
   id: string;
   title: string;
   url: string;
@@ -100,4 +107,24 @@ export function isSafeBioUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Legacy documents remain readable; the section is persisted on the next staff save.
+export function normalizeBioLinks(links: BioLink[]): BioLink[] {
+  return links.map((link) => ({
+    ...link,
+    section:
+      link.section ??
+      (["email", "whatsapp"].includes(link.id) ||
+      /^(mailto:|tel:|https:\/\/(api\.)?whatsapp\.com|https:\/\/wa\.me)/i.test(
+        link.url,
+      )
+        ? "contatti"
+        : ["site", "labs", "news"].includes(link.id) ||
+            link.url.startsWith("/") ||
+            /forms\.gle|docs\.google\.com\/forms/.test(link.url)
+          ? "main"
+          : "socials"),
+    visible: link.id === "news" && !link.section ? false : link.visible,
+  }));
 }

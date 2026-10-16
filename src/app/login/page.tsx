@@ -80,7 +80,7 @@ export default function LoginPage() {
       <section className="staff-login-intro">
         <Link href="/" aria-label="Under The Tower Factory, torna al sito"><Image src="/icons/homelogo.png" alt="Under The Tower Factory" width={150} height={150} /></Link>
         <span className="staff-kicker">Under The Tower Factory / Staff</span>
-        <h1>Dietro<br />le quinte.<br /><span>Dentro<br />la Factory.</span></h1>
+        <h1>Dietro{" "}<br />le quinte.<br /><span>Dentro{" "}<br />la Factory.</span></h1>
         <p>Lo spazio di chi dà una mano a far succedere le cose.</p>
         <Link href="/" className="staff-back">Torna al sito</Link>
       </section>
