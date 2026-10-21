@@ -74,3 +74,11 @@ Final verification (2026-10-09): production build completed successfully, includ
 - Final browser verification: mocked staff sessions pass section-local editing, new-panel defaults, moving a panel to Socials, preserving Contacts during save and cancelling edits. Real public reads preserve current saved titles/URLs/visibility; no production content was changed by the tests.
 - Final user correction: the featured website panel uses the supplied `/images/uttf-bio-cover.jpg` with the UTTF logo, displayed at its original aspect ratio without cropping. Login headings retain explicit spaces before responsive line breaks (Dietro le / Dentro la).
 - URL correction: the canonical hub is now `/bio`, with `/bio/socials` and `/bio/contatti`. Navigation, sharing and metadata use the new routes; permanent redirects preserve all previous `/link-in-bio` addresses and query parameters.
+
+## Editable team — 2026-10-21
+
+- Preserve existing portraits and biographies in framed photographic cards with ink borders, orange index tabs, skills and tags. Gentle mouse-only tilt uses the transitions-dev snippet; touch scrolling remains native and reduced motion disables transforms.
+- Authenticated accounts can edit each profile, upload/crop its portrait, add an optional personal link, add a profile through a matching plus card and edit the page introduction. Reuse Radix Dialog, Next Image, Lucide and existing design tokens.
+- 21st search returned HTTP 401. Existing project primitives were reused; no external component dependency was installed. 21st review returned informational color-token notices only.
+
+Validation: production build and targeted ESLint passed. The team page renders the six persisted Supabase profiles; database transactions verified authenticated insert/update and public write denial without changing the seeded biographies. Browser checks passed at desktop, 390px and 320px, with edit/add controls absent for visitors and no horizontal overflow. Authenticated form submission was not exercised through the browser.

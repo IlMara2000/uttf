@@ -4,10 +4,22 @@ export type LabCategory = {
   description: string;
   detailIntro: string;
   tags: string[];
+  active: boolean;
+  primaryLabel: string;
+  primaryUrl: string;
+  secondaryLabel: string;
+  secondaryUrl: string;
+  photos: string[];
+  version: number;
 };
+
+const defaults = { primaryLabel: "Scopri di più", secondaryLabel: "Voglio partecipare", secondaryUrl: "/labs#iscrizioni", photos: [] as string[], version: 0 };
 
 export const labCategories: LabCategory[] = [
   {
+    ...defaults,
+    active: true,
+    primaryUrl: '/labs/rap-fcktory',
     slug: 'rap-fcktory',
     title: 'RAP_F*CKTORY',
     description: 'Rap, scrittura e condivisione. Uno spazio per esprimersi attraverso le parole e incontrare altre persone con la stessa passione.',
@@ -15,6 +27,9 @@ export const labCategories: LabCategory[] = [
     tags: ['RAP', 'SCRITTURA', 'INCONTRI'],
   },
   {
+    ...defaults,
+    active: false,
+    primaryUrl: '/labs/rastapower',
     slug: 'rastapower',
     title: 'RASTAPOWER',
     description: 'Iniziative sporadiche della Factory, senza un calendario continuativo. Scrivici per sapere se ci sono appuntamenti in programma.',
@@ -22,6 +37,9 @@ export const labCategories: LabCategory[] = [
     tags: ['INIZIATIVE SPORADICHE', 'RASTAPOWER'],
   },
   {
+    ...defaults,
+    active: false,
+    primaryUrl: '/labs/graffiti',
     slug: 'graffiti',
     title: 'GRAFFITI',
     description: 'Iniziative sporadiche dedicate ai graffiti. Occasioni per condividere questa passione, quando vengono organizzate.',
@@ -29,6 +47,9 @@ export const labCategories: LabCategory[] = [
     tags: ['GRAFFITI', 'INIZIATIVE SPORADICHE'],
   },
   {
+    ...defaults,
+    active: true,
+    primaryUrl: '/labs/community-hub',
     slug: 'community-hub',
     title: 'INCONTRARSI',
     description: 'La Factory è anche un posto dove conoscersi e condividere la passione per la cultura urbana. Aperto a tutti.',

@@ -1,0 +1,111 @@
+:root {
+  --tilt-perspective: 1000px;
+  --tilt-return: 1000ms;
+  --tilt-return-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tilt-follow: 400ms;
+  --tilt-follow-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tilt-glare-opacity: 0.32;
+  --tilt-glare-fade: 300ms;
+  --tilt-glare-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The outer wrapper is the flat hit area; touch-action:none
+   lets a finger drag tilt the card instead of scrolling the
+   page, so tap-hold-drag works on mobile. */
+.t-tilt { touch-action: none; }
+/* The card tilts toward the pointer via rotateX/rotateY fed
+   from JS; on leave it eases back to flat. A separate
+   .is-tilting class swaps in a short linear follow while the
+   pointer moves so the tilt tracks the cursor 1:1. */
+.t-tilt-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  transform:
+    perspective(var(--tilt-perspective))
+    rotateX(var(--tilt-rx, 0deg))
+    rotateY(var(--tilt-ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform var(--tilt-return) var(--tilt-return-ease);
+  will-change: transform;
+}
+.t-tilt-card.is-tilting {
+  transition: transform var(--tilt-follow) var(--tilt-follow-ease);
+}
+/* Cursor-tracked glare: layered soft circles that add like
+   light (screen blend) at the pointer position. */
+.t-tilt-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(circle 95px at var(--tilt-gx, 50%) var(--tilt-gy, 50%),
+      rgba(255,255,255,0.48), rgba(255,255,255,0.06) 52%, rgba(255,255,255,0) 84%),
+    radial-gradient(circle 200px at var(--tilt-gx, 50%) var(--tilt-gy, 50%),
+      rgba(255,255,255,0.22), rgba(255,255,255,0.04) 58%, rgba(255,255,255,0) 78%),
+    radial-gradient(circle 360px at var(--tilt-gx, 50%) var(--tilt-gy, 50%),
+      rgba(255,255,255,0.10), rgba(255,255,255,0) 88%);
+  transition: opacity var(--tilt-glare-fade) var(--tilt-glare-ease);
+}
+.t-tilt.is-hover .t-tilt-glare { opacity: var(--tilt-glare-opacity); }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-tilt-card { transform: none !important; transition: none !important; }
+}
+
+
+/* Photographic profiles: crisp ink frames, orange edges, gentle mouse-only tilt. */
+.team-content { padding-bottom: 20px; }
+.team-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; align-items: stretch; }
+.team-card-shell { min-width: 0; touch-action: pan-y; --tilt-return: 650ms; --tilt-follow: 180ms; }
+.team-card { height: 100%; border: 1px solid var(--ink); border-radius: 0; display: flex; flex-direction: column; background: var(--paper, #fff); box-shadow: 5px 5px 0 var(--ink); }
+.team-photo { position: relative; aspect-ratio: 1 / 1.08; overflow: hidden; background: var(--ink); border-bottom: 1px solid var(--ink); }
+.team-photo img { object-fit: cover; transition: transform var(--motion-slow, 650ms) var(--motion-ease); }
+.team-card-shell:hover .team-photo img { transform: scale(1.035); }
+.team-number { position: absolute; bottom: 0; left: 0; padding: 10px 15px; background: var(--orange); color: var(--ink); font: 12px var(--font-mono), monospace; min-width: 48px; text-align: center; border-top: 1px solid var(--ink); border-right: 1px solid var(--ink); }
+.team-edit-button { position: absolute; top: 14px; right: 14px; display: inline-flex; align-items: center; gap: 6px; background: var(--paper, white); color: var(--ink); padding: 9px 12px; border: 1px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); font-size: 12px; cursor: pointer; transition: background var(--motion-fast, 180ms); }
+.team-edit-button:hover { background: var(--orange); }
+.team-card-copy { flex: 1; display: flex; flex-direction: column; padding: 25px 25px 28px; overflow-wrap: anywhere; }
+.team-card-copy h2 { font-size: clamp(25px, 2.5vw, 32px); font-style: italic; line-height: 1.05; margin: 0 0 10px; }
+.team-role { font: 10px/1.6 var(--font-mono), monospace; text-transform: uppercase; letter-spacing: .06em; }
+.team-card-copy > p { font-size: 14px; line-height: 1.8; color: var(--muted); margin: 22px 0 24px; white-space: pre-line; }
+.team-skills { border-top: 1px solid var(--ink); padding-top: 15px; margin-top: auto; }
+.team-skills > span { font: 9px var(--font-mono), monospace; letter-spacing: .08em; color: var(--muted); }
+.team-skills ul { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; line-height: 1.65; }
+.team-skills li + li::before { content: '/'; color: var(--orange); margin-right: 8px; }
+.team-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+.team-tags > span { font: 9px/1.5 var(--font-mono), monospace; padding: 5px 7px; border: 1px solid var(--ink); text-transform: uppercase; }
+.team-profile-link { align-self: flex-start; margin-top: 22px; font-size: 12px; }
+.team-card-edge { height: 5px; background: var(--orange); transform: scaleX(.18); transform-origin: left; transition: transform var(--motion-base, 320ms) var(--motion-ease); }
+.team-card-shell:hover .team-card-edge, .team-card-shell:focus-within .team-card-edge { transform: scaleX(1); }
+.team-add-card { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 28px; min-height: 560px; padding: 32px; text-align: left; color: var(--ink); background: transparent; border: 1px dashed var(--ink); cursor: pointer; transition: background var(--motion-base, 320ms), box-shadow var(--motion-base, 320ms), transform var(--motion-base, 320ms) var(--motion-ease); }
+.team-add-kicker { font: 10px var(--font-mono), monospace; letter-spacing: .08em; }
+.team-add-title { font-size: 30px; font-weight: 700; font-style: italic; text-transform: uppercase; line-height: 1.1; }
+.team-add-action { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; border-top: 1px solid currentColor; padding-top: 18px; width: 100%; }
+.team-add-card > svg { transition: transform var(--motion-base, 320ms) var(--motion-ease); }
+.team-add-card:hover { background: var(--orange); border-style: solid; box-shadow: 5px 5px 0 var(--ink); transform: translate(-2px, -2px); }
+.team-add-card:hover > svg { transform: rotate(90deg); }
+.team-intro-edit { margin-top: 20px; cursor: pointer; }
+.team-grid button:focus-visible, .team-intro-edit:focus-visible, .team-editor button:focus-visible, .team-profile-link:focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; }
+.team-grid button:disabled, .team-intro-edit:disabled { opacity: .45; cursor: not-allowed; }
+.team-notice:empty { display: none; }
+.team-notice:not(:empty), .team-load-error { margin-bottom: 24px; font-size: 14px; }
+.team-editor { max-width: min(700px, calc(100vw - 32px)); }
+.team-editor-photo { position: relative; height: 260px; background: var(--ink); border: 1px solid var(--ink); overflow: hidden; }
+.team-editor-photo img { object-fit: cover; }
+.team-editor-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.team-field-hint { font-size: 12px; color: #606060; }
+.team-editor input[type=range] { padding-inline: 0; accent-color: var(--orange); }
+@media (max-width: 1099px) { .team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; } }
+@media (max-width: 639px) {
+  .team-grid { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .team-card-copy { padding: 23px; }
+  .team-add-card { min-height: 380px; padding: 26px; }
+  .team-editor-columns { grid-template-columns: minmax(0, 1fr); }
+  .team-editor-photo { height: 220px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .team-photo img, .team-card-edge, .team-add-card, .team-add-card > svg { transition: none; transform: none !important; }
+}

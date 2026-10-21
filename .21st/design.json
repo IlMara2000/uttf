@@ -105,6 +105,10 @@
     {
       "date": "2026-10-16",
       "decision": "Link in bio uses a high-contrast urban poster direction: orange painted band, ink texture, italic display typography and off-white panels with orange offset edges. Preserve panel UX and original stand photograph foto1. Split main/site/forms, socials and contacts into separate routes, each with staff-only editing."
+    },
+    {
+      "date": "2026-10-21",
+      "decision": "User-requested editable team profiles: framed photographic cards with ink offset edges, orange numbering, skills and tags, subtle mouse-only tilt and reduced-motion support. Signed-in accounts can edit profiles, add people through a matching plus card and update the introduction."
     }
   ],
   "evidence": [

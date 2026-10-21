@@ -1,3 +1,4 @@
+import './team.css';
 import type { ReactNode } from 'react';
 import { metadataForPath } from '../seo';
 

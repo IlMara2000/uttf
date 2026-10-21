@@ -1,10 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
+import LabCards from "@/components/LabCards";
+import { loadLabs } from "@/lib/labs-server";
 import { ArrowUpRight } from "lucide-react";
 import PublicPageIntro from "@/components/PublicPageIntro";
-import { labCategories } from "./lab-data";
 
-export default function LabsPage() {
+export default async function LabsPage() {
+  const { labs, ready } = await loadLabs();
   return (
     <main className="public-page">
       <PublicPageIntro
@@ -18,11 +19,7 @@ export default function LabsPage() {
           </>
         }
         description="La cultura urbana diventa un’occasione per esprimersi, imparare e incontrare altre persone. Nei laboratori della Factory si cresce mettendosi in gioco, insieme."
-      >
-        <a href="#iscrizioni" className="text-link">
-          Come partecipare <ArrowUpRight size={17} />
-        </a>
-      </PublicPageIntro>
+      />
       <div className="content-width">
         <section
           className="photo-ribbon"
@@ -39,35 +36,7 @@ export default function LabsPage() {
             </div>
           ))}
         </section>
-        <section className="lab-list" aria-label="Laboratori e iniziative">
-          {labCategories.map((lab, index) => {
-            return (
-              <article className="lab-card" key={lab.slug}>
-                <div className="activity-top">
-                  <span className="card-index">ATTIVITÀ 0{index + 1}</span>
-                </div>
-                <h2>{lab.title}</h2>
-                <p>{lab.description}</p>
-                <div className="tags">
-                  {lab.tags.map((tag) => (
-                    <span key={tag}>{tag}</span>
-                  ))}
-                </div>
-                <div className="lab-actions">
-                  <Link
-                    className="clay-button light"
-                    href={`/labs/${lab.slug}`}
-                  >
-                    Scopri di più <ArrowUpRight size={17} />
-                  </Link>
-                  <a href="#iscrizioni" className="text-link">
-                    Voglio partecipare <ArrowUpRight size={16} />
-                  </a>
-                </div>
-              </article>
-            );
-          })}
-        </section>
+        <LabCards initialLabs={labs} ready={ready} />
         <section id="iscrizioni" className="association-cta">
           <div>
             <span className="eyebrow">Cominciamo da qui</span>

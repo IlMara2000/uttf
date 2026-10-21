@@ -329,7 +329,7 @@
   border-left: 2px solid var(--ink);
   padding-left: 55px;
 }
-.factory-ticker[data-visible="true"][data-paused="false"] .ticker-track {
+.factory-ticker[data-visible="true"] .ticker-track {
   animation-play-state: running;
 }
 .ticker-control {
@@ -1602,3 +1602,30 @@
   .public-site .topline-access a { padding-left: 12px; }
   .public-site .visit-map iframe { height: 280px; }
 }
+
+/* Editable laboratory panels. */
+.lab-card { min-width: 0; overflow-wrap: anywhere; }
+.lab-heading { border-bottom: 2px solid var(--ink); padding-bottom: 16px; margin-bottom: 24px; }
+.lab-status-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.lab-status { display: inline-flex; align-items: center; gap: 9px; font: 12px var(--font-mono), monospace; text-transform: uppercase; }
+.lab-status-dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: #c52a31; }
+.lab-status-dot.is-active { background: #198548; box-shadow: 0 0 0 3px rgb(25 133 72 / 12%); }
+.lab-edit { cursor: pointer; font-size: 12px; }
+.lab-photos { display: flex; gap: 10px; overflow-x: auto; margin-top: 20px; padding-bottom: 4px; }
+.lab-photos a { flex: 0 0 72%; }
+.lab-photos a:only-child { flex-basis: 100%; }
+.lab-photos img { width: 100%; height: 220px; object-fit: cover; border: 1px solid var(--ink); }
+.lab-editor { max-width: min(640px, calc(100vw - 32px)); max-height: 88dvh; overflow-y: auto; background: #fff; color: #171717; border-radius: 0; }
+.lab-editor fieldset { border: 0; display: grid; gap: 14px; min-width: 0; }
+.lab-editor label { display: grid; gap: 6px; font-weight: 600; }
+.lab-editor input, .lab-editor textarea, .lab-editor select { width: 100%; min-width: 0; border: 1px solid #888; padding: 10px; background: #fff; color: #171717; font-weight: 400; }
+.lab-editor textarea { min-height: 90px; resize: vertical; }
+.lab-editor-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+.lab-editor button { cursor: pointer; border: 1px solid #171717; padding: 8px 12px; }
+.lab-editor button[type=submit] { background: #171717; color: white; }
+.lab-editor button:disabled { opacity: .5; cursor: wait; }
+.lab-photo-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.lab-photo-previews img { width: 100%; height: 120px; object-fit: cover; margin-bottom: 6px; }
+
+.hero-photo-edit { position: absolute; z-index: 5; left: 12px; top: 46px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #171717; background: white; color: #171717; font-size: 12px; cursor: pointer; }
+.hero-photo-preview { width: 100%; height: auto; max-height: 300px; object-fit: contain; }

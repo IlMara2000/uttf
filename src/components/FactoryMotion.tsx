@@ -16,7 +16,7 @@ export default function FactoryMotion({ children }: { children: ReactNode }) {
     let observer: IntersectionObserver | undefined;
     const targets = Array.from(
       container.querySelectorAll<HTMLElement>(
-        ".section-heading, .mission-grid, .activity-card, .community-section, .news-card, .diary-invite, .participate-heading, .participate-grid > a, .visit-section, .person-card, .lab-card, .association-cta, .legal-section, .photo-ribbon > div",
+        ".section-heading, .mission-grid, .activity-card, .community-section, .news-card, .diary-invite, .participate-heading, .participate-grid > a, .visit-section, .person-card, .team-card-shell, .lab-card, .association-cta, .legal-section, .photo-ribbon > div",
       ),
     );
     const reset = () => {

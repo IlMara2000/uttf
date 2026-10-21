@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import EditableHeroPhoto from "./EditableHeroPhoto";
 import type { PointerEvent } from "react";
 
 export default function FactoryScene() {
@@ -31,13 +32,7 @@ export default function FactoryScene() {
     >
       <span className="scene-edition">UTTF / DAL TERRITORIO</span>
       <div className="hero-photo">
-        <Image
-          src="/labs/foto1.jpeg"
-          alt="Il gruppo Under The Tower Factory allo stand dell’associazione"
-          fill
-          preload
-          sizes="(min-width: 900px) 48vw, 100vw"
-        />
+        <EditableHeroPhoto />
         <span className="photo-caption">Rozzano. Persone, prima di tutto.</span>
       </div>
       <div className="scene-inset">

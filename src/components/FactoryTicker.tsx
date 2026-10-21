@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const words = [
   "LE ETICHETTE, FUORI",
@@ -9,7 +9,6 @@ const words = [
   "ROZZANO, CASA NOSTRA",
 ];
 export default function FactoryTicker() {
-  const [paused, setPaused] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const node = root.current;
@@ -32,7 +31,7 @@ export default function FactoryTicker() {
     };
   }, []);
   return (
-    <div className="factory-ticker" ref={root} data-paused={paused}>
+    <div className="factory-ticker" ref={root}>
       <div className="ticker-window">
         <div className="ticker-track">
           {[0, 1].map((copy) => (
@@ -48,19 +47,6 @@ export default function FactoryTicker() {
           ))}
         </div>
       </div>
-      <button
-        type="button"
-        className="ticker-control"
-        aria-label={
-          paused
-            ? "Riprendi la fascia in movimento"
-            : "Metti in pausa la fascia in movimento"
-        }
-        aria-pressed={paused}
-        onClick={() => setPaused((value) => !value)}
-      >
-        {paused ? "Riprendi" : "Pausa"}
-      </button>
     </div>
   );
 }

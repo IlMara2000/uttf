@@ -3,23 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import PublicPageIntro from "@/components/PublicPageIntro";
-import { getLabCategory, labCategories } from "../lab-data";
+import { loadLabs } from "@/lib/labs-server";
 
 type LabDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return labCategories.map((lab) => ({ slug: lab.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: LabDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const lab = getLabCategory(slug);
+  const { labs } = await loadLabs();
+  const lab = labs.find(lab => lab.slug === slug);
 
   if (!lab) {
     return {
@@ -38,7 +33,8 @@ export async function generateMetadata({
 
 export default async function LabDetailPage({ params }: LabDetailPageProps) {
   const { slug } = await params;
-  const lab = getLabCategory(slug);
+  const { labs } = await loadLabs();
+  const lab = labs.find(lab => lab.slug === slug);
 
   if (!lab) {
     notFound();
