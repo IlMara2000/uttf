@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { factoryAssetPath } from '@/lib/storage-media';
 import { getErrorMessage } from '@/lib/errors';
 import { 
   Plus, Search, Trash2, FileText, ChevronLeft, 
@@ -105,32 +106,44 @@ export default function NotesManager() {
     setIsUploading(true);
     
     try {
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileName = `${crypto.randomUUID()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      if (file.size > 25 * 1024 * 1024) throw new Error('Il file supera 25 MB.');
       const { error: upErr } = await supabase.storage
         .from('factory-assets')
         .upload(`notes/${fileName}`, file);
       
       if (upErr) throw upErr;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('factory-assets')
-        .getPublicUrl(`notes/${fileName}`);
+      const updatedAttachments = [...(activeNote.attachments || []), `notes/${fileName}`];
 
-      const updatedAttachments = [...(activeNote.attachments || []), publicUrl];
-      
       const updatedNote = { ...activeNote, attachments: updatedAttachments };
       setActiveNote(updatedNote);
       
       if (activeNote.id) {
-        await supabase
-          .from('notes')
-          .update({ attachments: updatedAttachments })
-          .eq('id', activeNote.id);
+        const { error } = await supabase.from('notes').update({ attachments: updatedAttachments }).eq('id', activeNote.id);
+        if (error) throw error;
       }
     } catch (err) {
       alert("Errore upload: " + getErrorMessage(err));
     } finally {
       setIsUploading(false);
+    }
+  }
+
+  async function downloadAttachment(value: string) {
+    try {
+      const path = factoryAssetPath(value);
+      if (!path?.startsWith('notes/')) throw new Error('Allegato non valido.');
+      const { data, error } = await supabase.storage.from('factory-assets').download(path);
+      if (error) throw error;
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = path.split('/').pop() || 'allegato';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      alert('Download non autorizzato o non disponibile.');
     }
   }
 
@@ -243,16 +256,11 @@ export default function NotesManager() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4 border-t border-white/5">
                   {activeNote.attachments?.map((url: string, i: number) => (
                     <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-zinc-900">
-                      {url.match(/\.(png|jpe?g|webp|gif|avif|svg)(?:\?|$)/i) ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- Note attachments use user-uploaded URLs outside the image allowlist.
-                        <img src={url} loading="lazy" className="w-full h-32 object-cover opacity-80" alt="Allegato nota" />
-                      ) : (
-                        <div className="flex h-32 items-center justify-center text-zinc-500"><FileText size={28} /></div>
-                      )}
+                      <div className="flex h-32 items-center justify-center text-zinc-500"><FileText size={28} /></div>
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                        <a href={url} target="_blank" rel="noreferrer" className="p-2 bg-white/10 rounded-full hover:bg-white/20">
+                        <button type="button" onClick={() => void downloadAttachment(url)} aria-label="Scarica allegato" className="p-2 bg-white/10 rounded-full hover:bg-white/20">
                           <FileText size={18} />
-                        </a>
+                        </button>
                       </div>
                     </div>
                   ))}

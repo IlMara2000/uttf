@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Sicurezza e accesso staff
+
+Le migrazioni in `supabase/migrations/` contengono le correzioni applicate a UTTF HUB.
+`authorized_users` è la fonte dei ruoli `staff` e `admin`; rimuovere una persona
+revoca l'accesso ai dati anche se il suo token Auth non è ancora scaduto.
+L'area `/admin` è riservata agli amministratori. Autorizzare un indirizzo non crea
+un account Auth e non invia automaticamente un invito.
+
+Il bucket `factory-assets` deve rimanere **privato**. Le pubblicazioni sotto
+`publications/` sono leggibili dal pubblico tramite URL firmati; `notes/` e
+`uploads/` sono riservati allo staff. Gli allegati esistenti non sono stati
+eliminati: i vecchi URL pubblici non sono più il percorso di download.
+Non salvare URL firmati temporanei nel database; salvare il percorso dell'oggetto.
+
+Le migrazioni presuppongono lo schema CRM esistente. I file SQL nella radice
+sono script di configurazione storici, non un bootstrap completo del database.
+Non riabilitare le vecchie policy permissive dopo le migrazioni.
+
+Controlli: `npm test`, `npm run lint`, `npm run build`, `npm audit`.
+Le chiavi server vanno nelle variabili d'ambiente, mai in variabili `NEXT_PUBLIC_`.

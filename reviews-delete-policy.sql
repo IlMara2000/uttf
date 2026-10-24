@@ -13,7 +13,7 @@ begin
     on public.reviews
     for delete
     to authenticated
-    using (true);
+    using ((select private.staff_role()) is not null);
   end if;
 end
 $$;

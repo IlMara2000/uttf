@@ -1,4 +1,5 @@
 'use client'
+import { escapeCsvCell } from '@/lib/csv';
 /* eslint-disable @next/next/no-img-element -- Object URL previews are not served through the image optimizer. */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -217,14 +218,13 @@ export default function Dashboard() {
   }, [previewUrl]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize the selected view with remote records.
     if (activeView === 'newsletter') fetchSubscribers();
     if (activeView === 'reviews') fetchReviews();
   }, [activeView, fetchReviews, fetchSubscribers]);
 
   const exportCSV = () => {
     const headers = ['Data', 'Nome', 'Email', 'Telefono'];
-    const escapeCsvCell = (value: string | number | null | undefined) =>
-      `"${String(value ?? '').replace(/"/g, '""')}"`;
     const rows = subscribers.map((subscriber) => [
       new Date(subscriber.created_at).toLocaleDateString('it-IT'),
       subscriber.name,

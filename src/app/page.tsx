@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { resolvePublicationUrl } from '@/lib/storage-media';
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowDown, ArrowUpRight, X } from "lucide-react";
@@ -55,7 +56,7 @@ export default function HomePage() {
           .order("created_at", { ascending: false })
           .limit(6);
         if (active && !error && data?.length)
-          setPublications(data as Publication[]);
+          setPublications(await Promise.all(data.map(async (post) => ({ ...post, image_url: await resolvePublicationUrl(post.image_url) }))) as Publication[]);
       } catch {
         /* Keep the editorial fallback when publications are unavailable. */
       }

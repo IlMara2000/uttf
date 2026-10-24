@@ -26,18 +26,13 @@ export default function FileUpload({ activityId }: { activityId?: number }) {
 
       if (uploadError) throw uploadError
 
-      // 2. Ottieni URL pubblico
-      const { data: urlData } = supabase.storage
-        .from('factory-assets')
-        .getPublicUrl(filePath)
-
       // 3. Salva nel DB
       const { error: dbError } = await supabase
         .from('media_storage')
         .insert([
           {
             file_name: file.name,
-            file_url: urlData.publicUrl,
+            file_url: filePath,
             file_type: file.type,
             activity_id: activityId || null,
             is_social_ready: false

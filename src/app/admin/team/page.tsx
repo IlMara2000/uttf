@@ -7,7 +7,6 @@ import ManagementBottomLogo from '@/components/ManagementBottomLogo'
 
 type TeamProfile = {
   id: string;
-  full_name: string;
   email: string;
   role: string;
 }
@@ -15,13 +14,12 @@ type TeamProfile = {
 export default function AdminTeamPage() {
   const [profiles, setProfiles] = useState<TeamProfile[]>([])
   const [loading, setLoading] = useState(false)
-  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('') // AGGIUNTO EMAIL
-  const [role, setRole] = useState('')
-  const [skills, setSkills] = useState('')
+  const [role, setRole] = useState('staff')
 
   const fetchTeam = useCallback(async () => {
-    const { data } = await supabase.from('profiles').select('*').order('full_name')
+    const { data, error } = await supabase.from('authorized_users').select('id, email, role').order('email')
+    if (error) alert('Lettura autorizzazioni non disponibile.')
     if (data) setProfiles(data as TeamProfile[])
   }, [])
 
@@ -34,39 +32,29 @@ export default function AdminTeamPage() {
     e.preventDefault()
     setLoading(true)
     
-    const skillsArray = skills.split(',').map(s => s.trim().toUpperCase()).filter(s => s !== '')
-
-    // 1. Inseriamo nel database dei profili
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([{ 
-        full_name: fullName.toUpperCase(), 
-        email: email.toLowerCase().trim(), // Salviamo l'email per il check
-        role: role.toUpperCase(), 
-        skills: skillsArray,
-        updated_at: new Date()
-      }])
-
-    // 2. Inseriamo nella tabella di autorizzazione (quella che controlla il login)
-    const { error: authError } = await supabase
-      .from('authorized_users')
-      .insert([{ email: email.toLowerCase().trim() }])
-
-    if (!profileError && !authError) {
-      setFullName(''); setEmail(''); setRole(''); setSkills('');
-      void fetchTeam()
-      alert("Accesso autorizzato: L'utente ora può registrarsi/accedere.");
+    const { error } = await supabase.from('authorized_users')
+      .insert([{ email: email.toLowerCase().trim(), role }]);
+    if (error) {
+      alert('Autorizzazione non salvata. Verifica i permessi amministratore e che la persona non sia già presente.');
     } else {
-      alert('DATABASE_ERROR: Controlla che le tabelle authorized_users e profiles esistano.');
+      setEmail(''); setRole('staff');
+      void fetchTeam();
+      alert("Accesso autorizzato. L'account Auth deve essere creato separatamente.");
     }
     setLoading(false)
   }
 
-  const deleteMember = async (id: string, userEmail: string) => {
-    if (!confirm('TERMINATE_CONTRACT?')) return
-    await supabase.from('profiles').delete().eq('id', id)
-    await supabase.from('authorized_users').delete().eq('email', userEmail)
-    void fetchTeam()
+  const deleteMember = async (id: string) => {
+    if (!confirm('Revocare l’accesso di questa persona?')) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    const member = profiles.find(item => item.id === id);
+    if (member?.email.toLowerCase() === user?.email?.toLowerCase()) {
+      alert('Non puoi revocare il tuo stesso accesso da questa schermata.');
+      return;
+    }
+    const { data, error } = await supabase.from('authorized_users').delete().eq('id', id).select('id');
+    if (error || !data?.length) alert('Revoca non riuscita.');
+    else void fetchTeam();
   }
 
   return (
@@ -88,10 +76,8 @@ export default function AdminTeamPage() {
               <UserPlus size={14} /> Aggiungi una persona
             </h2>
             <form onSubmit={handleAddMember} className="space-y-5">
-              <input required placeholder="Nome completo" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
               <input required type="email" placeholder="Email di accesso" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs font-mono" />
-              <input required placeholder="Ruolo" value={role} onChange={e => setRole(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-xs uppercase font-bold" />
-              <input placeholder="Competenze, separate da virgole" value={skills} onChange={e => setSkills(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3 outline-none focus:border-orange-500 text-[10px] font-mono" />
+              <select aria-label="Ruolo di accesso" value={role} onChange={e => setRole(e.target.value)} className="w-full bg-black/40 border-b border-zinc-800 p-3"><option value="staff">Staff</option><option value="admin">Amministratore</option></select>
               <button disabled={loading} className="w-full bg-white text-black font-black uppercase italic text-[10px] py-4 hover:bg-orange-500 transition-all">
                 {loading ? 'Salvataggio…' : 'Autorizza accesso'}
               </button>
@@ -104,11 +90,10 @@ export default function AdminTeamPage() {
             {profiles.map((member) => (
               <div key={member.id} className="flex items-center justify-between p-6 glass-panel border-white/5 bg-zinc-950/40 group">
                 <div>
-                  <h3 className="text-2xl font-black uppercase italic leading-none mb-1">{member.full_name}</h3>
-                  <p className="text-[9px] font-mono text-zinc-500 mb-2">{member.email}</p>
+                  <h3 className="text-2xl font-black uppercase italic leading-none mb-1">{member.email}</h3>
                   <span className="text-[9px] text-orange-500 font-black uppercase tracking-widest bg-orange-500/10 px-2 py-0.5">{member.role}</span>
                 </div>
-                <button aria-label={`Rimuovi ${member.full_name}`} onClick={() => deleteMember(member.id, member.email)} className="p-3 text-zinc-800 hover:text-red-500 transition-all">
+                <button aria-label={`Rimuovi ${member.email}`} onClick={() => deleteMember(member.id)} className="p-3 text-zinc-800 hover:text-red-500 transition-all">
                   <Trash2 size={16} />
                 </button>
               </div>

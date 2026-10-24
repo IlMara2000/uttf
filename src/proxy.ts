@@ -1,3 +1,4 @@
+import { getStaffRole } from './lib/staff-access'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -60,6 +61,14 @@ export async function proxy(request: NextRequest) {
     return redirectToLogin(request)
   }
 
+  try {
+    const role = await getStaffRole(supabase, user)
+    if (!role || (pathname.startsWith('/admin') && role !== 'admin')) {
+      return NextResponse.redirect(new URL('/?access=denied', request.url))
+    }
+  } catch {
+    return new NextResponse('Accesso temporaneamente non disponibile.', { status: 503 })
+  }
   return response
 }
 

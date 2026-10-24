@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ManagementBottomLogo from '@/components/ManagementBottomLogo';
 import { getErrorMessage } from '@/lib/errors';
+import { resolvePublicationUrl } from '@/lib/storage-media';
 import Image from 'next/image';
 
 type OutputPost = {
@@ -22,6 +23,7 @@ type OutputPost = {
   title: string;
   description: string | null;
   image_url: string;
+  display_url?: string;
 };
 
 export default function OutputsPage() {
@@ -41,7 +43,7 @@ export default function OutputsPage() {
       .from('publications')
       .select('*')
       .order('created_at', { ascending: false });
-    if (data) setPosts(data as OutputPost[]);
+    if (data) setPosts(await Promise.all(data.map(async (post) => ({ ...post, display_url: await resolvePublicationUrl(post.image_url) }))) as OutputPost[]);
     setLoading(false);
   }
 
@@ -170,10 +172,10 @@ export default function OutputsPage() {
               >
                 <div className="relative aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5">
                   {post.image_url.match(/\.(mp4|webm|ogg|mov)(?:\?|$)/i) ? (
-                    <video src={post.image_url} muted playsInline preload="none" className="h-full w-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
+                    <video src={post.display_url || ''} muted playsInline preload="none" className="h-full w-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500" />
                   ) : (
                     <Image
-                      src={post.image_url}
+                      src={post.display_url || ''}
                       alt={post.title}
                       fill
                       sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"

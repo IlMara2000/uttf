@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 function getSafeNextPath() {
   const requestedPath = new URLSearchParams(window.location.search).get('next');
 
-  if (requestedPath?.startsWith('/') && !requestedPath.startsWith('//') && !requestedPath.includes('\\')) {
+  if (requestedPath?.startsWith('/') && !requestedPath.startsWith('//') && !/[\s\u0000-\u001f\\]/u.test(requestedPath)) {
     return requestedPath;
   }
 

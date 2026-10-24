@@ -1,6 +1,7 @@
+import { readJson } from '@/lib/request-json';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { getErrorMessage } from '@/lib/errors';
+import { getStaffRole } from '@/lib/staff-access';
 
 type NewsletterPayload = {
   name?: unknown;
@@ -71,8 +72,12 @@ export async function POST(request: Request) {
   let payload: NewsletterPayload;
 
   try {
-    payload = await request.json();
+    payload = await readJson(request) as NewsletterPayload;
   } catch {
+    return NextResponse.json({ error: 'Richiesta non valida.' }, { status: 400 });
+  }
+
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return NextResponse.json({ error: 'Richiesta non valida.' }, { status: 400 });
   }
 
@@ -98,13 +103,13 @@ export async function POST(request: Request) {
       .insert([{ name, email, phone: phone || null }]);
 
     if (error?.code === '23505') {
-      return NextResponse.json({ error: 'Questa email risulta già iscritta.' }, { status: 409 });
+      return NextResponse.json({ success: true });
     }
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('NEWSLETTER_SAVE_ERROR', error);
+  } catch {
+    console.error('NEWSLETTER_SAVE_ERROR');
     return NextResponse.json(
       { error: 'Non sono riuscito a salvare il contatto nel gestionale.' },
       { status: 500 }
@@ -130,6 +135,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Sessione staff non valida.' }, { status: 401 });
     }
 
+    if (!await getStaffRole(getAdminSupabase(), user)) {
+      return NextResponse.json({ error: 'Accesso staff richiesto.' }, { status: 403 });
+    }
+
     const summary = new URL(request.url).searchParams.get('summary') === '1';
     let query = getAdminSupabase()
       .from('newsletter_subscribers')
@@ -141,11 +150,11 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ subscribers: (data ?? []) as NewsletterSubscriber[], total: count ?? data?.length ?? 0 });
-  } catch (error) {
-    console.error('NEWSLETTER_READ_ERROR', error);
+    return NextResponse.json({ subscribers: (data ?? []) as NewsletterSubscriber[], total: count ?? data?.length ?? 0 }, { headers: { 'Cache-Control': 'private, no-store' } });
+  } catch {
+    console.error('NEWSLETTER_READ_ERROR');
     return NextResponse.json(
-      { error: getErrorMessage(error, 'Non sono riuscito a leggere gli iscritti newsletter.') },
+      { error: 'Non sono riuscito a leggere gli iscritti newsletter.' },
       { status: 500 }
     );
   }

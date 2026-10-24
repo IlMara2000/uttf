@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/errors';
 import { Settings, X, Save, Loader2, KeyRound } from 'lucide-react';
@@ -20,16 +20,6 @@ export default function AccountSettings() {
   // Nuovi stati per la gestione della password
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  // Carica i dati dell'utente quando apre il modal
-  useEffect(() => {
-    if (isOpen) {
-      loadUserData();
-      // Resettiamo i campi password ad ogni apertura del modal
-      setNewPassword('');
-      setConfirmPassword('');
-    }
-  }, [isOpen]);
 
   async function loadUserData() {
     setFetching(true);
@@ -122,7 +112,12 @@ export default function AccountSettings() {
     <>
       {/* TASTO INGRANAGGIO */}
       <button 
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setNewPassword('');
+          setConfirmPassword('');
+          setIsOpen(true);
+          void loadUserData();
+        }}
         className="p-2 text-zinc-500 hover:text-[#FF914D] hover:bg-white/5 rounded-lg transition-all"
         title="Impostazioni Account"
       >

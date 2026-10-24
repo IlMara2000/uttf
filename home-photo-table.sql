@@ -10,11 +10,11 @@ grant select on public.home_photo to anon, authenticated;
 grant update (url, version) on public.home_photo to authenticated;
 create policy "Public reads home photo" on public.home_photo for select to anon, authenticated using (true);
 create policy "Accounts edit home photo" on public.home_photo for update to authenticated
-using ((select auth.uid()) is not null and coalesce((select auth.jwt()->>'is_anonymous'), 'false') = 'false')
-with check ((select auth.uid()) is not null and coalesce((select auth.jwt()->>'is_anonymous'), 'false') = 'false');
+using ((select auth.uid()) is not null and coalesce((select auth.jwt()->>'is_anonymous'), 'false') = 'false' and exists (select 1 from public.authorized_users where email = lower((select auth.jwt()->>'email')) and role in ('staff', 'admin')))
+with check ((select auth.uid()) is not null and coalesce((select auth.jwt()->>'is_anonymous'), 'false') = 'false' and exists (select 1 from public.authorized_users where email = lower((select auth.jwt()->>'email')) and role in ('staff', 'admin')));
 insert into public.home_photo (id, url) values (1, '/labs/foto1.jpeg');
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('site-photos', 'site-photos', true, 10485760, array['image/jpeg','image/png','image/webp']);
 create policy "Accounts upload site photos" on storage.objects for insert to authenticated
-with check (bucket_id = 'site-photos' and (select auth.uid()) is not null and coalesce((select auth.jwt()->>'is_anonymous'), 'false') = 'false');
+with check (bucket_id = 'site-photos' and (select auth.uid()) is not null and coalesce((select auth.jwt()->>'is_anonymous'), 'false') = 'false' and exists (select 1 from public.authorized_users where email = lower((select auth.jwt()->>'email')) and role in ('staff', 'admin')));
 create policy "Public reads site photos" on storage.objects for select to anon, authenticated using (bucket_id = 'site-photos');

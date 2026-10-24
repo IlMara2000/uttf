@@ -1,33 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { getErrorMessage } from '@/lib/errors';
+import { getStaffRole } from '@/lib/staff-access';
 
-let adminSupabase: SupabaseClient | null = null;
 let publicSupabase: SupabaseClient | null = null;
-
-function getAdminSupabase() {
-  if (adminSupabase) return adminSupabase;
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Configurazione Supabase server mancante: aggiungi SUPABASE_SERVICE_ROLE_KEY.');
-  }
-
-  adminSupabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-
-  return adminSupabase;
-}
-
-function canUseAdminSupabase() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
-}
 
 function getPublicSupabase() {
   if (publicSupabase) return publicSupabase;
@@ -93,45 +68,18 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Sessione staff non valida.' }, { status: 401 });
     }
 
-    const userDelete = await getUserSupabase(token)
-      .from('reviews')
-      .delete()
-      .eq('id', reviewId)
-      .select('id');
-
-    if (userDelete.error) throw userDelete.error;
-
-    if (userDelete.data && userDelete.data.length > 0) {
-      return NextResponse.json({ success: true, deletedId: reviewId, mode: 'staff_policy' });
+    const client = getUserSupabase(token);
+    if (!await getStaffRole(client, user)) {
+      return NextResponse.json({ error: 'Accesso staff richiesto.' }, { status: 403 });
     }
-
-    if (!canUseAdminSupabase()) {
-      return NextResponse.json(
-        {
-          error:
-            'Recensione non cancellata: la policy RLS non permette il DELETE e manca SUPABASE_SERVICE_ROLE_KEY sul server.',
-        },
-        { status: 500 }
-      );
-    }
-
-    const adminDelete = await getAdminSupabase()
-      .from('reviews')
-      .delete()
-      .eq('id', reviewId)
-      .select('id');
-
-    if (adminDelete.error) throw adminDelete.error;
-
-    if (!adminDelete.data || adminDelete.data.length === 0) {
-      return NextResponse.json({ error: 'Recensione non trovata o gia eliminata.' }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, deletedId: reviewId, mode: 'service_role' });
-  } catch (error) {
-    console.error('REVIEW_DELETE_ERROR', error);
+    const { data, error } = await client.from('reviews').delete().eq('id', reviewId).select('id');
+    if (error) throw error;
+    if (!data?.length) return NextResponse.json({ error: 'Recensione non trovata.' }, { status: 404 });
+    return NextResponse.json({ success: true, deletedId: reviewId });
+  } catch {
+    console.error('REVIEW_DELETE_ERROR');
     return NextResponse.json(
-      { error: getErrorMessage(error, 'Non sono riuscito a cancellare la recensione.') },
+      { error: 'Non sono riuscito a cancellare la recensione.' },
       { status: 500 }
     );
   }

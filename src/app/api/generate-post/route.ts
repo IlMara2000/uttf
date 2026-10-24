@@ -1,7 +1,8 @@
+import { readJson } from '@/lib/request-json';
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { createClient } from '@supabase/supabase-js';
-import { getErrorMessage } from '@/lib/errors';
+import { getStaffRole } from '@/lib/staff-access';
 
 let groq: Groq | null = null;
 
@@ -26,13 +27,16 @@ export async function POST(req: Request) {
     if (!supabaseUrl || !supabaseKey) throw new Error('Configurazione Supabase mancante.');
     const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: { autoRefreshToken: false, persistSession: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return NextResponse.json({ error: 'Sessione staff non valida.' }, { status: 401 });
 
+    if (!await getStaffRole(supabase, user)) return NextResponse.json({ error: 'Accesso staff richiesto.' }, { status: 403 });
+
     let payload: { title?: unknown; description?: unknown };
     try {
-      payload = await req.json();
+      payload = await readJson(req) as { title?: unknown; description?: unknown };
     } catch {
       return NextResponse.json({ error: 'Richiesta non valida.' }, { status: 400 });
     }
@@ -60,7 +64,7 @@ export async function POST(req: Request) {
     const content = chatCompletion.choices[0]?.message?.content;
     if (!content) return NextResponse.json({ error: 'Il modello non ha restituito un testo.' }, { status: 502 });
     return NextResponse.json({ post: content });
-  } catch (error) {
-    return NextResponse.json({ error: getErrorMessage(error, 'Generazione post non riuscita') }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Generazione post non riuscita' }, { status: 500 });
   }
 }

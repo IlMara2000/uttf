@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   // se c'è un "next" nel query param, lo usiamo, altrimenti dashboard
   const requestedNext = searchParams.get('next')
-  const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !requestedNext.includes('\\')
+  const next = requestedNext?.startsWith('/') && !requestedNext.startsWith('//') && !/[\s\u0000-\u001f\\]/u.test(requestedNext)
     ? requestedNext
     : '/dashboard'
 

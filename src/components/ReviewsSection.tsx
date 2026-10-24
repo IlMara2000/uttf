@@ -33,6 +33,7 @@ export default function ReviewsSection() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial remote data fetch.
     void fetchReviews();
   }, [fetchReviews]);
 
