@@ -82,17 +82,17 @@ export default function LabCards({ initialLabs, ready }: { initialLabs: LabCateg
     <p role="status">{notice}</p>
     {!ready && <p role="status">Impossibile caricare gli aggiornamenti dei laboratori. Ricarica la pagina per riprovare.</p>}
     <section className="lab-list" aria-label="Laboratori e iniziative">
-      {labs.map(lab => <article className="lab-card" key={lab.slug}>
+      {[...labs].sort((a, b) => Number(b.active) - Number(a.active)).map(lab => <article className={`lab-card${lab.active ? "" : " lab-card-inactive"}`} key={lab.slug}>
         <div className="lab-heading">
           <div className="lab-status-row">
-            <span className="lab-status"><span className={`lab-status-dot ${lab.active ? 'is-active' : ''}`} aria-hidden="true" />{lab.active ? 'Attivo' : 'Non attivo'}</span>
+            <span className={`lab-status lab-status-pixel ${lab.active ? "is-active" : "is-inactive"}`}><span className="lab-status-pixel-light" aria-hidden="true" />{lab.active ? "Attivo" : "Non attivo"}<span className="lab-status-signal" aria-hidden="true"><i /><i /><i /></span></span>
             {allowed && <button type="button" className="text-link lab-edit" disabled={!ready} onClick={() => { setDraft({ ...lab, photos: [...lab.photos] }); setMessage(''); }}><Pencil size={14} /> Modifica<span className="sr-only"> {lab.title}</span></button>}
           </div>
-          {lab.photos.length > 0 && <div className="lab-photos">{lab.photos.map((url, i) => <a key={url} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Apri foto ${i + 1} di ${lab.title}`}><Image unoptimized width={800} height={600} src={url} alt={`${lab.title}, foto ${i + 1}`} loading="lazy" /></a>)}</div>}
+          {lab.photos.length > 0 && <div className="lab-photos">{lab.photos.map((url, i) => <a key={url} href={lab.active ? url : undefined} aria-disabled={!lab.active || undefined} tabIndex={lab.active ? undefined : -1} target="_blank" rel="noopener noreferrer" aria-label={`Apri foto ${i + 1} di ${lab.title}`}><Image unoptimized width={800} height={600} src={url} alt={`${lab.title}, foto ${i + 1}`} loading="lazy" /></a>)}</div>}
         </div>
         <h2>{lab.title}</h2><p>{lab.description}</p>
         <div className="tags">{lab.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
-        <div className="lab-actions"><a className="clay-button light" href={lab.primaryUrl}>{lab.primaryLabel}<ArrowUpRight size={17} /></a><a className="text-link" href={lab.secondaryUrl}>{lab.secondaryLabel}<ArrowUpRight size={16} /></a></div>
+        <div className="lab-actions"><a className="clay-button light" href={lab.active ? lab.primaryUrl : undefined} aria-disabled={!lab.active || undefined} tabIndex={lab.active ? undefined : -1}>{lab.primaryLabel}<ArrowUpRight size={17} /></a><a className="text-link" href={lab.active ? lab.secondaryUrl : undefined} aria-disabled={!lab.active || undefined} tabIndex={lab.active ? undefined : -1}>{lab.secondaryLabel}<ArrowUpRight size={16} /></a></div>
       </article>)}
     </section>
     <Dialog open={!!draft} onOpenChange={open => { if (!open && !busy) setDraft(null); }}>

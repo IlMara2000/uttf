@@ -1,5 +1,5 @@
 export type TeamMember = {
-  id: string; name: string; role: string; image: string; description: string;
+  archived?: boolean; id: string; name: string; role: string; image: string; description: string;
   skills: string[]; tags: string[]; link_url: string; link_label: string;
   photo_position: number; sort_order: number; version: number;
 };

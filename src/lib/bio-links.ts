@@ -1,8 +1,8 @@
 export type BioSection = "main" | "socials" | "contatti";
 export const bioSections = {
   main: { label: "Sito e laboratori", path: "/bio" },
-  socials: { label: "Socials", path: "/bio/socials" },
-  contatti: { label: "Contatti", path: "/bio/contatti" },
+  socials: { label: "Contatti", path: "/bio/socials" },
+  contatti: { label: "Recensioni & Newsletter", path: "/bio/contatti" },
 };
 export type BioLink = {
   section?: BioSection;
@@ -13,6 +13,8 @@ export type BioLink = {
   visible: boolean;
 };
 export const defaultBioLinks: BioLink[] = [
+  { id: "newsletter", section: "contatti", title: "Iscriviti alla newsletter", url: "/feed?newsletter=open", description: "Le novità della Factory, direttamente nella tua email.", visible: true },
+  { id: "reviews", section: "contatti", title: "Lascia una recensione", url: "/feed/recensioni", description: "Raccontaci la tua esperienza.", visible: true },
   {
     id: "site",
     title: "Sito web UTTF",
@@ -119,7 +121,7 @@ export function normalizeBioLinks(links: BioLink[]): BioLink[] {
       /^(mailto:|tel:|https:\/\/(api\.)?whatsapp\.com|https:\/\/wa\.me)/i.test(
         link.url,
       )
-        ? "contatti"
+        ? "socials"
         : ["site", "labs", "news"].includes(link.id) ||
             link.url.startsWith("/") ||
             /forms\.gle|docs\.google\.com\/forms/.test(link.url)

@@ -574,9 +574,6 @@
   box-shadow: none;
   transition: background-color var(--motion-base);
 }
-.participate-grid > a:first-child {
-  padding-left: 0;
-}
 .participate-grid > a:last-child {
   border-right: 0;
 }
@@ -1629,3 +1626,43 @@
 
 .hero-photo-edit { position: absolute; z-index: 5; left: 12px; top: 46px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid #171717; background: white; color: #171717; font-size: 12px; cursor: pointer; }
 .hero-photo-preview { width: 100%; height: auto; max-height: 300px; object-fit: contain; }
+
+/* A compact pixel status panel, with inactive content unavailable to visitors. */
+.lab-card { position: relative; }
+.lab-status-pixel { padding: 8px 10px; gap: 10px; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); background: #e6f4e9; color: #154b2a; font-size: 11px; font-weight: 700; letter-spacing: .06em; line-height: 1.2; }
+.lab-status-pixel.is-inactive { background: #f1e8e8; color: #7c252a; }
+.lab-status-pixel-light { width: 8px; height: 8px; background: #23884b; box-shadow: 3px 0 0 #175a32, 0 3px 0 #175a32; }
+.lab-status-pixel.is-inactive .lab-status-pixel-light { background: #b9444a; box-shadow: 3px 0 0 #7c252a, 0 3px 0 #7c252a; }
+.lab-status-signal { display: flex; align-items: flex-end; gap: 2px; margin-left: 4px; }
+.lab-status-signal i { width: 3px; height: 4px; background: currentColor; }
+.lab-status-signal i:nth-child(2) { height: 7px; }
+.lab-status-signal i:nth-child(3) { height: 10px; }
+.lab-status-pixel.is-inactive .lab-status-signal i { opacity: .22; }
+.lab-card-inactive::after { content: ''; position: absolute; inset: 0; background: #53565c20; pointer-events: none; z-index: 1; }
+.lab-card-inactive .lab-status-row { position: relative; z-index: 2; }
+.lab-card-inactive .lab-photos, .lab-card-inactive h2, .lab-card-inactive > p, .lab-card-inactive .tags, .lab-card-inactive .lab-actions { filter: grayscale(1); opacity: .55; }
+.lab-card-inactive .lab-photos a, .lab-card-inactive .lab-actions a { cursor: not-allowed; pointer-events: none; }
+.lab-card-inactive:hover { transform: none; }
+.lab-card-inactive .lab-edit { background: var(--paper, #fff); padding: 7px 9px; border: 1px solid var(--ink); }
+@media (max-width: 420px) { .lab-status-pixel { font-size: 10px; padding: 7px; gap: 7px; } .lab-status-signal { display: none; } }
+
+/* Photo-led posts with familiar Instagram reading and action layout. */
+.ig-post { min-width: 0; align-self: start; background: #fff; color: #171717; border: 1px solid #d9d9d9; border-radius: 7px; overflow: hidden; }
+.ig-post-header { display: flex; align-items: center; gap: 10px; padding: 14px 12px; }
+.ig-avatar { display: grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; background: #171717; border: 2px solid white; outline: 1px solid #ff914d; }
+.ig-account { min-width: 0; flex: 1; font-size: 11px; font-weight: 700; overflow-wrap: anywhere; }
+.ig-account span { display: block; font-size: 10px; font-weight: 400; color: #666; margin-top: 2px; }
+.ig-media { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; background: #eee; }
+.ig-media img { object-fit: cover; }
+.ig-post-actions { display: flex; align-items: center; gap: 15px; padding: 14px 14px 8px; }
+.ig-post-actions a { display: flex; padding: 3px; transition: opacity 160ms ease; }
+.ig-post-actions a:hover { opacity: .55; }
+.ig-post-actions a:last-child { margin-left: auto; }
+.ig-post-actions svg { width: 23px; height: 23px; stroke-width: 1.7; }
+.ig-post-copy { padding: 4px 16px 16px; }
+.ig-post-caption { font-size: 13px; line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ig-post-caption.is-expanded { display: block; }
+.ig-caption-toggle { display: block; font-size: 12px; color: #666; padding: 5px 0; }
+.ig-post-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #eee; padding: 12px 16px; font-size: 12px; font-weight: 600; }
+.ig-post a:focus-visible, .ig-post button:focus-visible { outline: 2px solid #e46b1e; outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .ig-post-actions a { transition: none; } }

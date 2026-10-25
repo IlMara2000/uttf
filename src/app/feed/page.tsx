@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, X, Loader2 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import InstagramPost from "@/components/InstagramPost";
 import { Dialog } from "radix-ui";
 import PublicPageIntro from "@/components/PublicPageIntro";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -220,44 +220,7 @@ export default function FeedPage() {
             </a>
           </div>
           <div className="people-grid">
-            {instagramPosts.map((ig, index) => (
-              <a
-                href={ig.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="person-card instagram-card"
-                key={ig.id}
-              >
-                <div className="instagram-card-header">
-                  <Image
-                    src="/icons/favicon.svg"
-                    alt=""
-                    width={28}
-                    height={28}
-                  />
-                  <span>under_the_tower_factory</span>
-                  <ArrowUpRight size={17} />
-                </div>
-                <div className="instagram-photo">
-                  <Image
-                    src={ig.img}
-                    alt={
-                      [
-                        "Rap F*cktory: incontri e musica",
-                        "La Factory alla Festa delle Associazioni di Rozzano",
-                        "No Limit Jam 2025",
-                      ][index]
-                    }
-                    fill
-                    sizes="(min-width: 1100px) 33vw, (min-width: 520px) 50vw, 100vw"
-                  />
-                </div>
-                <div className="instagram-caption">{ig.caption}</div>
-                <span className="instagram-read">
-                  Continua su Instagram <ArrowUpRight size={16} />
-                </span>
-              </a>
-            ))}
+            {instagramPosts.map((ig, index) => <InstagramPost key={ig.id} {...ig} alt={['Rap F*cktory: incontri e musica', 'La Factory alla Festa delle Associazioni di Rozzano', 'No Limit Jam 2025'][index]} />)}
           </div>
         </section>
         <div className="reviews-area">
