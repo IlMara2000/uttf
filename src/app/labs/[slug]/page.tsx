@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import RegistrationForm from "@/components/RegistrationForm";
 import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import PublicPageIntro from "@/components/PublicPageIntro";
@@ -33,7 +34,7 @@ export async function generateMetadata({
 
 export default async function LabDetailPage({ params }: LabDetailPageProps) {
   const { slug } = await params;
-  const { labs } = await loadLabs();
+  const { labs, ready } = await loadLabs();
   const lab = labs.find(lab => lab.slug === slug);
 
   if (!lab) {
@@ -72,15 +73,14 @@ export default async function LabDetailPage({ params }: LabDetailPageProps) {
             ))}
           </div>
           <a
-            href="https://forms.gle/gbkbEvaavFaHFkkG9"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#iscrizione"
             className="clay-button light"
           >
             Mi interessa <ArrowUpRight size={17} />
           </a>
         </aside>
       </div>
+      <div className="content-width" id="iscrizione"><RegistrationForm lab={lab} ready={ready}/></div>
     </main>
   );
 }

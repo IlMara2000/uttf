@@ -11,6 +11,8 @@ export const loadLabs = cache(async () => {
   if (!url || !key) return { labs: labCategories, ready: false };
   const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await client.from('labs').select('*');
-  if (error || !data?.length) return { labs: labCategories, ready: false };
-  return { labs: labCategories.map(fallback => (data.find(row => row.slug === fallback.slug) as LabCategory | undefined) ?? fallback), ready: data.length === labCategories.length };
+  if (error || !data) return { labs: labCategories, ready: false };
+  const rank = new Map(labCategories.map((lab, index) => [lab.slug, index]));
+  const labs = (data as LabCategory[]).sort((a, b) => (rank.get(a.slug) ?? 999) - (rank.get(b.slug) ?? 999) || a.title.localeCompare(b.title, 'it'));
+  return { labs, ready: true };
 });

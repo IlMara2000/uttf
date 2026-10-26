@@ -1,4 +1,6 @@
+import type { RegistrationConfig } from '@/lib/registrations/model';
 export type LabCategory = {
+  registration_config?: RegistrationConfig;
   slug: string;
   title: string;
   description: string;

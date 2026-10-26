@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     return [{ source: '/link-in-bio/:path*', destination: '/bio/:path*', permanent: true }];
   },
   serverExternalPackages: ['sharp'],
+  outputFileTracingIncludes: { '/api/registrations': ['./public/fonts/NotoSans-Regular.ttf'] },
   images: {
     remotePatterns: [{
       protocol: 'https',

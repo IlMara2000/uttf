@@ -46,15 +46,11 @@ export default async function LabsPage() {
               per fare il primo passo.
             </h2>
             <p>
-              I nostri laboratori sono aperti a tutti. Compila il modulo per
-              manifestare il tuo interesse: ti rispondiamo con le informazioni
-              sulle attività disponibili.
+              Scegli una delle attività attive e apri il suo modulo di iscrizione. Per altre informazioni, scrivici.
             </p>
           </div>
           <a
-            href="https://forms.gle/gbkbEvaavFaHFkkG9"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:ass.uttf@gmail.com"
             className="clay-button light"
           >
             Chiedi informazioni <ArrowUpRight size={19} />

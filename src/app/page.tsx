@@ -310,11 +310,7 @@ export default function HomePage() {
             </p>
           </div>
           <div className="participate-grid">
-            <a
-              href="https://forms.gle/gbkbEvaavFaHFkkG9"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <Link href="/labs">
               <span className="participate-number">01</span>
               <h3>Partecipa a un lab</h3>
               <p>
@@ -323,7 +319,7 @@ export default function HomePage() {
               <span>
                 Vai al modulo di iscrizione <ArrowUpRight size={19} />
               </span>
-            </a>
+            </Link>
             <Link href="/team#collabora">
               <span className="participate-number">02</span>
               <h3>Dai una mano</h3>

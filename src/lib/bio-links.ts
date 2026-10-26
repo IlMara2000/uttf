@@ -25,7 +25,7 @@ export const defaultBioLinks: BioLink[] = [
   {
     id: "labs",
     title: "Iscrizione ai laboratori",
-    url: "https://forms.gle/gbkbEvaavFaHFkkG9",
+    url: "/labs",
     description: "Le idee prendono voce.",
     visible: true,
   },

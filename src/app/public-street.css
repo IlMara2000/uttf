@@ -1666,3 +1666,47 @@
 .ig-post-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #eee; padding: 12px 16px; font-size: 12px; font-weight: 600; }
 .ig-post a:focus-visible, .ig-post button:focus-visible { outline: 2px solid #e46b1e; outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) { .ig-post-actions a { transition: none; } }
+
+.registration-form { max-width: 800px; margin: 40px auto 80px; border-top: 4px solid var(--ink); padding-top: 28px; }
+.registration-form h2 { font-size: clamp(30px,5vw,48px); margin: 12px 0; }
+.registration-form p { line-height: 1.7; margin: 12px 0; }
+.registration-form fieldset { border: 0; border-top: 1px solid #bbb; margin: 30px 0; padding: 24px 0 0; }
+.registration-form legend { font-family: var(--font-mono); padding-right: 12px; font-size: 13px; text-transform: uppercase; }
+.registration-form label,.registration-settings label { display: grid; gap: 8px; margin: 18px 0; font-size: 14px; }
+.registration-form input,.registration-form textarea,.registration-form select { border: 1px solid #aaa; padding: 12px; width: 100%; background: white; color: #171717; min-width: 0; }
+.registration-form textarea { min-height: 100px; }
+.registration-columns { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 20px; }
+.registration-check.registration-check { display: flex; align-items: flex-start; gap: 12px; line-height: 1.5; }
+.registration-check input[type=checkbox] { width: 18px; min-width: 18px; height: 18px; margin-top: 2px; accent-color: #e77a36; }
+.registration-info { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #bbb; margin: 24px 0; }
+.registration-info > div { padding: 16px; }
+.registration-info dt { font-weight: 700; font-size: 12px; text-transform: uppercase; }
+.registration-info dd { white-space: pre-wrap; margin-top: 6px; line-height: 1.6; }
+.registration-legal,.registration-form details { background: #f0efeb; padding: 20px; white-space: pre-wrap; font-size: 14px; line-height: 1.7; margin: 16px 0; }
+.registration-form summary { cursor: pointer; font-weight: 600; }
+.registration-minor { border-left: 3px solid #ff914d; padding: 14px 20px; background: #fff4eb; }
+.registration-error { color: #a02121; }
+.registration-trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.registration-settings { border-top: 3px solid #ff914d; margin-top: 20px; padding-top: 20px; }
+.registration-settings h3 { margin: 24px 0 12px; font-weight: 700; }
+.registration-question { padding: 12px; border: 1px solid #bbb; margin-bottom: 12px; }
+.registration-settings button { padding: 8px 12px; border: 1px solid #888; }
+.lab-add-card { border: 2px dashed #999; display: flex; min-height: 250px; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 25px; transition: background 180ms ease; }
+.lab-add-card:hover { background: #fff0e6; }
+.lab-add-card > span { font-size: 24px; font-weight: 700; }
+@media(max-width:600px){.registration-columns,.registration-info {grid-template-columns:1fr}.registration-form{margin-top:24px}.registration-legal{padding:14px}}
+@media(prefers-reduced-motion:reduce){.lab-add-card{transition:none}}
+
+/* Flyers retain their original proportions; card heights follow their contents. */
+.lab-photos { align-items: flex-start; }
+.lab-photos img { display: block; width: 100%; height: auto; object-fit: contain; }
+.lab-list { align-items: start; }
+.lab-masonry-item { min-width: 0; }
+.lab-list[data-masonry="ready"] { grid-auto-rows: 1px; row-gap: 0; }
+.lab-list[data-masonry="ready"] > .lab-masonry-item { padding-bottom: 26px; align-self: start; }
+.lab-add-card { width: 100%; }
+.registration-preview { max-width: 900px; }
+@media (max-width: 800px) {
+  .lab-list[data-masonry="ready"] { grid-auto-rows: auto; gap: 24px; }
+  .lab-list[data-masonry="ready"] > .lab-masonry-item { grid-row-end: auto !important; padding-bottom: 0; }
+}

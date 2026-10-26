@@ -1,0 +1,2 @@
+-- Move only the laboratory signup link to the native activity picker.
+update public.bio_page set links=(select jsonb_agg(case when item->>'id'='labs' and item->>'url' like 'https://forms.gle/%' then jsonb_set(item,'{url}','"/labs"'::jsonb) else item end order by n) from jsonb_array_elements(links) with ordinality as e(item,n)), version=version+1 where exists(select 1 from jsonb_array_elements(links) item where item->>'id'='labs' and item->>'url' like 'https://forms.gle/%');

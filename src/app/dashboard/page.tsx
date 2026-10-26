@@ -414,6 +414,13 @@ export default function Dashboard() {
       action: () => setActiveView('notes'),
     },
     {
+      key: 'registrations',
+      title: 'Risposte laboratori',
+      subtitle: 'Iscrizioni, risposte e autorizzazioni',
+      icon: <FileText size={18} />,
+      action: () => router.push('/dashboard/iscrizioni'),
+    },
+    {
       key: 'newsletter' as ActiveView,
       title: 'Newsletter',
       subtitle: 'Database contatti',
