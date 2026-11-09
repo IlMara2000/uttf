@@ -16,7 +16,8 @@ type CalendarEvent = {
   deadline?: string | null;
   assigned_to?: string[] | null;
   status?: string | null;
-  eventType: 'task' | 'activity';
+  time?: string | null;
+  eventType: 'task' | 'activity' | 'google';
 };
 
 type CalendarProfile = {
@@ -50,19 +51,37 @@ export default function CalendarWidget() {
       .gte('deadline', start)
       .lte('deadline', end);
 
+    // 3. Eventi importati da Google Calendar (sola lettura)
+    const { data: googleEvents, error: googleError } = await supabase
+      .from('google_calendar_events')
+      .select('id, title, description, starts_on, starts_at')
+      .gte('starts_on', format(startOfMonth(currentMonth), 'yyyy-MM-dd'))
+      .lte('starts_on', format(endOfMonth(currentMonth), 'yyyy-MM-dd'));
+
     const { data: profileData, error: profilesError } = await supabase
       .from('profiles')
       .select('id, account_color');
     
     if (tasksError) console.error("Tasks fetch error:", tasksError);
     if (activitiesError) console.error("Activities fetch error:", activitiesError);
+    if (googleError) console.error("Google events fetch error:", googleError);
     if (profilesError) console.error("Profiles fetch error:", profilesError);
 
     // Uniamo i due set di dati aggiungendo un flag "eventType" per distinguerli
     const formattedTasks = (tasks || []).map(t => ({ ...t, eventType: 'task' as const }));
     const formattedActivities = (activities || []).map(a => ({ ...a, eventType: 'activity' as const }));
+    const formattedGoogle = (googleEvents || []).map(g => ({
+      id: g.id,
+      title: g.title,
+      description: g.description,
+      deadline: g.starts_on,
+      time: g.starts_at,
+      assigned_to: null,
+      status: null,
+      eventType: 'google' as const,
+    }));
 
-    setEvents([...formattedTasks, ...formattedActivities]);
+    setEvents([...formattedTasks, ...formattedActivities, ...formattedGoogle]);
     if (profileData) setProfiles(profileData as CalendarProfile[]);
   }, [currentMonth]);
 
@@ -87,6 +106,7 @@ export default function CalendarWidget() {
 
   const getEventColors = (event: CalendarEvent) => {
     if (event.eventType === 'activity') return ['#FFFFFF'];
+    if (event.eventType === 'google') return ['#00C2FF'];
 
     const assignedIds = Array.isArray(event.assigned_to) ? event.assigned_to : [];
     if (assignedIds.length === 0) return ['#FF914D'];
@@ -111,11 +131,13 @@ export default function CalendarWidget() {
 
   const getEventLabel = (event: CalendarEvent) => {
     if (event.eventType === 'activity') return 'Attivita';
+    if (event.eventType === 'google') return 'Google Calendar';
     return isShiftTask(event) ? 'Turno in sede' : 'Task';
   };
 
   const getEventShape = (event: CalendarEvent) => {
     if (event.eventType === 'activity') return 'activity';
+    if (event.eventType === 'google') return 'google';
     return isShiftTask(event) ? 'shift' : 'task';
   };
 
@@ -162,6 +184,10 @@ export default function CalendarWidget() {
           <span className="inline-flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-white" />
             Attivita
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-[3px] bg-[#00C2FF]" />
+            Google
           </span>
         </div>
         <p className="text-[10px] leading-relaxed text-zinc-600">
