@@ -32,6 +32,7 @@ import type { Review } from '@/types/database';
 
 const Planner = dynamic(() => import('@/components/Planner'));
 const CalendarWidget = dynamic(() => import('@/components/CalendarWidget'));
+const CalendarSync = dynamic(() => import('@/components/CalendarSync'));
 const ShiftPlanner = dynamic(() => import('@/components/ShiftPlanner'));
 const NotesManager = dynamic(() => import('@/components/NotesManager'));
 const AccountSettings = dynamic(() => import('@/components/AccountSettings'));
@@ -316,15 +317,12 @@ export default function Dashboard() {
         .upload(`publications/${fileName}`, uploadFile);
       if (upErr) throw upErr;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('factory-assets').getPublicUrl(`publications/${fileName}`);
-
       const { error: dbErr } = await supabase.from('publications').insert([
         {
           title: title.toUpperCase(),
           description,
-          image_url: publicUrl,
+          // Il bucket è privato: si salva il percorso dell'oggetto, non un URL.
+          image_url: `publications/${fileName}`,
         },
       ]);
       if (dbErr) {
@@ -735,6 +733,7 @@ export default function Dashboard() {
                 <CalendarWidget />
                 <ShiftPlanner />
                 <Planner />
+                <CalendarSync />
               </div>
             )}
 

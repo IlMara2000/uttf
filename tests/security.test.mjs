@@ -71,14 +71,23 @@ test('Privileged APIs reject missing tokens and valid nonstaff identities before
     assert.equal((await handler(new Request(`https://local/api/${name}?id=1`, { method, headers: { authorization: 'Bearer test' } }))).status, 403);
   }
 });
-test('Publication signing cannot turn private note paths or foreign URLs into signed reads', async () => {
-  const signed = [];
-  const { factoryAssetPath, resolvePublicationUrl } = load('src/lib/storage-media.ts', {
-    './supabase': { supabase: { storage: { from() { return { async createSignedUrl(path) { signed.push(path); return { data: { signedUrl: 'https://signed.test' }, error: null }; } }; } } } },
-  });
+test('Publication images resolve to a public media path and private folders never expose a URL', () => {
+  const { factoryAssetPath, resolvePublicationUrl, isOptimizableImage } = load('src/lib/storage-media.ts');
   assert.equal(factoryAssetPath('https://evil.test/storage/v1/object/public/factory-assets/notes/x'), null);
-  assert.equal(await resolvePublicationUrl('notes/private.pdf'), '');
-  assert.equal(await resolvePublicationUrl('publications/../notes/private.pdf'), '');
-  assert.equal(await resolvePublicationUrl('https://example.supabase.co/storage/v1/object/public/factory-assets/publications/photo.jpg'), 'https://signed.test');
-  assert.deepEqual(signed, ['publications/photo.jpg']);
+  assert.equal(factoryAssetPath('publications/photo.jpg'), 'publications/photo.jpg');
+  assert.equal(
+    factoryAssetPath('https://example.supabase.co/storage/v1/object/public/factory-assets/publications/photo.jpg'),
+    'publications/photo.jpg',
+  );
+  assert.equal(resolvePublicationUrl('notes/private.pdf'), '');
+  assert.equal(resolvePublicationUrl('uploads/staff.pdf'), '');
+  assert.equal(resolvePublicationUrl('publications/../notes/private.pdf'), '');
+  assert.equal(resolvePublicationUrl('publications/dir/photo.jpg'), '');
+  assert.equal(
+    resolvePublicationUrl('https://example.supabase.co/storage/v1/object/public/factory-assets/publications/photo.jpg'),
+    '/api/publications/media/photo.jpg',
+  );
+  assert.equal(resolvePublicationUrl('publications/photo one.jpg'), '/api/publications/media/photo%20one.jpg');
+  assert.equal(isOptimizableImage('/api/publications/media/photo.jpg'), true);
+  assert.equal(isOptimizableImage('https://example.supabase.co/storage/v1/object/sign/factory-assets/publications/photo.jpg?token=x'), false);
 });

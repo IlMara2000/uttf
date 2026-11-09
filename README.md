@@ -44,8 +44,10 @@ L'area `/admin` è riservata agli amministratori. Autorizzare un indirizzo non c
 un account Auth e non invia automaticamente un invito.
 
 Il bucket `factory-assets` deve rimanere **privato**. Le pubblicazioni sotto
-`publications/` sono leggibili dal pubblico tramite URL firmati; `notes/` e
-`uploads/` sono riservati allo staff. Gli allegati esistenti non sono stati
+`publications/` sono servite da `/api/publications/media/<file>`, che firma la
+lettura lato server e restituisce l'immagine con cache lunga: il browser non vede
+URL firmati e l'optimizer di `next/image` può ridimensionarla; `notes/` e
+`uploads/` restano riservati allo staff. Gli allegati esistenti non sono stati
 eliminati: i vecchi URL pubblici non sono più il percorso di download.
 Non salvare URL firmati temporanei nel database; salvare il percorso dell'oggetto.
 

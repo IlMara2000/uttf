@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
-import { noIndexMetadata } from '../seo';
+import "../management.css";
 
-export const metadata = noIndexMetadata('Accesso staff', 'Accesso riservato allo staff Under The Tower Factory.');
-
-export default function LoginLayout({ children }: { children: ReactNode }) {
+export default function LoginLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return children;
 }

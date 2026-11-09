@@ -78,13 +78,6 @@
   gap: 11px;
   margin-right: auto;
 }
-.brand-symbol {
-  background: var(--ink);
-  border: 2px solid var(--ink);
-  border-radius: 12px;
-  padding: 4px;
-  box-shadow: 2px 3px 0 var(--orange);
-}
 .site-brand > span:last-child {
   font-weight: 700;
   font-size: 12px;
@@ -130,17 +123,6 @@
   transition:
     transform 0.18s,
     box-shadow 0.18s;
-}
-.clay-button:hover {
-  transform: translate(-2px, -2px);
-  box-shadow:
-    6px 7px 0 var(--ink),
-    inset 3px 3px 5px #ffffff70,
-    inset -3px -4px 6px #00000012;
-}
-.clay-button:active {
-  transform: translate(3px, 3px);
-  box-shadow: 1px 2px 0 var(--ink);
 }
 .clay-button.light {
   background: #fff;
@@ -225,13 +207,6 @@
   background: var(--orange);
   border: 1px solid var(--ink);
 }
-.public-site .hero-copy h1 {
-  font-size: clamp(55px, 5.9vw, 89px);
-  font-weight: 700;
-  letter-spacing: -0.075em;
-  line-height: 1.01;
-  margin: 28px 0 27px;
-}
 .hero-copy h1 > span {
   display: inline-block;
   background: var(--orange);
@@ -244,12 +219,6 @@
     inset 3px 4px 7px #ffffff65,
     inset -4px -4px 7px #0000000c;
   transform: rotate(-2deg);
-}
-.hero-copy > p {
-  max-width: 465px;
-  font-size: 16px;
-  line-height: 1.8;
-  color: var(--muted);
 }
 .hero-actions {
   display: flex;
@@ -393,37 +362,17 @@
   padding: 62px 0 78px;
   scroll-margin-top: 25px;
 }
-.mission-section .section-kicker {
-  color: #aaa;
-  border-color: #555;
-}
 .mission-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 110px;
   padding-top: 52px;
 }
-.public-site h2 {
-  font-size: clamp(34px, 4vw, 56px);
-  font-weight: 700;
-  letter-spacing: -0.055em;
-  line-height: 1.08;
-}
-.mission-grid h2 {
-  font-size: clamp(43px, 4.6vw, 68px);
-}
-.mission-grid h2 > span {
-  color: var(--orange);
-}
 .mission-grid p {
   font-size: 16px;
   line-height: 1.8;
   color: #d4d4d4;
   margin-top: 20px;
-}
-.mission-grid .text-link {
-  margin-top: 25px;
-  color: var(--orange);
 }
 .clay-icon {
   display: inline-flex;
@@ -465,9 +414,6 @@
   box-shadow: 5px 6px 0 var(--ink);
   background: #fff;
   transition: transform 0.18s;
-}
-.activity-card:hover {
-  transform: translateY(-5px);
 }
 .activity-top {
   display: flex;
@@ -560,9 +506,6 @@
   color: var(--ink);
   transition: transform 0.18s;
 }
-.news-card:hover {
-  transform: translateY(-4px);
-}
 .news-photo {
   position: relative;
   aspect-ratio: 4/3;
@@ -640,14 +583,6 @@
   gap: 30px;
   margin: 38px 0;
 }
-.participate-heading h2 {
-  font-size: clamp(48px, 5.4vw, 78px);
-}
-.participate-heading h2 span {
-  text-decoration: underline;
-  text-underline-offset: 9px;
-  text-decoration-thickness: 3px;
-}
 .participate-heading > p {
   line-height: 1.7;
   font-size: 15px;
@@ -656,20 +591,6 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
-}
-.participate-grid > a {
-  background: #fff;
-  border: 2px solid var(--ink);
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow:
-    5px 6px 0 var(--ink),
-    inset 4px 4px 10px #fff,
-    inset -5px -5px 13px #0000000c;
-  transition: transform 0.18s;
-}
-.participate-grid > a:hover {
-  transform: translateY(-4px);
 }
 .participate-grid h3 {
   font-size: 23px;
@@ -814,12 +735,6 @@
   margin-top: 39px;
   align-items: end;
 }
-.public-site .page-intro h1 {
-  font-size: clamp(45px, 5.5vw, 78px);
-  font-weight: 700;
-  letter-spacing: -0.065em;
-  line-height: 1.04;
-}
 .page-intro h1 span {
   color: var(--ink);
   text-decoration: underline;
@@ -853,9 +768,6 @@
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 4px 5px 0 var(--ink);
-}
-.photo-ribbon > div:nth-child(even) {
-  transform: translateY(18px);
 }
 .photo-ribbon img {
   object-fit: cover;
@@ -914,9 +826,6 @@
   gap: 35px;
   scroll-margin-top: 35px;
 }
-.association-cta h2 {
-  font-size: 38px;
-}
 .association-cta p {
   font-size: 15px;
   max-width: 580px;
@@ -963,9 +872,6 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-}
-.person-copy h2 {
-  font-size: 30px;
 }
 .person-copy .eyebrow {
   font-size: 9px;
@@ -1101,9 +1007,6 @@
   .site-header {
     gap: 23px;
   }
-  .home-hero {
-    gap: 38px;
-  }
   .hero-visual {
     min-height: 490px;
   }
@@ -1129,9 +1032,6 @@
   .footer-main {
     gap: 25px;
     grid-template-columns: 1fr 1fr;
-  }
-  .community-copy {
-    padding: 32px;
   }
   .participate-grid {
     gap: 17px;
@@ -1175,12 +1075,6 @@
   .hero-copy {
     padding-top: 0;
   }
-  .public-site .hero-copy h1 {
-    font-size: clamp(59px, 11vw, 85px);
-  }
-  .hero-copy > p {
-    max-width: 570px;
-  }
   .hero-footnote {
     margin-top: 32px;
     width: 100%;
@@ -1211,30 +1105,11 @@
   .values-strip > span:nth-last-child(-n + 4) {
     display: none;
   }
-  .mission-grid {
-    grid-template-columns: 1fr;
-    gap: 35px;
-  }
-  .mission-grid h2 {
-    font-size: 50px;
-  }
   .section-kicker {
     font-size: 8px;
   }
   .section-kicker > span:last-child {
     text-align: right;
-  }
-  .mission-section {
-    padding-block: 43px 50px;
-  }
-  .community-section {
-    grid-template-columns: 1fr;
-  }
-  .community-photo {
-    min-height: 400px;
-  }
-  .community-copy {
-    padding: 36px;
   }
   .news-grid {
     grid-template-columns: 1fr 1fr;
@@ -1266,10 +1141,6 @@
   }
   .visit-art {
     min-height: 270px;
-  }
-  .page-intro-grid {
-    grid-template-columns: 1fr;
-    gap: 23px;
   }
   .photo-ribbon {
     grid-template-columns: 1fr 1fr;
@@ -1305,9 +1176,6 @@
   .site-header,
   .site-topline {
     padding-inline: 20px;
-  }
-  .site-brand > span:last-child {
-    font-size: 11px;
   }
   .hero-actions {
     align-items: flex-start;
@@ -1365,24 +1233,12 @@
   .activity-top {
     margin-bottom: 23px;
   }
-  .activity-card h3 {
-    font-size: 27px;
-  }
-  .activity-card p {
-    font-size: 15px;
-  }
   .activity-card .eyebrow {
     font-size: 9px;
   }
   .activities-section,
   .news-section {
     padding-block: 48px;
-  }
-  .community-photo {
-    min-height: 330px;
-  }
-  .community-copy {
-    padding: 30px 24px;
   }
   .community-copy .clay-button {
     font-size: 12px;
@@ -1413,9 +1269,6 @@
     line-height: 1.8;
     gap: 15px;
   }
-  .page-intro {
-    padding-block: 32px 38px;
-  }
   .public-site .page-intro h1 {
     font-size: 46px;
     overflow-wrap: anywhere;
@@ -1426,14 +1279,8 @@
   .lab-card {
     padding: 25px;
   }
-  .lab-card h2 {
-    font-size: 28px;
-  }
   .association-cta {
     padding: 26px;
-  }
-  .association-cta h2 {
-    font-size: 33px;
   }
   .lab-detail > div,
   .lab-detail aside {
@@ -1470,9 +1317,6 @@
   text-align: left;
   font-weight: 700;
   font-size: 13px;
-}
-.diary-actions > :last-child {
-  background: #fff;
 }
 .diary-actions span {
   flex: 1;
@@ -1650,10 +1494,6 @@
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  .diary-actions > a,
-  .diary-actions > button {
-    padding: 20px;
-  }
   .video-feature-caption {
     flex-direction: column;
     align-items: flex-start;
@@ -1823,13 +1663,7 @@
     flex-direction: column;
     padding-inline: 12px;
   }
-  .legal-section h2 {
-    font-size: 23px;
-  }
 }
 
 @media (max-width: 520px) {
-  .public-site .hero-copy h1 {
-    font-size: clamp(43px, 15vw, 64px);
-  }
 }

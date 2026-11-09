@@ -7,14 +7,12 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['sharp'],
   outputFileTracingIncludes: { '/api/registrations': ['./public/fonts/NotoSans-Regular.ttf'] },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 86400,
     remotePatterns: [{
       protocol: 'https',
       hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://oieqtrfeoyfabyjirrqa.supabase.co').hostname,
       pathname: '/storage/v1/object/public/**',
-    }, {
-      protocol: 'https',
-      hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://oieqtrfeoyfabyjirrqa.supabase.co').hostname,
-      pathname: '/storage/v1/object/sign/factory-assets/publications/**',
     }],
   },
 };

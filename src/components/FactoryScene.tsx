@@ -3,8 +3,13 @@
 import Image from "next/image";
 import EditableHeroPhoto from "./EditableHeroPhoto";
 import type { PointerEvent } from "react";
+import type { HomePhoto } from "@/lib/home-photo";
 
-export default function FactoryScene() {
+export default function FactoryScene({
+  initialPhoto,
+}: {
+  initialPhoto: HomePhoto;
+}) {
   const move = (event: PointerEvent<HTMLDivElement>) => {
     if (
       event.pointerType !== "mouse" ||
@@ -32,7 +37,7 @@ export default function FactoryScene() {
     >
       <span className="scene-edition">UTTF / DAL TERRITORIO</span>
       <div className="hero-photo">
-        <EditableHeroPhoto />
+        <EditableHeroPhoto initialPhoto={initialPhoto} />
         <span className="photo-caption">Rozzano. Persone, prima di tutto.</span>
       </div>
       <div className="scene-inset">

@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import ManagementBottomLogo from '@/components/ManagementBottomLogo';
 import { getErrorMessage } from '@/lib/errors';
-import { resolvePublicationUrl } from '@/lib/storage-media';
+import { factoryAssetPath, isOptimizableImage, resolvePublicationUrl } from '@/lib/storage-media';
 import Image from 'next/image';
 
 type OutputPost = {
@@ -43,7 +43,7 @@ export default function OutputsPage() {
       .from('publications')
       .select('*')
       .order('created_at', { ascending: false });
-    if (data) setPosts(await Promise.all(data.map(async (post) => ({ ...post, display_url: await resolvePublicationUrl(post.image_url) }))) as OutputPost[]);
+    if (data) setPosts(data.map((post) => ({ ...post, display_url: resolvePublicationUrl(post.image_url) })) as OutputPost[]);
     setLoading(false);
   }
 
@@ -55,9 +55,9 @@ export default function OutputsPage() {
       const { data, error } = await supabase.from('publications').delete().eq('id', id).select('id');
       if (error) throw error;
       if (!data?.length) throw new Error('Post non trovato o cancellazione non autorizzata.');
-      const path = new URL(url, window.location.origin).pathname.split('/').pop();
-      if (url.includes('/factory-assets/publications/') && path) {
-        const { error: storageError } = await supabase.storage.from('factory-assets').remove([`publications/${decodeURIComponent(path)}`]);
+      const path = factoryAssetPath(url);
+      if (path?.startsWith('publications/')) {
+        const { error: storageError } = await supabase.storage.from('factory-assets').remove([path]);
         if (storageError) console.warn('Post eliminato; file ancora presente nello storage:', storageError);
       }
       await fetchPosts();
@@ -179,7 +179,7 @@ export default function OutputsPage() {
                       alt={post.title}
                       fill
                       sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      unoptimized={!post.image_url.startsWith('/') && !post.image_url.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://oieqtrfeoyfabyjirrqa.supabase.co'}/storage/v1/object/public/`)}
+                      unoptimized={!isOptimizableImage(post.display_url || '')}
                       className="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"
                     />
                   )}

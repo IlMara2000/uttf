@@ -1,0 +1,11 @@
+output/
+.freebuff/
+.playwright-cli/
+node_modules/
+.next/
+.env
+.env.*
+*.log
+tsconfig.tsbuildinfo
+supabase/.temp/
+.DS_Store

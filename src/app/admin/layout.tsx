@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
-import { noIndexMetadata } from '../seo';
+import "../management.css";
 
-export const metadata = noIndexMetadata('Area admin', 'Area amministrativa riservata Under The Tower Factory.');
-
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return children;
 }

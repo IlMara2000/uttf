@@ -12,6 +12,7 @@ import {
   defaultConfig,
 } from "@/lib/registrations/model";
 import { optimizeUpload } from "@/lib/optimize-upload";
+import { isOptimizableImage } from "@/lib/storage-media";
 import {
   Dialog,
   DialogContent,
@@ -265,7 +266,7 @@ export default function LabCards({
                           aria-label={`Apri foto ${i + 1} di ${lab.title}`}
                         >
                           <Image
-                            unoptimized
+                            unoptimized={!isOptimizableImage(url)}
                             width={800}
                             height={600}
                             src={url}
