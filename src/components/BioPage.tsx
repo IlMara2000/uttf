@@ -396,7 +396,7 @@ export default function BioPage({ section }: { section: BioSection }) {
             <h2>{bioSections[section].label}</h2>
           </div>
           <nav className="bio-links" aria-label={bioSections[section].label}>
-            {(loading ? [] : links)
+            {links
               .filter(
                 (link) =>
                   link.section === section &&
@@ -418,7 +418,7 @@ export default function BioPage({ section }: { section: BioSection }) {
                       alt="Logo Under The Tower Factory su sfondo arancione e nero"
                       width={1280}
                       height={853}
-                      loading="eager"
+                      preload
                       sizes="(max-width: 640px) 100vw, 592px"
                     />
                   )}
