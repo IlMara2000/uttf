@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
@@ -13,18 +13,30 @@ import {
   normalizeBioLinks,
 } from "@/lib/bio-links";
 
-export default function BioPage({ section }: { section: BioSection }) {
-  const [links, setLinks] = useState(() => normalizeBioLinks(defaultBioLinks));
+export default function BioPage({
+  section,
+  initialLinks,
+  initialVersion,
+}: {
+  section: BioSection;
+  initialLinks?: BioLink[];
+  initialVersion?: number;
+}) {
+  const hadInitialLinks = useRef(Boolean(initialLinks?.length));
+  const [links, setLinks] = useState(() =>
+    normalizeBioLinks(initialLinks?.length ? initialLinks : defaultBioLinks),
+  );
   const [draft, setDraft] = useState<BioLink[]>([]);
-  const [version, setVersion] = useState(0);
+  const [version, setVersion] = useState(initialVersion ?? 0);
   const [staff, setStaff] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(Boolean(initialLinks?.length));
   const [loading, setLoading] = useState(
-    Boolean(
-      process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    ),
+    !initialLinks?.length &&
+      Boolean(
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      ),
   );
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -80,6 +92,12 @@ export default function BioPage({ section }: { section: BioSection }) {
       void checkStaff().catch(() => {
         if (active) setStaff(false);
       });
+      // Links already came from the server render: no need to refetch them here.
+      if (hadInitialLinks.current) {
+        setLoading(false);
+        setReady(true);
+        return;
+      }
       const { data, error } = await supabase
         .from("bio_page")
         .select("links, version")
