@@ -20,6 +20,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
+// The strip shows each photo at 72% of the card width (100% when it is the only
+// one) and cards sit two per row above 800px, so the rendered width stays far
+// below the 800px source: without sizes the optimizer always served 800px.
+const LAB_PHOTO_SIZES =
+  "(min-width: 1392px) 406px, (min-width: 1101px) calc(36vw - 96px), (min-width: 801px) calc(36vw - 79px), (min-width: 521px) calc(72vw - 80px), calc(72vw - 65px)";
+const LAB_PHOTO_SIZES_SINGLE =
+  "(min-width: 1392px) 563px, (min-width: 1101px) calc(50vw - 133px), (min-width: 801px) calc(50vw - 109px), (min-width: 521px) calc(100vw - 114px), calc(100vw - 90px)";
+
 export default function LabCards({
   initialLabs,
   ready,
@@ -270,6 +278,11 @@ export default function LabCards({
                             width={800}
                             height={600}
                             src={url}
+                            sizes={
+                              lab.photos.length > 1
+                                ? LAB_PHOTO_SIZES
+                                : LAB_PHOTO_SIZES_SINGLE
+                            }
                             alt={`${lab.title}, foto ${i + 1}`}
                             loading="lazy"
                           />

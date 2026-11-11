@@ -10,6 +10,11 @@ import { isSafeBioUrl } from '@/lib/bio-links';
 import { optimizeUpload } from '@/lib/optimize-upload';
 import { isOptimizableImage } from '@/lib/storage-media';
 
+// Cards sit three per row above 1100px, two from 640px and one below; the photo
+// fills the card, so its width is the grid column width.
+const TEAM_PHOTO_SIZES =
+  '(min-width: 1392px) 405px, (min-width: 1101px) calc(33vw - 59px), (min-width: 640px) calc(50vw - 45px), (min-width: 521px) calc(100vw - 64px), calc(100vw - 40px)';
+
 function TiltCard({ children }: { children: ReactNode }) {
   const card = useRef<HTMLElement>(null);
   function reset() {
@@ -178,7 +183,7 @@ export default function TeamEditor({ initialMembers, initialIntro, ready, kind =
       <section className="team-grid" aria-label={gallery ? "Galleria della Factory" : "Il team Under The Tower Factory"}>
         {members.map((member, index) => <TiltCard key={member.id}>
           <div className="team-photo">
-            {gallery ? <a href={member.image} target="_blank" rel="noopener noreferrer" aria-label={`Apri l’opera ${member.name}`}><Image src={member.image} alt={member.name} fill sizes="(min-width: 1100px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized={!isOptimizableImage(member.image)} /></a> : <Image src={member.image} alt={member.name} fill sizes="(min-width: 1100px) 33vw, (min-width: 640px) 50vw, 100vw" unoptimized={!isOptimizableImage(member.image)} style={{ objectPosition: `50% ${member.photo_position}%` }} />}
+            {gallery ? <a href={member.image} target="_blank" rel="noopener noreferrer" aria-label={`Apri l’opera ${member.name}`}><Image src={member.image} alt={member.name} fill preload={index === 0} sizes={TEAM_PHOTO_SIZES} unoptimized={!isOptimizableImage(member.image)} /></a> : <Image src={member.image} alt={member.name} fill preload={index === 0} sizes={TEAM_PHOTO_SIZES} unoptimized={!isOptimizableImage(member.image)} style={{ objectPosition: `50% ${member.photo_position}%` }} />}
             <span className="team-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
             {account && <button className="team-edit-button" type="button" disabled={!ready} onClick={() => { setError(''); setEditing({ member: { ...member }, isNew: false }); }}><Pencil size={14} /> Modifica<span className="sr-only"> {member.name}</span></button>}
           </div>

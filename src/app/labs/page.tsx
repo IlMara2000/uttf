@@ -31,6 +31,7 @@ export default async function LabsPage() {
                 src={`/labs/foto${i}.jpeg`}
                 alt={`Persone e attività della Factory, foto ${i}`}
                 fill
+                preload={i === 1}
                 sizes="(min-width: 800px) 25vw, 50vw"
               />
             </div>
