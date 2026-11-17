@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Quick Tunnel verso l'agente del drive (127.0.0.1:8787), senza dominio.
+
+  Installa il tunnel come servizio dell'utente: riparte da solo dopo un riavvio
+  del Mac o la morte di cloudflared. Ogni avvio genera un URL nuovo, scritto in
+  ~/.cloudflared/uttf-drive-quick.url: va riportato su Vercel, vedi README.md.
+
+  Lo script viene eseguito da ~/Library/Application Support/UTTF: launchd non
+  ha il permesso di leggere file sul volume esterno del drive.
+
+  Installazione (dal root del progetto):
+    brew install cloudflared
+    mkdir -p "$HOME/Library/Application Support/UTTF"
+    cp drive-agent/cloudflared/quick-tunnel.sh "$HOME/Library/Application Support/UTTF/drive-quick-tunnel.sh"
+    chmod +x "$HOME/Library/Application Support/UTTF/drive-quick-tunnel.sh"
+    sed "s|__HOME__|$HOME|g" drive-agent/cloudflared/com.uttf.drive-quick-tunnel.plist \
+      > ~/Library/LaunchAgents/com.uttf.drive-quick-tunnel.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.uttf.drive-quick-tunnel.plist
+
+  Controllo:  launchctl print gui/$(id -u)/com.uttf.drive-quick-tunnel
+  Riavvio:    launchctl kickstart -k gui/$(id -u)/com.uttf.drive-quick-tunnel
+
+  Quando ci sara' un dominio su Cloudflare si passa al tunnel nominato
+  (com.uttf.drive-tunnel.plist + config.yml.example) e questo si disinstalla:
+    launchctl bootout gui/$(id -u)/com.uttf.drive-quick-tunnel
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.uttf.drive-quick-tunnel</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/sh</string>
+		<string>__HOME__/Library/Application Support/UTTF/drive-quick-tunnel.sh</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>15</integer>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/uttf-drive-tunnel.out.log</string>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/uttf-drive-tunnel.err.log</string>
+</dict>
+</plist>
