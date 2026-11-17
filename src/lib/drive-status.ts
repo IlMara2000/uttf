@@ -118,7 +118,7 @@ export async function readAgentStatus(): Promise<DriveAgentStatus> {
 }
 
 /** Cartelle reali sul disco (anche vuote): l'indice conosce solo quelle con file. */
-export async function readDiskFolders(): Promise<string[]> {
+async function readDiskFolders(): Promise<string[]> {
   try {
     const response = await fetchAgent('/api/folders', {}, AGENT_TIMEOUT_MS);
     if (!response.ok) return [];

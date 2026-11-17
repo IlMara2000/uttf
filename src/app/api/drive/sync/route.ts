@@ -69,15 +69,22 @@ export async function POST(request: Request) {
     }
 
     // Il disco e' la fonte di verita': quello che non c'e' piu' esce dall'indice.
-    const { data: existing, error: existingError } = await client
-      .from('drive_assets')
-      .select('remote_id');
-    if (existingError) throw existingError;
+    // PostgREST tronca a 1000 righe per default: si scorre a pagine per non
+    // lasciare orfani oltre il limite.
+    const existing: { remote_id: string }[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error: existingError } = await client
+        .from('drive_assets')
+        .select('remote_id')
+        .range(from, from + 999);
+      if (existingError) throw existingError;
+      if (!data || data.length === 0) break;
+      existing.push(...(data as { remote_id: string }[]));
+      if (data.length < 1000) break;
+    }
 
     const keep = new Set(rows.map((row) => row.remote_id));
-    const stale = ((existing ?? []) as { remote_id: string }[])
-      .map((row) => row.remote_id)
-      .filter((id) => !keep.has(id));
+    const stale = existing.map((row) => row.remote_id).filter((id) => !keep.has(id));
 
     for (const group of chunk(stale, UPSERT_CHUNK)) {
       const { error } = await client.from('drive_assets').delete().in('remote_id', group);
