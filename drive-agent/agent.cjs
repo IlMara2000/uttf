@@ -19,6 +19,8 @@
  *   DELETE /api/files/:id    sposta nel cestino (.uttf-drive/trash)
  *   GET    /api/folders      elenco delle cartelle (anche vuote)
  *   POST   /api/folders?folder=Foto/2026   crea la cartella
+ *   PATCH  /api/folders?folder=Vecchia&to=Nuova   rinomina la cartella
+ *   DELETE /api/folders?folder=Foto/2026   cancella la cartella (e il suo contenuto)
  *
  * Ascolta su 127.0.0.1: l'unico modo per arrivare ai file e' il gestionale, che
  * richiede il login staff e firma gli URL di anteprime e originali. Con --host=
@@ -622,6 +624,86 @@ async function handleCreateFolder(res, url) {
   return sendJson(res, 201, { folder });
 }
 
+async function handleRenameFolder(res, url) {
+  const from = sanitizeFolder(url.searchParams.get('folder'));
+  const to = sanitizeFolder(url.searchParams.get('to'));
+  if (!from) return sendJson(res, 400, { error: 'cartella di origine mancante' });
+  if (!to) return sendJson(res, 400, { error: 'nuovo nome mancante' });
+  if (from === to) return sendJson(res, 400, { error: 'il nome è già questo' });
+
+  const fromAbs = path.join(ROOT, from);
+  const toAbs = path.join(ROOT, to);
+
+  let stat;
+  try {
+    stat = await fsp.stat(fromAbs);
+  } catch {
+    return sendJson(res, 404, { error: 'cartella non trovata' });
+  }
+  if (!stat.isDirectory()) return sendJson(res, 400, { error: 'non è una cartella' });
+
+  const destExists = await fsp.stat(toAbs).catch(() => null);
+  if (destExists) return sendJson(res, 409, { error: 'esiste già una cartella con questo nome' });
+
+  try {
+    await fsp.mkdir(path.dirname(toAbs), { recursive: true });
+    await fsp.rename(fromAbs, toAbs);
+  } catch (error) {
+    return sendJson(res, 500, { error: `rinomina non riuscita: ${error.message}` });
+  }
+
+  // Aggiorna l'indice: la cartella e i suoi figli cambiano percorso.
+  for (const asset of state.assets) {
+    if (asset.folder === from || asset.folder.startsWith(from + '/')) {
+      asset.relPath = to + asset.relPath.slice(from.length);
+      asset.folder = to + asset.folder.slice(from.length);
+    }
+  }
+  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+
+  log('cartella rinominata:', from, '->', to);
+  return sendJson(res, 200, { folder: to });
+}
+
+async function handleDeleteFolder(res, url) {
+  const folder = sanitizeFolder(url.searchParams.get('folder'));
+  if (!folder) return sendJson(res, 400, { error: 'nome cartella mancante' });
+
+  const abs = path.join(ROOT, folder);
+  let stat;
+  try {
+    stat = await fsp.stat(abs);
+  } catch {
+    return sendJson(res, 404, { error: 'cartella non trovata' });
+  }
+  if (!stat.isDirectory()) return sendJson(res, 400, { error: 'non è una cartella' });
+
+  const target = path.join(TRASH_DIR, `${Date.now()}-${path.basename(folder)}`);
+  try {
+    await fsp.mkdir(path.dirname(target), { recursive: true });
+    await fsp.rename(abs, target);
+  } catch (error) {
+    return sendJson(res, 500, { error: `cancellazione non riuscita: ${error.message}` });
+  }
+
+  // Rimuove dall'indice tutti i file della cartella (e dei suoi figli), insieme
+  // alle anteprime che altrimenti resterebbero orfane su disco.
+  const prefix = folder + '/';
+  const removed = state.assets.filter(
+    (asset) => asset.folder === folder || asset.folder.startsWith(prefix),
+  );
+  state.assets = state.assets.filter(
+    (asset) => asset.folder !== folder && !asset.folder.startsWith(prefix),
+  );
+  for (const asset of removed) {
+    await fsp.rm(path.join(THUMB_DIR, `${asset.id}.webp`), { force: true }).catch(() => {});
+  }
+  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+
+  log('cartella cancellata:', folder);
+  return sendJson(res, 200, { folder, trashed: path.relative(ROOT, target) });
+}
+
 /* ── copia di sicurezza su un secondo disco ────────────────────────────── */
 
 const MIRROR_SUBDIR = 'Drive Under the Tower Factory';
@@ -1072,7 +1154,7 @@ const server = http.createServer(async (req, res) => {
     // Browser diretto sul tunnel: solo l'origine del gestionale.
     if (ALLOWED_ORIGIN && req.headers.origin === ALLOWED_ORIGIN) {
       res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
-      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, PATCH, DELETE, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'content-type, range');
       res.setHeader('Access-Control-Expose-Headers', 'content-length, content-range, accept-ranges');
       res.setHeader('Access-Control-Max-Age', '600');
@@ -1102,6 +1184,14 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/folders') {
       return await handleCreateFolder(res, url);
+    }
+
+    if (req.method === 'PATCH' && pathname === '/api/folders') {
+      return await handleRenameFolder(res, url);
+    }
+
+    if (req.method === 'DELETE' && pathname === '/api/folders') {
+      return await handleDeleteFolder(res, url);
     }
 
     if (req.method === 'GET' && pathname === '/api/health') {

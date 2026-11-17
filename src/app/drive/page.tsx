@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Le anteprime arrivano dall'agente locale, non dal loader di Next. */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ChevronLeft,
@@ -108,6 +108,10 @@ export default function DrivePage() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [folder, setFolder] = useState('');
+  const [folderMenu, setFolderMenu] = useState<string | null>(null);
+  const [folderBusy, setFolderBusy] = useState<string | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressed = useRef(false);
 
   const request = useCallback(async (path: string, init: RequestInit = {}) => {
     const {
@@ -214,6 +218,18 @@ export default function DrivePage() {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!folderMenu) return;
+    const close = () => setFolderMenu(null);
+    const handle = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('[data-folder-menu]')) return;
+      close();
+    };
+    document.addEventListener('click', handle);
+    return () => document.removeEventListener('click', handle);
+  }, [folderMenu]);
 
   useEffect(() => {
     if (!access) return;
@@ -325,11 +341,92 @@ export default function DrivePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ folder: value.trim() }),
       });
+      await request('/api/drive/sync', { method: 'POST' });
       await load();
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : 'Cartella non creata.');
     } finally {
       setCreating(false);
+    }
+  }
+
+  function startLongPress(folderPath: string) {
+    if (!canUseAgent) return;
+    longPressed.current = false;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      setFolderMenu(folderPath);
+    }, 450);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
+
+  function handleFolderClick(folderPath: string) {
+    if (longPressed.current) {
+      longPressed.current = false;
+      return;
+    }
+    setFolderMenu(null);
+    setFolder(folderPath);
+    setUploadFolder(folderPath);
+  }
+
+  async function renameFolder(folderPath: string) {
+    const value = window.prompt('Nuovo nome della cartella', folderPath);
+    if (!value?.trim() || value.trim() === folderPath) {
+      setFolderMenu(null);
+      return;
+    }
+    setFolderBusy(folderPath);
+    setError('');
+    try {
+      await request('/api/drive/folders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: folderPath, to: value.trim() }),
+      });
+      await request('/api/drive/sync', { method: 'POST' });
+      await load();
+      if (folder === folderPath) setFolder(value.trim());
+      if (uploadFolder === folderPath) setUploadFolder(value.trim());
+    } catch (renameError) {
+      setError(renameError instanceof Error ? renameError.message : 'Rinomina non riuscita.');
+    } finally {
+      setFolderBusy(null);
+      setFolderMenu(null);
+    }
+  }
+
+  async function deleteFolder(folderPath: string) {
+    if (!window.confirm(`Cancellare la cartella "${folderPath}" e il suo contenuto?`)) {
+      setFolderMenu(null);
+      return;
+    }
+    setFolderBusy(folderPath);
+    setError('');
+    try {
+      await request('/api/drive/folders', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: folderPath }),
+      });
+      await request('/api/drive/sync', { method: 'POST' });
+      await load();
+      if (folder === folderPath || folder.startsWith(`${folderPath}/`)) {
+        setFolder('');
+        setUploadFolder('');
+      }
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Cancellazione non riuscita.');
+    } finally {
+      setFolderBusy(null);
+      setFolderMenu(null);
     }
   }
 
@@ -374,9 +471,9 @@ export default function DrivePage() {
   // Se l'agente non risponde lo stato della copia sarebbe un falso "non configurata".
   const backup = data?.agent.reachable ? backupView(data.agent.backup) : null;
 
-  // Sito deployato senza tunnel: sync, caricamenti e nuove cartelle passano
-  // dall'agente, quindi da qui fallirebbero sempre. Meglio non offrirli.
-  const agentRemote = data !== null && !data.agent.local && !data.agent.reachable;
+  // Sincronizzazione, caricamenti e nuove cartelle passano dall'agente: se questa
+  // pagina non lo raggiunge (Vercel senza tunnel) si spengono.
+  const canUseAgent = access && data !== null && (data.agent.reachable || data.agent.local);
 
   // Il refresh silenzioso aggiorna solo i numeri: se sono comparsi file nuovi la
   // griglia è vecchia, e lo diciamo invece di ricaricare le anteprime da soli.
@@ -405,29 +502,15 @@ export default function DrivePage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={uploadFolder}
-              onChange={(event) => setUploadFolder(event.target.value)}
-              disabled={uploading || !access || agentRemote}
-              aria-label="Cartella di destinazione del caricamento"
-              className="h-10 rounded-lg border border-zinc-700/80 bg-zinc-950/50 px-3 text-sm text-zinc-200 outline-none transition-colors focus:border-[#ff914d]/45 disabled:opacity-50"
-            >
-              <option value="">radice</option>
-              {folders.map((item) => (
-                <option key={item.path} value={item.path}>
-                  {item.path}
-                </option>
-              ))}
-            </select>
             <label
               className={`${BTN_PRIMARY} ${
-                uploading || !access || agentRemote
+                uploading || !canUseAgent
                   ? 'pointer-events-none opacity-50'
                   : 'cursor-pointer'
               }`}
             >
               {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-              Carica file
+              Carica{uploadFolder ? ` in ${uploadFolder.split('/').pop()}` : ' file'}
               <input
                 type="file"
                 multiple
@@ -445,8 +528,7 @@ export default function DrivePage() {
             <button
               type="button"
               onClick={() => void createFolder()}
-              disabled={creating || !access || agentRemote}
-              title={agentRemote ? 'Cartelle: solo dal Mac, dove gira l’agente.' : undefined}
+              disabled={creating || !canUseAgent}
               className={BTN_SECONDARY}
             >
               {creating ? <Loader2 size={16} className="animate-spin" /> : <FolderPlus size={16} />}
@@ -455,8 +537,7 @@ export default function DrivePage() {
             <button
               type="button"
               onClick={() => void syncIndex()}
-              disabled={syncing || !access || agentRemote}
-              title={agentRemote ? 'Sincronizzazione: solo dal Mac, dove gira l’agente.' : undefined}
+              disabled={syncing || !canUseAgent}
               className={BTN_PRIMARY}
             >
               {syncing ? <Loader2 size={16} className="animate-spin" /> : <HardDrive size={16} />}
@@ -532,8 +613,7 @@ export default function DrivePage() {
                       Dal Mac il drive funziona già: per usarlo anche dal sito serve il tunnel
                       Cloudflare verso l’agente, con il suo indirizzo in{' '}
                       <code className="font-mono">DRIVE_AGENT_URL</code> e il service token di Access.
-                      Da qui puoi solo consultare i file già indicizzati: sincronizzazione e
-                      caricamenti restano sul Mac.
+                      Da qui puoi solo consultare i file già indicizzati.
                     </p>
                   )}
                 </div>
@@ -623,22 +703,51 @@ export default function DrivePage() {
                   <Folder size={14} /> Tutte
                 </button>
                 {folders.map((item) => (
-                  <button
-                    key={item.path}
-                    type="button"
-                    onClick={() => {
-                      setFolder(item.path);
-                      setUploadFolder(item.path);
-                    }}
-                    className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors ${
-                      folder === item.path
-                        ? 'bg-[#ff914d] text-zinc-950'
-                        : 'border border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    <Folder size={14} /> {item.path}
-                    <span className="tabular-nums opacity-60">{item.assetCount}</span>
-                  </button>
+                  <div key={item.path} className="relative" data-folder-menu>
+                    <button
+                      type="button"
+                      onClick={() => handleFolderClick(item.path)}
+                      onMouseDown={() => startLongPress(item.path)}
+                      onMouseUp={cancelLongPress}
+                      onMouseLeave={cancelLongPress}
+                      onTouchStart={() => startLongPress(item.path)}
+                      onTouchEnd={cancelLongPress}
+                      onTouchMove={cancelLongPress}
+                      disabled={folderBusy === item.path}
+                      className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors select-none ${
+                        folder === item.path
+                          ? 'bg-[#ff914d] text-zinc-950'
+                          : 'border border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:text-zinc-200'
+                      } ${folderBusy === item.path ? 'opacity-50' : ''}`}
+                    >
+                      <Folder size={14} /> {item.path}
+                      <span className="tabular-nums opacity-60">{item.assetCount}</span>
+                    </button>
+                    <div
+                      className={`absolute left-0 top-full z-20 mt-1 min-w-[150px] origin-top-left overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-900 shadow-xl shadow-black/40 transition-all duration-150 ${
+                        folderMenu === item.path
+                          ? 'scale-100 opacity-100'
+                          : 'pointer-events-none scale-95 opacity-0'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => void renameFolder(item.path)}
+                        disabled={folderBusy === item.path}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                      >
+                        Rinomina
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void deleteFolder(item.path)}
+                        disabled={folderBusy === item.path}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                      >
+                        Cancella
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
 
@@ -659,16 +768,16 @@ export default function DrivePage() {
                   <>
                     <p className="font-semibold text-zinc-200">Nessun file nell’indice.</p>
                     <p className="mt-2">
-                      {agentRemote ? (
-                        <>
-                          L’indice lo costruisce l’agente sul Mac del disco: sincronizzalo da lì,
-                          oppure collega il tunnel Cloudflare per farlo anche da questo sito.
-                        </>
-                      ) : (
+                      {canUseAgent ? (
                         <>
                           Con Hiksemi collegato e l’agente attivo, premi{' '}
                           <span className="text-[#ff914d]">Sincronizza indice</span>: l’indice
                           legge i file già presenti sul disco senza ricaricarli.
+                        </>
+                      ) : (
+                        <>
+                          L’indice lo costruisce l’agente sul Mac del disco: sincronizzalo da lì,
+                          oppure collega il tunnel Cloudflare per farlo anche da questo sito.
                         </>
                       )}
                     </p>

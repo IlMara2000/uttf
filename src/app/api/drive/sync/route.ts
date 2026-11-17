@@ -45,6 +45,20 @@ export async function POST(request: Request) {
       if (error) throw error;
     }
 
+    // Cartelle che non hanno più file (cancellate o svuotate) escono dall'indice.
+    const keepFolders = new Set(folders.map((folder) => folder.path));
+    const { data: existingFolders, error: existingFoldersError } = await client
+      .from('drive_folders')
+      .select('path');
+    if (existingFoldersError) throw existingFoldersError;
+    const staleFolders = (existingFolders ?? [])
+      .map((row: { path: string }) => row.path)
+      .filter((path) => !keepFolders.has(path));
+    for (const group of chunk(staleFolders, UPSERT_CHUNK)) {
+      const { error } = await client.from('drive_folders').delete().in('path', group);
+      if (error) throw error;
+    }
+
     const rows = assets.map((asset) => ({
       remote_id: asset.remoteId,
       folder_path: asset.folderPath,
