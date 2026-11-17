@@ -1,0 +1,21 @@
+# Configurazione del tunnel: copiare in ~/.cloudflared/uttf-drive.yml
+# e sostituire il dominio e l'UUID del tunnel creato con `cloudflared tunnel create`.
+
+tunnel: uttf-drive
+credentials-file: /Users/UTENTE/.cloudflared/UUID-DEL-TUNNEL.json
+
+ingress:
+  # Chiamate server-to-server (gestionale su Vercel -> agente).
+  # Su Cloudflare: applicazione Access con policy "Service Auth" sul service token.
+  - hostname: drive.ESEMPIO.it
+    service: http://127.0.0.1:8787
+
+  # Link firmati che apre il browser: upload e riproduzione dei file grandi.
+  # Su Cloudflare: applicazione Access con policy di BYPASS su /file/* e /api/files,
+  # perche' il browser non puo' presentare il service token. Il permesso qui e'
+  # la firma HMAC a scadenza (15 minuti per gli upload, 1 ora per i file).
+  - hostname: media.ESEMPIO.it
+    service: http://127.0.0.1:8787
+
+  # Tutto il resto non esiste.
+  - service: http_status:404

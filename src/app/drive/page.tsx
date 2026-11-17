@@ -15,6 +15,7 @@ import {
   Search,
   Tag,
   TriangleAlert,
+  Upload,
   X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +25,7 @@ import {
   type DriveAsset,
   type DriveBackupStatus,
   type DriveIndexPayload,
+  type DriveStatusPayload,
 } from '@/lib/drive-model';
 
 const BTN =
@@ -36,6 +38,24 @@ function assetMeta(asset: DriveAsset) {
   if (asset.width && asset.height) parts.push(`${asset.width}×${asset.height}`);
   if (asset.durationSeconds) parts.push(`${Math.round(asset.durationSeconds)}s`);
   return parts.join(' · ');
+}
+
+/** URL firmato per caricare direttamente al tunnel: null = si passa dal proxy Next. */
+async function requestDirectUploadUrl(token: string, name: string, folder: string) {
+  try {
+    const response = await fetch('/api/drive/upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ name, folder }),
+      cache: 'no-store',
+    });
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as { url?: unknown };
+    return typeof payload.url === 'string' ? payload.url : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Disco staccato prima dell'errore: un errore vecchio non deve sembrare un guasto attuale. */
@@ -77,6 +97,9 @@ export default function DrivePage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadFolder, setUploadFolder] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('');
   const [busyAsset, setBusyAsset] = useState<string | null>(null);
   const [data, setData] = useState<DriveIndexPayload | null>(null);
   const [error, setError] = useState('');
@@ -112,12 +135,33 @@ export default function DrivePage() {
     if (!silent) setLoading(true);
     setError('');
     try {
-      setData((await (await request('/api/drive')).json()) as DriveIndexPayload);
+      if (silent) {
+        // Solo numeri e stato: gli asset restano quelli gia' in pagina, quindi le
+        // anteprime non ricevono URL firmati nuovi e il browser non le riscarica.
+        const status = (await (await request('/api/drive/status')).json()) as DriveStatusPayload;
+        setData((previous) =>
+          previous
+            ? {
+                ...previous,
+                agent: status.agent,
+                folders: status.folders,
+                syncedAt: status.syncedAt,
+                totals: {
+                  ...previous.totals,
+                  assets: status.totals.assets,
+                  bytes: status.totals.bytes,
+                },
+              }
+            : previous,
+        );
+      } else {
+        setData((await (await request('/api/drive')).json()) as DriveIndexPayload);
+      }
     } catch (loadError) {
-      setData(null);
+      if (!silent) setData(null);
       setError(loadError instanceof Error ? loadError.message : 'Indice del drive non disponibile.');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [request]);
 
@@ -183,6 +227,70 @@ export default function DrivePage() {
       setError(syncError instanceof Error ? syncError.message : 'Sincronizzazione non riuscita.');
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function uploadFiles(fileList: FileList | null) {
+    const files = Array.from(fileList ?? []);
+    if (files.length === 0) return;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      setError('Accedi all’Area Staff per caricare file.');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    try {
+      for (const [index, file] of files.entries()) {
+        setUploadStatus(`Carico ${index + 1}/${files.length} · ${file.name}`);
+        const directUrl = await requestDirectUploadUrl(
+          session.access_token,
+          file.name,
+          uploadFolder,
+        );
+
+        await new Promise<void>((resolve, reject) => {
+          const params = new URLSearchParams({ name: file.name });
+          if (uploadFolder) params.set('folder', uploadFolder);
+
+          const xhr = new XMLHttpRequest();
+          // Diretto al tunnel: il limite di 4,5 MB delle funzioni Vercel non vale.
+          xhr.open('POST', directUrl ?? `/api/drive/upload?${params.toString()}`);
+          if (!directUrl) xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+          xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+          xhr.upload.onprogress = (event) => {
+            if (!event.lengthComputable) return;
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setUploadStatus(`Carico ${index + 1}/${files.length} · ${file.name} · ${percent}%`);
+          };
+          xhr.onload = () => {
+            if (xhr.status === 201 || xhr.status === 200) return resolve();
+            let message = `HTTP ${xhr.status}`;
+            try {
+              message = JSON.parse(xhr.responseText).error || message;
+            } catch {
+              /* risposta non JSON: resta lo stato HTTP */
+            }
+            reject(new Error(`${file.name}: ${message}`));
+          };
+          xhr.onerror = () => reject(new Error(`${file.name}: errore di rete`));
+          xhr.send(file);
+        });
+      }
+
+      setUploadStatus('Aggiorno l’indice…');
+      await request('/api/drive/sync', { method: 'POST' });
+      await load();
+      setUploadStatus(`✓ ${files.length} file caricati in ${uploadFolder || 'radice'}`);
+    } catch (uploadError) {
+      setUploadStatus('');
+      setError(uploadError instanceof Error ? uploadError.message : 'Caricamento non riuscito.');
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -272,7 +380,38 @@ export default function DrivePage() {
               genera l’agente locale. Nessun byte caricato su Supabase.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={uploadFolder}
+              onChange={(event) => setUploadFolder(event.target.value)}
+              disabled={uploading || !access}
+              aria-label="Cartella di destinazione del caricamento"
+              className="h-10 rounded-lg border border-zinc-700/80 bg-zinc-950/50 px-3 text-sm text-zinc-200 outline-none transition-colors focus:border-[#ff914d]/45 disabled:opacity-50"
+            >
+              <option value="">radice</option>
+              {folders.map((item) => (
+                <option key={item.path} value={item.path}>
+                  {item.path}
+                </option>
+              ))}
+            </select>
+            <label
+              className={`${BTN_PRIMARY} ${
+                uploading || !access ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+              }`}
+            >
+              {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+              Carica file
+              <input
+                type="file"
+                multiple
+                hidden
+                onChange={(event) => {
+                  void uploadFiles(event.target.files);
+                  event.target.value = '';
+                }}
+              />
+            </label>
             <button type="button" onClick={() => void load()} disabled={loading} className={BTN_SECONDARY}>
               {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
               Aggiorna
@@ -304,6 +443,12 @@ export default function DrivePage() {
             className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
           >
             {error}
+          </p>
+        )}
+
+        {uploadStatus && (
+          <p role="status" className="mt-4 text-xs text-zinc-400">
+            {uploadStatus}
           </p>
         )}
 
@@ -399,7 +544,10 @@ export default function DrivePage() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setFolder('')}
+                  onClick={() => {
+                    setFolder('');
+                    setUploadFolder('');
+                  }}
                   className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors ${
                     folder === ''
                       ? 'bg-[#ff914d] text-zinc-950'
@@ -412,7 +560,10 @@ export default function DrivePage() {
                   <button
                     key={item.path}
                     type="button"
-                    onClick={() => setFolder(item.path)}
+                    onClick={() => {
+                      setFolder(item.path);
+                      setUploadFolder(item.path);
+                    }}
                     className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors ${
                       folder === item.path
                         ? 'bg-[#ff914d] text-zinc-950'
@@ -463,7 +614,7 @@ export default function DrivePage() {
                     className="overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/25 transition-colors hover:border-[#ff914d]/35"
                   >
                     <a
-                      href={asset.fileUrl}
+                      href={asset.directFileUrl ?? asset.fileUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="flex aspect-[4/3] items-center justify-center bg-zinc-950/60"

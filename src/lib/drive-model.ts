@@ -27,6 +27,8 @@ export type DriveAsset = {
   tags: DriveTag[];
   thumbUrl: string | null;
   fileUrl: string;
+  /** URL firmato che punta all'agente/tunnel: null se l'accesso diretto è spento. */
+  directFileUrl: string | null;
 };
 
 export type DriveFolderSummary = {
@@ -57,13 +59,18 @@ export type DriveAgentStatus = {
   error: string | null;
 };
 
-export type DriveIndexPayload = {
+/** Stato senza asset: gli URL firmati restano quelli gia' caricati dalla pagina. */
+export type DriveStatusPayload = {
   folders: DriveFolderSummary[];
+  totals: { assets: number; bytes: number };
+  agent: DriveAgentStatus;
+  syncedAt: string | null;
+};
+
+export type DriveIndexPayload = DriveStatusPayload & {
   assets: DriveAsset[];
   tags: DriveTag[];
   totals: { assets: number; bytes: number; shown: number };
-  agent: DriveAgentStatus;
-  syncedAt: string | null;
 };
 
 const MAX_TAG_LENGTH = 40;

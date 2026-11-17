@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Tunnel Cloudflare verso l'agente del drive (127.0.0.1:8787).
+  cloudflared si collega in uscita: nessuna porta da aprire sul router e l'agente
+  resta in ascolto solo su loopback.
+
+  Installazione (dal root del progetto):
+    brew install cloudflared
+    cloudflared tunnel login
+    cloudflared tunnel create uttf-drive
+    cp drive-agent/cloudflared/config.yml.example ~/.cloudflared/uttf-drive.yml
+    # nel config: dominio e nome del file di credenziali (UUID del tunnel)
+    sed "s|__HOME__|$HOME|g" drive-agent/cloudflared/com.uttf.drive-tunnel.plist \
+      > ~/Library/LaunchAgents/com.uttf.drive-tunnel.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.uttf.drive-tunnel.plist
+
+  Controllo:  launchctl print gui/$(id -u)/com.uttf.drive-tunnel
+  Riavvio:    launchctl kickstart -k gui/$(id -u)/com.uttf.drive-tunnel
+
+  Il plist non contiene segreti: le credenziali del tunnel stanno in
+  ~/.cloudflared/<uuid>.json e non vanno committate.
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.uttf.drive-tunnel</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/sh</string>
+		<string>-c</string>
+		<string>exec /opt/homebrew/bin/cloudflared tunnel --config "__HOME__/.cloudflared/uttf-drive.yml" --no-autoupdate run uttf-drive</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>10</integer>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/uttf-drive-tunnel.out.log</string>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/uttf-drive-tunnel.err.log</string>
+</dict>
+</plist>

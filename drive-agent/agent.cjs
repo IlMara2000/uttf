@@ -29,6 +29,10 @@
  * non e' montato non si scrive nulla (niente cartelle fantasma sul disco interno).
  * Sul disco di copia resta .uttf-manifest.json con percorsi, dimensioni e hash;
  * `node drive-agent/backup-verify.cjs` lo confronta con l'indice.
+ *
+ * Accesso diretto (tunnel): con DRIVE_MEDIA_SECRET gli URL /file/:id e gli upload
+ * devono portare exp+sig (HMAC-SHA256). DRIVE_ALLOWED_ORIGIN concede il CORS al
+ * solo gestionale, cosi' il browser carica e riproduce senza passare da Vercel.
  */
 
 const http = require('node:http');
@@ -54,6 +58,10 @@ const CONFIG = {
   host: process.env.DRIVE_HOST || '127.0.0.1',
   // Volume del disco di copia, vuoto = nessuna copia di sicurezza.
   mirrorVolume: process.env.DRIVE_MIRROR_VOLUME || '',
+  // Segreto condiviso col gestionale per gli accessi diretti firmati.
+  mediaSecret: process.env.DRIVE_MEDIA_SECRET || '',
+  // Origine autorizzata a chiamare l'agente dal browser (es. https://app.example).
+  allowedOrigin: process.env.DRIVE_ALLOWED_ORIGIN || '',
 };
 
 for (const raw of process.argv.slice(2)) {
@@ -64,6 +72,8 @@ for (const raw of process.argv.slice(2)) {
   else if (key === 'port') CONFIG.port = Number(value);
   else if (key === 'host') CONFIG.host = value;
   else if (key === 'mirror-volume') CONFIG.mirrorVolume = value;
+  else if (key === 'media-secret') CONFIG.mediaSecret = value;
+  else if (key === 'allowed-origin') CONFIG.allowedOrigin = value;
 }
 
 const ROOT = path.resolve(CONFIG.root);
@@ -72,6 +82,8 @@ const THUMB_DIR = path.join(META_DIR, 'thumbs');
 const TMP_DIR = path.join(META_DIR, 'tmp');
 const TRASH_DIR = path.join(META_DIR, 'trash');
 const INDEX_FILE = path.join(META_DIR, 'index.json');
+const MEDIA_SECRET = CONFIG.mediaSecret.trim();
+const ALLOWED_ORIGIN = CONFIG.allowedOrigin.trim();
 
 const MIME_BY_EXT = {
   '.jpg': 'image/jpeg',
@@ -366,11 +378,41 @@ async function makeThumbnail(asset, absolutePath) {
   }
 }
 
+/* ── accesso diretto firmato ────────────────────────────────────────────── */
+
+/** Il gestionale firma `modo|bersaglio|scadenza` con lo stesso segreto: qui si
+ * ricostruisce la stringa e si confronta, cosi' un URL scaduto o ritoccato
+ * (altro file, altra cartella) non apre nulla. */
+function signedValue(mode, target, expiresAt) {
+  return crypto
+    .createHmac('sha256', MEDIA_SECRET)
+    .update(`${mode}|${target}|${expiresAt}`)
+    .digest('base64url');
+}
+
+function signatureValid(url, mode, target) {
+  if (!MEDIA_SECRET) return true; // nessun segreto: uso solo locale
+
+  const expiresAt = Number(url.searchParams.get('exp'));
+  const given = Buffer.from(url.searchParams.get('sig') || '', 'base64url');
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now() || given.length === 0) return false;
+
+  const expected = Buffer.from(signedValue(mode, target, expiresAt), 'base64url');
+  return given.length === expected.length && crypto.timingSafeEqual(given, expected);
+}
+
 /* ── upload ────────────────────────────────────────────────────────────── */
 
 async function handleUpload(req, res, url) {
   const requestedName = url.searchParams.get('name');
   if (!requestedName) return sendJson(res, 400, { error: 'parametro name mancante' });
+
+  // Il caricamento diretto dal browser arriva qui: firma su nome e cartella,
+  // verificata prima di leggere il corpo.
+  const rawFolder = url.searchParams.get('folder') || '';
+  if (MEDIA_SECRET && !signatureValid(url, 'upload', `${requestedName}|${rawFolder}`)) {
+    return sendJson(res, 403, { error: 'link di caricamento scaduto o non valido' });
+  }
 
   const fileName = sanitizeName(requestedName);
   const folder = sanitizeFolder(url.searchParams.get('folder'));
@@ -997,6 +1039,19 @@ const server = http.createServer(async (req, res) => {
   try {
     const { pathname } = url;
 
+    // Browser diretto sul tunnel: solo l'origine del gestionale.
+    if (ALLOWED_ORIGIN && req.headers.origin === ALLOWED_ORIGIN) {
+      res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'content-type, range');
+      res.setHeader('Access-Control-Expose-Headers', 'content-length, content-range, accept-ranges');
+      res.setHeader('Access-Control-Max-Age', '600');
+    }
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      return res.end();
+    }
+
     if (req.method === 'POST' && pathname === '/api/files') {
       return await handleUpload(req, res, url);
     }
@@ -1057,6 +1112,9 @@ const server = http.createServer(async (req, res) => {
 
     if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/file/')) {
       const id = pathname.slice('/file/'.length);
+      if (!signatureValid(url, 'file', id)) {
+        return sendJson(res, 403, { error: 'link scaduto o non valido' });
+      }
       const asset = state.assets.find((item) => item.id === id);
       if (!asset) return sendJson(res, 404, { error: 'file non indicizzato' });
       return await serveOriginal(req, res, asset);

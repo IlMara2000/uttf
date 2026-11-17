@@ -26,6 +26,15 @@ export function driveAgentUrl() {
   return (process.env.DRIVE_AGENT_URL?.trim() || DEFAULT_AGENT_URL).replace(/\/+$/, '');
 }
 
+/** Service token di Cloudflare Access: lo presenta il server Next al tunnel.
+ * Il browser non lo vede mai e il disco non e' raggiungibile senza. */
+function accessHeaders(): Record<string, string> {
+  const clientId = process.env.CF_ACCESS_CLIENT_ID?.trim();
+  const clientSecret = process.env.CF_ACCESS_CLIENT_SECRET?.trim();
+  if (!clientId || !clientSecret) return {};
+  return { 'CF-Access-Client-Id': clientId, 'CF-Access-Client-Secret': clientSecret };
+}
+
 /** timeoutMs = 0 disattiva il timeout: serve ai trasferimenti con Range. */
 export async function fetchAgent(
   pathname: string,
@@ -34,7 +43,7 @@ export async function fetchAgent(
 ) {
   return fetch(`${driveAgentUrl()}${pathname}`, {
     ...init,
-    headers: (init.headers as Record<string, string>) || {},
+    headers: { ...accessHeaders(), ...((init.headers as Record<string, string>) || {}) },
     cache: 'no-store',
     ...(timeoutMs > 0 ? { signal: AbortSignal.timeout(timeoutMs) } : {}),
   });
@@ -137,6 +146,39 @@ export async function fetchAgentIndex() {
     root: typeof payload.root === 'string' ? payload.root : null,
     assets,
   };
+}
+
+/** Firma condivisa con l'agente (`modo|bersaglio|scadenza`). Deve essere lo
+ * stesso DRIVE_MEDIA_SECRET configurato sull'agente, altrimenti l'agente
+ * rifiuta le chiamate e gli URL diretti restano spenti. */
+function directSecret() {
+  return process.env.DRIVE_MEDIA_SECRET?.trim() || '';
+}
+
+function directQuery(mode: 'file' | 'upload', target: string, ttlMs: number) {
+  const secret = directSecret();
+  if (!secret) return null;
+
+  const expiresAt = Date.now() + ttlMs;
+  const signature = createHmac('sha256', secret)
+    .update(`${mode}|${target}|${expiresAt}`)
+    .digest('base64url');
+  return new URLSearchParams({ exp: String(expiresAt), sig: signature }).toString();
+}
+
+/** Firma per la lettura di un asset direttamente dall'agente (proxy o browser). */
+export function signAgentFile(id: string, ttlMs = MEDIA_TTL_MS) {
+  return directQuery('file', id, ttlMs);
+}
+
+/** Firma per un caricamento diretto: copre nome e cartella, non solo il tempo. */
+export function signAgentUpload(name: string, folder: string, ttlMs = 15 * 60 * 1000) {
+  return directQuery('upload', `${name}|${folder}`, ttlMs);
+}
+
+/** URL pubblico dell'agente dietro il tunnel (vuoto = accesso diretto spento). */
+export function drivePublicUrl() {
+  return (process.env.DRIVE_PUBLIC_URL?.trim() || '').replace(/\/+$/, '');
 }
 
 function mediaSecret() {

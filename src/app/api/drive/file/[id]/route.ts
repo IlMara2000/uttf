@@ -1,4 +1,10 @@
-import { DriveError, driveErrorResponse, fetchAgent, verifyDriveMedia } from '@/lib/drive-server';
+import {
+  DriveError,
+  driveErrorResponse,
+  fetchAgent,
+  signAgentFile,
+  verifyDriveMedia,
+} from '@/lib/drive-server';
 import { isDriveId } from '@/lib/drive-model';
 
 export const runtime = 'nodejs';
@@ -14,11 +20,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return Response.json({ error: 'File non autorizzato o link scaduto.' }, { status: 403 });
   }
 
+  // L'agente accetta solo richieste firmate quando ha DRIVE_MEDIA_SECRET.
+  const signature = signAgentFile(id);
   const range = request.headers.get('range');
   let upstream: Response;
   try {
     upstream = await fetchAgent(
-      `/file/${id}`,
+      `/file/${id}${signature ? `?${signature}` : ''}`,
       range ? { headers: { Range: range } } : {},
       0,
     );
