@@ -49,10 +49,17 @@ export async function POST(request: Request) {
     if (!(await checkBookingRateLimit(request)))
       return fail("Troppi tentativi. Riprova più tardi.", 429);
 
-    const result = await createReservation({ slotId, ...form });
+    const result = await createReservation({
+      slotId,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      people: form.people,
+      notes: form.notes,
+    });
     if (!result.ok) return fail(result.error, result.status);
     return NextResponse.json(
-      { code: result.code, date: result.slot.date, start: result.slot.start_time, end: result.slot.end_time, free: result.slot.free },
+      { code: result.code, date: result.slot.date, start: result.slot.start_time, end: result.slot.end_time },
       { headers },
     );
   } catch (error) {

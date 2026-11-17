@@ -39,7 +39,7 @@ export type ReservationInput = {
 };
 
 export type ReservationResult =
-  | { ok: true; code: string; slot: { date: string; start_time: string; end_time: string; free: number } }
+  | { ok: true; code: string; slot: { date: string; start_time: string; end_time: string } }
   | { ok: false; status: number; error: string };
 
 function codeFor() {
@@ -51,9 +51,7 @@ function codeFor() {
 
 // Controllo capienza + insert atomici lato database: la RPC blocca la riga
 // dello slot (SELECT ... FOR UPDATE), così due prenotazioni simultanee non
-// possono superare i posti disponibili. Su 'ok', `free` è già il residuo post-insert.
-const SLOT_GONE = "Questo slot non esiste più. Scegline un altro qui sotto.";
-
+// possono superare i posti disponibili.
 export async function createReservation(input: ReservationInput): Promise<ReservationResult> {
   const client = bookingAdmin();
   const code = codeFor();
@@ -77,8 +75,9 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
     capacity: number;
   }> | null)?.[0];
 
-  if (!row || row.status === "not_found")
-    return { ok: false, status: 409, error: SLOT_GONE };
+  // Zero righe = slot inesistente: la RPC non emette stati fittizi.
+  if (!row)
+    return { ok: false, status: 409, error: "Questo slot non esiste più. Scegline un altro qui sotto." };
   if (row.status === "past")
     return { ok: false, status: 409, error: "Questo slot è passato. Scegline un altro qui sotto." };
   if (row.status === "full")
@@ -91,15 +90,13 @@ export async function createReservation(input: ReservationInput): Promise<Reserv
           : `In questo slot sono rimasti solo ${row.free} posti. Riduci la crew o scegli un altro orario.`,
     };
 
-  const slot = {
-    date: row.slot_date,
-    start_time: row.slot_start,
-    end_time: row.slot_end,
-  };
-
   // Nessuna email: la conferma è il codice mostrato a schermo, la prenotazione
   // resta visibile allo staff nel pannello. Niente servizi esterni da configurare.
   console.info(`[bookings] Prenotazione ${code} creata — posti residui ${row.free}/${row.capacity}`);
 
-  return { ok: true, code, slot: { ...slot, free: row.free } };
+  return {
+    ok: true,
+    code,
+    slot: { date: row.slot_date, start_time: row.slot_start, end_time: row.slot_end },
+  };
 }

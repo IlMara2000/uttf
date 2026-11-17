@@ -1,6 +1,8 @@
--- Prenotazioni slot (calendly interno), orari settimanali e impostazioni email staff.
+-- Prenotazioni slot (calendario interno) e orari settimanali.
 -- Lettura pubblica degli slot e degli orari; scritture riservate allo staff via RLS.
 -- La prenotazione pubblica passa dall'API server (service role) che controlla la capienza.
+-- Nessuna email: la conferma è il codice restituito a schermo (vedi la 20281117000007,
+-- che elimina la vecchia tabella booking_settings delle notifiche).
 
 create table if not exists public.booking_slots (
   id uuid primary key default gen_random_uuid(),
@@ -41,21 +43,12 @@ create table if not exists public.weekly_hours (
 insert into public.weekly_hours (day_of_week) values (1),(2),(3),(4),(5),(6),(7)
 on conflict (day_of_week) do nothing;
 
-create table if not exists public.booking_settings (
-  id integer primary key check (id = 1),
-  staff_email text not null default 'ass.uttf@gmail.com' check (char_length(staff_email) between 3 and 254),
-  updated_at timestamptz not null default now()
-);
-
-insert into public.booking_settings (id) values (1) on conflict (id) do nothing;
-
 create index if not exists booking_slots_date_idx on public.booking_slots (date, start_time);
 create index if not exists booking_reservations_slot_idx on public.booking_reservations (slot_id, status);
 
 alter table public.booking_slots enable row level security;
 alter table public.booking_reservations enable row level security;
 alter table public.weekly_hours enable row level security;
-alter table public.booking_settings enable row level security;
 
 -- Pubblico: leggere slot e orari (solo future/visibili e righe valide).
 drop policy if exists "Public reads booking slots" on public.booking_slots;
@@ -81,10 +74,6 @@ create policy "Staff updates reservations" on public.booking_reservations for up
 
 drop policy if exists "Staff manages weekly hours" on public.weekly_hours;
 create policy "Staff manages weekly hours" on public.weekly_hours for all to authenticated
-  using ((select private.staff_role()) is not null) with check ((select private.staff_role()) is not null);
-
-drop policy if exists "Staff manages booking settings" on public.booking_settings;
-create policy "Staff manages booking settings" on public.booking_settings for all to authenticated
   using ((select private.staff_role()) is not null) with check ((select private.staff_role()) is not null);
 
 -- Vista pubblica con i posti liberi, senza dati personali.

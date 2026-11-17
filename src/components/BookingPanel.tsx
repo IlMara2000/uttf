@@ -10,8 +10,6 @@ type Confirmation = {
   code: string;
   date: string;
   start: string;
-  end: string;
-  free: number;
 };
 
 const emptyForm = { name: "", email: "", phone: "", people: 1, notes: "", privacy: false };

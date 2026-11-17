@@ -70,6 +70,7 @@ export default function StaffBookingEditor() {
     };
   }, []);
 
+  // Unica query di caricamento: la usano sia l'apertura del pannello sia ogni salvataggio.
   async function refresh() {
     const { supabase } = await import("@/lib/supabase");
     const [slotsRes, resRes, hoursRes] = await Promise.all([
@@ -84,26 +85,13 @@ export default function StaffBookingEditor() {
 
   useEffect(() => {
     if (!open) return;
-    let alive = true;
-    (async () => {
+    void (async () => {
       try {
-        const { supabase } = await import("@/lib/supabase");
-        const [slotsRes, resRes, hoursRes] = await Promise.all([
-          supabase.from("booking_slots").select("id, date, start_time, end_time, capacity, category, internal_note").order("date").order("start_time"),
-          supabase.from("booking_reservations").select("id, slot_id, code, name, email, phone, people, notes, status, created_at").order("created_at", { ascending: false }).limit(200),
-          supabase.from("weekly_hours").select("day_of_week, is_open, morning_start, morning_end, afternoon_start, afternoon_end").order("day_of_week"),
-        ]);
-        if (!alive) return;
-        if (slotsRes.data) setSlots(slotsRes.data as SlotRow[]);
-        if (resRes.data) setReservations(resRes.data as ReservationRow[]);
-        if (hoursRes.data) setHours(hoursRes.data as WeeklyHour[]);
+        await refresh();
       } catch {
-        if (alive) setMessage("Non ho caricato i dati. Riprova.");
+        setMessage("Non ho caricato i dati. Riprova.");
       }
     })();
-    return () => {
-      alive = false;
-    };
   }, [open]);
 
   const takenFor = (slotId: string) =>
