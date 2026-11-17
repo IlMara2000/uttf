@@ -41,7 +41,6 @@ export default function StaffBookingEditor() {
   const [hours, setHours] = useState<WeeklyHour[]>([]);
   const [draft, setDraft] = useState(emptySlot);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [staffEmail, setStaffEmail] = useState("ass.uttf@gmail.com");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -73,16 +72,14 @@ export default function StaffBookingEditor() {
 
   async function refresh() {
     const { supabase } = await import("@/lib/supabase");
-    const [slotsRes, resRes, hoursRes, settingsRes] = await Promise.all([
+    const [slotsRes, resRes, hoursRes] = await Promise.all([
       supabase.from("booking_slots").select("id, date, start_time, end_time, capacity, category, internal_note").order("date").order("start_time"),
       supabase.from("booking_reservations").select("id, slot_id, code, name, email, phone, people, notes, status, created_at").order("created_at", { ascending: false }).limit(200),
       supabase.from("weekly_hours").select("day_of_week, is_open, morning_start, morning_end, afternoon_start, afternoon_end").order("day_of_week"),
-      supabase.from("booking_settings").select("staff_email").eq("id", 1).maybeSingle(),
     ]);
     if (slotsRes.data) setSlots(slotsRes.data as SlotRow[]);
     if (resRes.data) setReservations(resRes.data as ReservationRow[]);
     if (hoursRes.data) setHours(hoursRes.data as WeeklyHour[]);
-    if (settingsRes.data?.staff_email) setStaffEmail(settingsRes.data.staff_email);
   }
 
   useEffect(() => {
@@ -91,17 +88,15 @@ export default function StaffBookingEditor() {
     (async () => {
       try {
         const { supabase } = await import("@/lib/supabase");
-        const [slotsRes, resRes, hoursRes, settingsRes] = await Promise.all([
+        const [slotsRes, resRes, hoursRes] = await Promise.all([
           supabase.from("booking_slots").select("id, date, start_time, end_time, capacity, category, internal_note").order("date").order("start_time"),
           supabase.from("booking_reservations").select("id, slot_id, code, name, email, phone, people, notes, status, created_at").order("created_at", { ascending: false }).limit(200),
           supabase.from("weekly_hours").select("day_of_week, is_open, morning_start, morning_end, afternoon_start, afternoon_end").order("day_of_week"),
-          supabase.from("booking_settings").select("staff_email").eq("id", 1).maybeSingle(),
         ]);
         if (!alive) return;
         if (slotsRes.data) setSlots(slotsRes.data as SlotRow[]);
         if (resRes.data) setReservations(resRes.data as ReservationRow[]);
         if (hoursRes.data) setHours(hoursRes.data as WeeklyHour[]);
-        if (settingsRes.data?.staff_email) setStaffEmail(settingsRes.data.staff_email);
       } catch {
         if (alive) setMessage("Non ho caricato i dati. Riprova.");
       }
@@ -200,11 +195,6 @@ export default function StaffBookingEditor() {
         const { error } = await supabase.from("weekly_hours").update(payload).eq("day_of_week", h.day_of_week);
         if (error) throw error;
       }
-      const { error: settingsError } = await supabase
-        .from("booking_settings")
-        .update({ staff_email: staffEmail, updated_at: new Date().toISOString() })
-        .eq("id", 1);
-      if (settingsError) throw settingsError;
       await refresh();
       setMessage("Salvato, tutto a posto. ✅");
     } catch {
@@ -454,14 +444,6 @@ export default function StaffBookingEditor() {
                       )}
                     </fieldset>
                   ))}
-                  <label htmlFor="staff-email">Email per le notifiche</label>
-                  <input
-                    id="staff-email"
-                    type="email"
-                    required
-                    value={staffEmail}
-                    onChange={(event) => setStaffEmail(event.target.value)}
-                  />
                   <button type="submit" className="clay-button small" disabled={busy}>
                     Salva tutto
                   </button>

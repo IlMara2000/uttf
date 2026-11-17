@@ -52,10 +52,12 @@ export async function POST(request: Request) {
     const result = await createReservation({ slotId, ...form });
     if (!result.ok) return fail(result.error, result.status);
     return NextResponse.json(
-      { code: result.code, date: result.slot.date, start: result.slot.start_time, end: result.slot.end_time, free: result.slot.free, emailAccepted: result.emailAccepted },
+      { code: result.code, date: result.slot.date, start: result.slot.start_time, end: result.slot.end_time, free: result.slot.free },
       { headers },
     );
-  } catch {
+  } catch (error) {
+    // Riga unica da cercare nei log Vercel quando una prenotazione non entra.
+    console.error("[bookings] Prenotazione non riuscita:", error);
     return fail("Qualcosa non ha funzionato. Riprova tra un istante o scrivici a ass.uttf@gmail.com.", 500);
   }
 }

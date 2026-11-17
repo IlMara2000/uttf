@@ -12,7 +12,6 @@ type Confirmation = {
   start: string;
   end: string;
   free: number;
-  emailAccepted: boolean;
 };
 
 const emptyForm = { name: "", email: "", phone: "", people: 1, notes: "", privacy: false };
@@ -135,9 +134,15 @@ export default function BookingPanel({
                 Codice prenotazione: <strong>{confirmation.code}</strong>
               </p>
               <p className="booking-note">
-                {confirmation.emailAccepted
-                  ? "Conferma email in partenza verso la tua casella: se non la vedi entro qualche minuto, controlla lo spam. Il codice qui sopra vale sempre."
-                  : "La conferma via email non è partita. Salva il codice qui sopra: basta quello all'ingresso."}
+                Tieni il codice a portata di mano: è quello che ti chiediamo all&rsquo;ingresso. Non mandiamo email
+                di conferma, quindi fai uno screenshot se ti serve.
+              </p>
+              <p className="booking-note">
+                Se non riesci più a venire, scrivici a{" "}
+                <a className="text-link" href="mailto:ass.uttf@gmail.com">
+                  ass.uttf@gmail.com
+                </a>
+                : liberiamo il posto per qualcun altro.
               </p>
               <button type="button" className="clay-button" onClick={onClose}>
                 Chiudi
