@@ -1805,7 +1805,7 @@
 .weekly-hours {
   border-top: 2px solid #ffffff40;
   margin-top: 26px;
-  padding-top: 24px;
+  padding: 24px 18px 22px;
   max-width: 100%;
   display: flex;
   flex-direction: column;
