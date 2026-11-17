@@ -661,8 +661,7 @@ export default function DrivePage() {
                     <p className="mt-2">
                       {agentRemote ? (
                         <>
-                          L’indice lo costruisce l’agente sul Mac del disco: sincronizzalo da lì
-                          (pulsante <span className="text-[#ff914d]">Sincronizza indice</span>),
+                          L’indice lo costruisce l’agente sul Mac del disco: sincronizzalo da lì,
                           oppure collega il tunnel Cloudflare per farlo anche da questo sito.
                         </>
                       ) : (
