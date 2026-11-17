@@ -6,8 +6,14 @@ export type BookingSlot = {
   start_time: string; // HH:MM:SS
   end_time: string;
   capacity: number;
+  category?: string;
   taken?: number;
 };
+
+// Categorie configurabili dallo staff: per aggiungerne una basta allungare
+// questa lista (il DB accetta qualsiasi testo, il pannello la mostra come etichetta).
+export const BOOKING_CATEGORIES = ["Studio didattico", "Attività ricreativa", "Studio professionale"];
+export const DEFAULT_BOOKING_CATEGORY = "Attività ricreativa";
 
 export type WeeklyHour = {
   day_of_week: number; // 1 = lunedì ... 7 = domenica
@@ -42,7 +48,7 @@ export function formatDay(dateStr: string) {
   return `${weekday} ${day} ${monthName}`;
 }
 
-export function formatRange(slot: BookingSlot) {
+export function formatRange(slot: Pick<BookingSlot, "start_time" | "end_time">) {
   return `${hhmm(slot.start_time)}–${hhmm(slot.end_time)}`;
 }
 

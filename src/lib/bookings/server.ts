@@ -1,4 +1,5 @@
 import "server-only";
+import { createHmac } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { formatDay, formatRange } from "./model";
 
@@ -11,6 +12,24 @@ export function bookingAdmin() {
   });
 }
 
+// Rate limiting anti-spam, stesso schema delle iscrizioni ai laboratori:
+// 15 tentativi/ora per IP (IP hashato HMAC-SHA256, tabella booking_rate_limits).
+// Va chiamato dopo la validazione, così gli invii malformati non consumano quota.
+export async function checkBookingRateLimit(request: Request) {
+  const ip =
+    request.headers.get("x-vercel-forwarded-for") ||
+    request.headers.get("x-forwarded-for") ||
+    "local";
+  const key = createHmac("sha256", process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    .update(ip.split(",")[0])
+    .digest("hex");
+  const { data, error } = await bookingAdmin().rpc("take_booking_slot", {
+    bucket_key: key,
+  });
+  if (error) throw error;
+  return Boolean(data);
+}
+
 export type ReservationInput = {
   slotId: string;
   name: string;
@@ -21,7 +40,7 @@ export type ReservationInput = {
 };
 
 export type ReservationResult =
-  | { ok: true; code: string; slot: { date: string; start_time: string; end_time: string; free: number }; emailSent: boolean }
+  | { ok: true; code: string; slot: { date: string; start_time: string; end_time: string; free: number }; emailAccepted: boolean }
   | { ok: false; status: number; error: string };
 
 function codeFor() {
@@ -31,63 +50,71 @@ function codeFor() {
   return "UTTF-" + Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("").toUpperCase();
 }
 
+// Controllo capienza + insert atomici lato database: la RPC blocca la riga
+// dello slot (SELECT ... FOR UPDATE), così due prenotazioni simultanee non
+// possono superare i posti disponibili. Su 'ok', `free` è già il residuo post-insert.
+const SLOT_GONE = "Questo slot non esiste più. Scegline un altro qui sotto.";
+
 export async function createReservation(input: ReservationInput): Promise<ReservationResult> {
   const client = bookingAdmin();
+  const code = codeFor();
 
-  const { data: slot, error: slotError } = await client
-    .from("booking_slots")
-    .select("id, date, start_time, end_time, capacity")
-    .eq("id", input.slotId)
-    .single();
-  if (slotError || !slot)
-    return { ok: false, status: 409, error: "Questo slot non esiste più. Scegline un altro qui sotto." };
+  const { data, error: rpcError } = await client.rpc("reserve_booking_slot", {
+    p_slot_id: input.slotId,
+    p_code: code,
+    p_name: input.name,
+    p_email: input.email,
+    p_phone: input.phone,
+    p_people: input.people,
+    p_notes: input.notes,
+  });
+  if (rpcError) throw rpcError;
+  const row = (data as Array<{
+    status: string;
+    free: number;
+    slot_date: string;
+    slot_start: string;
+    slot_end: string;
+    capacity: number;
+  }> | null)?.[0];
 
-  if (slot.date < new Date().toISOString().slice(0, 10))
+  if (!row || row.status === "not_found")
+    return { ok: false, status: 409, error: SLOT_GONE };
+  if (row.status === "past")
     return { ok: false, status: 409, error: "Questo slot è passato. Scegline un altro qui sotto." };
-
-  const { data: takenRows, error: takenError } = await client
-    .from("booking_reservations")
-    .select("people")
-    .eq("slot_id", slot.id)
-    .eq("status", "confirmed");
-  if (takenError) throw takenError;
-  const taken = (takenRows ?? []).reduce((sum, r) => sum + (r.people ?? 0), 0);
-  const free = slot.capacity - taken;
-  if (input.people > free)
+  if (row.status === "full")
     return {
       ok: false,
       status: 409,
       error:
-        free <= 0
+        row.free <= 0
           ? "Ops, giusto ora si è riempito. Prova con un altro slot qui sotto."
-          : `In questo slot sono rimasti solo ${free} posti. Riduci la crew o scegli un altro orario.`,
+          : `In questo slot sono rimasti solo ${row.free} posti. Riduci la crew o scegli un altro orario.`,
     };
 
-  const code = codeFor();
-  const { error: insertError } = await client.from("booking_reservations").insert({
-    slot_id: slot.id,
-    code,
-    name: input.name,
-    email: input.email,
-    phone: input.phone,
-    people: input.people,
-    notes: input.notes,
-    status: "confirmed",
-  });
-  if (insertError) throw insertError;
+  const slot = {
+    date: row.slot_date,
+    start_time: row.slot_start,
+    end_time: row.slot_end,
+  };
 
   // Email best-effort: la prenotazione è già salva anche se l'invio fallisce.
-  let emailSent = false;
+  // emailAccepted = Resend ha ACCETTATO la richiesta (2xx), non che l'email sia
+  // stata consegnata: la consegna è asincrona e si verifica su Resend → Emails
+  // (o via webhook). Qui logghiamo l'id Resend per poterla tracciare.
+  let emailAccepted = false;
+  let customerId: string | null = null;
+  let staffAccepted = false;
+  let staffId: string | null = null;
   try {
     const { data: settings } = await client
       .from("booking_settings")
       .select("staff_email")
       .eq("id", 1)
       .maybeSingle();
-    const staffEmail = settings?.staff_email ?? "ass.uttf@gmail.com";
     const day = formatDay(slot.date);
     const range = formatRange(slot);
-    await Promise.all([
+    const [customer, staff] = await Promise.allSettled([
       sendMail({
         to: input.email,
         subject: `Confermato: ${day}, ore ${slot.start_time.slice(0, 5)} — ci vediamo lì`,
@@ -106,7 +133,7 @@ A presto,
 Under The Tower Factory`,
       }),
       sendMail({
-        to: staffEmail,
+        to: settings?.staff_email ?? "ass.uttf@gmail.com",
         subject: `Nuova prenotazione: ${day}, ${slot.start_time.slice(0, 5)}, ${input.people} pers. 🎉`,
         text: `Nuova prenotazione per ${day}, slot ${range}.
 
@@ -115,26 +142,74 @@ Email: ${input.email}
 Telefono: ${input.phone}
 Persone: ${input.people}
 Note: ${input.notes || "Nessuna nota"}
-Posti residui nella fascia: ${free - input.people} su ${slot.capacity}
+Posti residui nella fascia: ${row.free} su ${row.capacity}
 Codice prenotazione: ${code}`,
       }),
     ]);
-    emailSent = true;
+    if (customer.status === "fulfilled") {
+      emailAccepted = customer.value.accepted;
+      customerId = customer.value.id;
+    } else {
+      console.error(
+        `[bookings] Invio email cliente fallito — to=${input.email} code=${code}:`,
+        customer.reason,
+      );
+    }
+    if (staff.status === "fulfilled") {
+      staffAccepted = staff.value.accepted;
+      staffId = staff.value.id;
+    } else {
+      console.error(`[bookings] Avviso staff non inviato — code=${code}:`, staff.reason);
+    }
+    // Riga di sintesi: unico posto da guardare nei log Vercel per capire subito
+    // se una email si è persa prima ancora di essere accettata.
+    console.info(
+      `[bookings] Email prenotazione ${code}: cliente=${emailAccepted ? "accettata" : "NON accettata"} id=${customerId ?? "n/a"} | staff=${staffAccepted ? "accettata" : "NON accettata"} id=${staffId ?? "n/a"}. Accettata != consegnata: controlla Resend → Emails per bounce.`,
+    );
   } catch {
     // Intentionally swallowed: booking succeeded.
+    console.error(`[bookings] Errore inatteso nell'invio email — code=${code}.`);
   }
 
-  return { ok: true, code, slot: { date: slot.date, start_time: slot.start_time, end_time: slot.end_time, free: free - input.people }, emailSent };
+  return { ok: true, code, slot: { ...slot, free: row.free }, emailAccepted };
 }
 
-async function sendMail({ to, subject, text }: { to: string; subject: string; text: string }) {
+type SendMailResult = { accepted: boolean; id: string | null };
+
+async function sendMail({ to, subject, text }: { to: string; subject: string; text: string }): Promise<SendMailResult> {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return; // Email non configurata: nessun errore, la prenotazione vale lo stesso.
-  const from = process.env.BOOKING_FROM_EMAIL || "Under The Tower Factory <ass.uttf@gmail.com>";
+  if (!key) {
+    console.warn("[bookings] RESEND_API_KEY non impostata: invio email saltato (prenotazione salvata comunque).");
+    return { accepted: false, id: null };
+  }
+  // Resend accetta solo mittenti su domini verificati: niente Gmail/Outlook come from.
+  const from = process.env.BOOKING_FROM_EMAIL;
+  if (!from) {
+    console.error("[bookings] BOOKING_FROM_EMAIL non impostata: invio email saltato. Mittente non configurato.");
+    return { accepted: false, id: null };
+  }
+  const staffReplyTo = process.env.BOOKING_REPLY_TO_EMAIL || "ass.uttf@gmail.com";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to, subject, text }),
+    body: JSON.stringify({ from, reply_to: staffReplyTo, to, subject, text }),
   });
-  if (!response.ok) throw new Error("Invio email fallito.");
+  const bodyText = await response.text().catch(() => "");
+  let parsed: { id?: string } | null = null;
+  try {
+    parsed = bodyText ? JSON.parse(bodyText) : null;
+  } catch {
+    parsed = null;
+  }
+  if (!response.ok) {
+    console.error(
+      `[bookings] Email NON accettata da Resend — to=${to} status=${response.status} body=${bodyText.slice(0, 500)}`,
+    );
+    throw new Error("Invio email fallito.");
+  }
+  const id = parsed?.id ?? null;
+  // 'accepted' = Resend ha preso in carico la richiesta. La consegna (e i bounce)
+  // sono asincroni: controllare Resend → Emails o webhook per lo stato finale.
+  console.info(`[bookings] Email accettata da Resend (non = consegnata) — to=${to} id=${id ?? "n/a"} status=${response.status}`);
+  return { accepted: true, id };
 }

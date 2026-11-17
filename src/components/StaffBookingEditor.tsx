@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Pencil, X } from "lucide-react";
 import { Dialog } from "radix-ui";
-import { WEEKDAYS, hhmm, type WeeklyHour } from "@/lib/bookings/model";
+import { BOOKING_CATEGORIES, DEFAULT_BOOKING_CATEGORY, WEEKDAYS, hhmm, type WeeklyHour } from "@/lib/bookings/model";
 
 type SlotRow = {
   id: string;
@@ -11,6 +11,7 @@ type SlotRow = {
   start_time: string;
   end_time: string;
   capacity: number;
+  category: string;
   internal_note: string;
 };
 
@@ -29,7 +30,7 @@ type ReservationRow = {
 
 type Tab = "slots" | "reservations" | "hours";
 
-const emptySlot = { date: "", start_time: "18:00", end_time: "20:00", capacity: 10, internal_note: "" };
+const emptySlot = { date: "", start_time: "18:00", end_time: "20:00", capacity: 10, category: DEFAULT_BOOKING_CATEGORY, internal_note: "" };
 
 export default function StaffBookingEditor() {
   const [isStaff, setIsStaff] = useState(false);
@@ -73,7 +74,7 @@ export default function StaffBookingEditor() {
   async function refresh() {
     const { supabase } = await import("@/lib/supabase");
     const [slotsRes, resRes, hoursRes, settingsRes] = await Promise.all([
-      supabase.from("booking_slots").select("id, date, start_time, end_time, capacity, internal_note").order("date").order("start_time"),
+      supabase.from("booking_slots").select("id, date, start_time, end_time, capacity, category, internal_note").order("date").order("start_time"),
       supabase.from("booking_reservations").select("id, slot_id, code, name, email, phone, people, notes, status, created_at").order("created_at", { ascending: false }).limit(200),
       supabase.from("weekly_hours").select("day_of_week, is_open, morning_start, morning_end, afternoon_start, afternoon_end").order("day_of_week"),
       supabase.from("booking_settings").select("staff_email").eq("id", 1).maybeSingle(),
@@ -91,7 +92,7 @@ export default function StaffBookingEditor() {
       try {
         const { supabase } = await import("@/lib/supabase");
         const [slotsRes, resRes, hoursRes, settingsRes] = await Promise.all([
-          supabase.from("booking_slots").select("id, date, start_time, end_time, capacity, internal_note").order("date").order("start_time"),
+          supabase.from("booking_slots").select("id, date, start_time, end_time, capacity, category, internal_note").order("date").order("start_time"),
           supabase.from("booking_reservations").select("id, slot_id, code, name, email, phone, people, notes, status, created_at").order("created_at", { ascending: false }).limit(200),
           supabase.from("weekly_hours").select("day_of_week, is_open, morning_start, morning_end, afternoon_start, afternoon_end").order("day_of_week"),
           supabase.from("booking_settings").select("staff_email").eq("id", 1).maybeSingle(),
@@ -125,6 +126,7 @@ export default function StaffBookingEditor() {
         start_time: draft.start_time,
         end_time: draft.end_time,
         capacity: Number(draft.capacity),
+        category: draft.category,
         internal_note: draft.internal_note,
       };
       const query = editingId
@@ -232,7 +234,10 @@ export default function StaffBookingEditor() {
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="editorial-modal-overlay" />
-          <Dialog.Content className="booking-modal staff-modal" aria-describedby={undefined}>
+          <Dialog.Content className="booking-modal staff-modal">
+            <Dialog.Description className="sr-only">
+              Gestione fasce prenotabili, prenotazioni e orari settimanali. Solo staff.
+            </Dialog.Description>
             <Dialog.Close className="modal-close" aria-label="Chiudi">
               <X size={22} />
             </Dialog.Close>
@@ -274,6 +279,12 @@ export default function StaffBookingEditor() {
                     <input id="staff-end" type="time" required value={draft.end_time} onChange={(e) => setDraft({ ...draft, end_time: e.target.value })} />
                     <label htmlFor="staff-capacity">Capienza posti</label>
                     <input id="staff-capacity" type="number" min={1} max={100} required value={draft.capacity} onChange={(e) => setDraft({ ...draft, capacity: Number(e.target.value) })} />
+                    <label htmlFor="staff-category">Categoria</label>
+                    <select id="staff-category" value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}>
+                      {BOOKING_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                     <label htmlFor="staff-note">Note interne (facoltative)</label>
                     <input id="staff-note" value={draft.internal_note} onChange={(e) => setDraft({ ...draft, internal_note: e.target.value })} />
                     <div className="staff-actions">
@@ -302,7 +313,7 @@ export default function StaffBookingEditor() {
                       {slots.map((slot) => (
                         <li key={slot.id}>
                           <span>
-                            {slot.date} · {hhmm(slot.start_time)}–{hhmm(slot.end_time)} · {takenFor(slot.id)}/{slot.capacity}
+                            {slot.date} · {hhmm(slot.start_time)}–{hhmm(slot.end_time)} · {slot.category} · {takenFor(slot.id)}/{slot.capacity}
                           </span>
                           <span className="staff-actions">
                             <button
@@ -315,6 +326,7 @@ export default function StaffBookingEditor() {
                                   start_time: hhmm(slot.start_time),
                                   end_time: hhmm(slot.end_time),
                                   capacity: slot.capacity,
+                                  category: slot.category ?? DEFAULT_BOOKING_CATEGORY,
                                   internal_note: slot.internal_note,
                                 });
                               }}

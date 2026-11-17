@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowUpRight, X } from "lucide-react";
 import { Dialog } from "radix-ui";
-import { formatDay, formatRange, hhmm, validateBookingForm, type BookingSlot } from "@/lib/bookings/model";
+import { DEFAULT_BOOKING_CATEGORY, formatDay, formatRange, hhmm, validateBookingForm, type BookingSlot } from "@/lib/bookings/model";
 
 type Slot = BookingSlot & { free_seats: number };
 type Confirmation = {
@@ -12,7 +12,7 @@ type Confirmation = {
   start: string;
   end: string;
   free: number;
-  emailSent: boolean;
+  emailAccepted: boolean;
 };
 
 const emptyForm = { name: "", email: "", phone: "", people: 1, notes: "", privacy: false };
@@ -25,6 +25,7 @@ export default function BookingPanel({
   onClose: () => void;
 }) {
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [filter, setFilter] = useState("Tutte");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Slot | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -41,7 +42,7 @@ export default function BookingPanel({
         const { supabase } = await import("@/lib/supabase");
         const { data, error } = await supabase
           .from("booking_slot_availability")
-          .select("id, date, start_time, end_time, capacity, free_seats")
+          .select("id, date, start_time, end_time, capacity, category, free_seats")
           .gte("date", new Date().toISOString().slice(0, 10))
           .order("date", { ascending: true })
           .order("start_time", { ascending: true })
@@ -57,15 +58,21 @@ export default function BookingPanel({
     };
   }, [open]);
 
+  const categories = useMemo(
+    () => [...new Set(slots.map((s) => s.category ?? DEFAULT_BOOKING_CATEGORY))],
+    [slots],
+  );
+  const visible = filter === "Tutte" ? slots : slots.filter((s) => (s.category ?? DEFAULT_BOOKING_CATEGORY) === filter);
+
   const groups = useMemo(() => {
     const map = new Map<string, Slot[]>();
-    for (const slot of slots) {
+    for (const slot of visible) {
       const list = map.get(slot.date) ?? [];
       list.push(slot);
       map.set(slot.date, list);
     }
     return [...map.entries()];
-  }, [slots]);
+  }, [visible]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -106,7 +113,11 @@ export default function BookingPanel({
     <Dialog.Root open={open} onOpenChange={(value) => !value && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="editorial-modal-overlay" />
-        <Dialog.Content className="booking-modal" aria-describedby={undefined}>
+        <Dialog.Content className="booking-modal">
+          <Dialog.Description className="sr-only">
+            Scegli uno slot disponibile e prenotati per passare del tempo in compagnia o con noi o con i tuoi
+            amici nei nostri spazi.
+          </Dialog.Description>
           <Dialog.Close className="modal-close" aria-label="Chiudi">
             <X size={22} />
           </Dialog.Close>
@@ -124,9 +135,9 @@ export default function BookingPanel({
                 Codice prenotazione: <strong>{confirmation.code}</strong>
               </p>
               <p className="booking-note">
-                {confirmation.emailSent
-                  ? "Ti abbiamo mandato una conferma per email. Se salti il turno, rispondi a quella mail e liberiamo il posto per qualcun altro."
-                  : "Salva il codice prenotazione: la conferma via email non è stata inviata."}
+                {confirmation.emailAccepted
+                  ? "Conferma email in partenza verso la tua casella: se non la vedi entro qualche minuto, controlla lo spam. Il codice qui sopra vale sempre."
+                  : "La conferma via email non è partita. Salva il codice qui sopra: basta quello all'ingresso."}
               </p>
               <button type="button" className="clay-button" onClick={onClose}>
                 Chiudi
@@ -144,6 +155,21 @@ export default function BookingPanel({
                 Gratis. La prenotazione serve solo a non farti trovare &ldquo;posto occupato&rdquo;.
               </p>
               <h3 className="booking-subtitle">Prossime disponibilità</h3>
+              {categories.length > 1 && (
+                <div className="booking-filters" role="group" aria-label="Filtra per categoria">
+                  {["Tutte", ...categories].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-pressed={filter === c}
+                      className={filter === c ? "active" : ""}
+                      onClick={() => setFilter(c)}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
               {loading ? (
                 <p className="booking-note">Carico le disponibilità…</p>
               ) : groups.length === 0 ? (
@@ -163,7 +189,7 @@ export default function BookingPanel({
                           return (
                             <li key={slot.id}>
                               <span className="booking-slot-info">
-                                {formatRange(slot)} ·{" "}
+                                {formatRange(slot)} · {slot.category ?? DEFAULT_BOOKING_CATEGORY} ·{" "}
                                 {full ? "Full" : free <= 2 ? `${free} posti liberi — quasi pieni 👀` : `${free} posti liberi`}
                               </span>
                               <button

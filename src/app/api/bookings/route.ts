@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readJson } from "@/lib/request-json";
 import { validateBookingForm } from "@/lib/bookings/model";
-import { createReservation } from "@/lib/bookings/server";
+import { checkBookingRateLimit, createReservation } from "@/lib/bookings/server";
 
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store" };
@@ -28,11 +28,12 @@ export async function POST(request: Request) {
   const p = raw as Record<string, unknown>;
 
   const slotId = typeof p.slotId === "string" ? p.slotId : "";
+  const people = typeof p.people === "string" ? Number(p.people) : p.people;
   const form = {
     name: typeof p.name === "string" ? p.name.trim() : "",
     email: typeof p.email === "string" ? p.email.trim() : "",
     phone: typeof p.phone === "string" ? p.phone.trim() : "",
-    people: p.people,
+    people: Number.isInteger(people) ? (people as number) : 0,
     notes: typeof p.notes === "string" ? p.notes.trim().slice(0, 1000) : "",
     privacy: p.privacy === true,
   };
@@ -41,23 +42,17 @@ export async function POST(request: Request) {
     return fail("Slot non valido.");
   if (form.name.length > 120 || form.email.length > 254 || form.phone.length > 40)
     return fail("Dati troppo lunghi.");
-
-  const people = typeof form.people === "string" ? Number(form.people) : form.people;
-  const validationError = validateBookingForm({ ...form, people: Number.isInteger(people) ? (people as number) : 0 });
+  const validationError = validateBookingForm(form);
   if (validationError) return fail(validationError);
 
   try {
-    const result = await createReservation({
-      slotId,
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      people: people as number,
-      notes: form.notes,
-    });
+    if (!(await checkBookingRateLimit(request)))
+      return fail("Troppi tentativi. Riprova più tardi.", 429);
+
+    const result = await createReservation({ slotId, ...form });
     if (!result.ok) return fail(result.error, result.status);
     return NextResponse.json(
-      { code: result.code, date: result.slot.date, start: result.slot.start_time, end: result.slot.end_time, free: result.slot.free, emailSent: result.emailSent },
+      { code: result.code, date: result.slot.date, start: result.slot.start_time, end: result.slot.end_time, free: result.slot.free, emailAccepted: result.emailAccepted },
       { headers },
     );
   } catch {
