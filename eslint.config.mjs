@@ -14,6 +14,14 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // Script Node dell'agente, CommonJS per scelta: qui require() è il formato
+    // giusto del runtime, non un import da convertire in ESM.
+    files: ["drive-agent/**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
