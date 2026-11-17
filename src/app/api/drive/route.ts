@@ -7,8 +7,14 @@ import {
   signAgentFile,
   signDriveMedia,
 } from '@/lib/drive-server';
-import { readAgentStatus, readFolders, readSyncedAt, readTotals } from '@/lib/drive-status';
-import type { DriveAsset, DriveIndexPayload, DriveKind, DriveTag } from '@/lib/drive-model';
+import { readAgentStatus, readFolders, readIndexSummary } from '@/lib/drive-status';
+import {
+  driveNumberOrNull,
+  type DriveAsset,
+  type DriveIndexPayload,
+  type DriveKind,
+  type DriveTag,
+} from '@/lib/drive-model';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,11 +40,6 @@ type AssetRow = {
   drive_asset_tags?: { drive_tags?: DriveTag | DriveTag[] | null }[] | null;
 };
 
-function numberOrNull(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) && number >= 0 ? number : null;
-}
-
 function tagsOf(row: AssetRow): DriveTag[] {
   return (row.drive_asset_tags ?? [])
     .flatMap((link) => {
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
   try {
     const { client } = await requireDriveStaff(request);
 
-    const [assetsResult, tagsResult, agent, folders, totals, syncedAt] = await Promise.all([
+    const [assetsResult, tagsResult, agent, folders, index] = await Promise.all([
       client
         .from('drive_assets')
         .select(
@@ -63,8 +64,7 @@ export async function GET(request: Request) {
       client.from('drive_tags').select('id, name, color').order('name'),
       readAgentStatus(),
       readFolders(client),
-      readTotals(client),
-      readSyncedAt(client),
+      readIndexSummary(client),
     ]);
 
     if (assetsResult.error) {
@@ -94,7 +94,7 @@ export async function GET(request: Request) {
         duplicateOf: row.duplicate_of,
         width: row.width,
         height: row.height,
-        durationSeconds: numberOrNull(row.duration_seconds),
+        durationSeconds: driveNumberOrNull(row.duration_seconds),
         hasThumb: Boolean(row.has_thumb),
         capturedAt: row.captured_at,
         tags: tagsOf(row),
@@ -112,9 +112,9 @@ export async function GET(request: Request) {
       folders,
       assets,
       tags: (tagsResult.data ?? []) as DriveTag[],
-      totals: { ...totals, shown: assets.length },
+      totals: index.totals,
       agent,
-      syncedAt,
+      syncedAt: index.syncedAt,
     };
 
     return NextResponse.json(payload, { headers });

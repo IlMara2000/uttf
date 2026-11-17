@@ -70,19 +70,28 @@ left join public.drive_assets a
   on a.folder_path = f.path or starts_with(a.folder_path, f.path || '/')
 group by f.path, f.name;
 
+-- Totali dell'indice e ultima scrittura in una riga: l'API non deve scaricare
+-- tutte le righe di drive_assets (PostgREST le troncherebbe in silenzio).
+create view public.drive_totals with (security_invoker = true) as
+select
+  count(*)::int as asset_count,
+  coalesce(sum(size_bytes), 0) as total_bytes,
+  max(updated_at) as last_updated_at
+from public.drive_assets;
+
 alter table public.drive_folders enable row level security;
 alter table public.drive_assets enable row level security;
 alter table public.drive_tags enable row level security;
 alter table public.drive_asset_tags enable row level security;
 
 revoke all on public.drive_folders, public.drive_assets, public.drive_tags, public.drive_asset_tags from anon, authenticated;
-revoke all on public.drive_folder_overview from anon, authenticated;
+revoke all on public.drive_folder_overview, public.drive_totals from anon, authenticated;
 
 grant select, insert, update, delete on public.drive_folders to authenticated;
 grant select, insert, update, delete on public.drive_assets to authenticated;
 grant select, insert, update, delete on public.drive_tags to authenticated;
 grant select, insert, delete on public.drive_asset_tags to authenticated;
-grant select on public.drive_folder_overview to authenticated;
+grant select on public.drive_folder_overview, public.drive_totals to authenticated;
 
 -- Solo staff/admin confermati (vedi private.staff_role in security_hardening).
 create policy "Staff manage drive folders" on public.drive_folders for all to authenticated
@@ -104,3 +113,4 @@ with check ((select private.staff_role()) is not null);
 comment on table public.drive_assets is 'Indice del drive su disco locale: metadati e hash, nessun byte caricato su Supabase.';
 comment on column public.drive_assets.remote_id is 'ID generato da drive-agent/agent.cjs; chiave stabile per anteprime e file originali.';
 comment on view public.drive_folder_overview is 'Cartelle con numero file e byte, sottocartelle incluse.';
+comment on view public.drive_totals is 'Totali dell''indice (file, byte) e data dell''ultima scrittura.';

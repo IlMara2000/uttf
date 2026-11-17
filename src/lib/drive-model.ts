@@ -70,7 +70,6 @@ export type DriveStatusPayload = {
 export type DriveIndexPayload = DriveStatusPayload & {
   assets: DriveAsset[];
   tags: DriveTag[];
-  totals: { assets: number; bytes: number; shown: number };
 };
 
 const MAX_TAG_LENGTH = 40;
@@ -101,6 +100,12 @@ export function driveKindFromMime(mime: string): DriveKind {
   if (value.startsWith('video/')) return 'video';
   if (value.startsWith('audio/')) return 'audio';
   return 'other';
+}
+
+/** Numero non negativo arrivato da JSON o dal database, altrimenti null. */
+export function driveNumberOrNull(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
 export function formatDriveBytes(bytes: number | null | undefined) {

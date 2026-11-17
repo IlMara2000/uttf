@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { driveErrorResponse, requireDriveStaff } from '@/lib/drive-server';
-import { readAgentStatus, readFolders, readSyncedAt, readTotals } from '@/lib/drive-status';
+import { readAgentStatus, readFolders, readIndexSummary } from '@/lib/drive-status';
 import type { DriveStatusPayload } from '@/lib/drive-model';
 
 export const runtime = 'nodejs';
@@ -14,14 +14,18 @@ export async function GET(request: Request) {
   try {
     const { client } = await requireDriveStaff(request);
 
-    const [agent, folders, totals, syncedAt] = await Promise.all([
+    const [agent, folders, index] = await Promise.all([
       readAgentStatus(),
       readFolders(client),
-      readTotals(client),
-      readSyncedAt(client),
+      readIndexSummary(client),
     ]);
 
-    const payload: DriveStatusPayload = { folders, totals, agent, syncedAt };
+    const payload: DriveStatusPayload = {
+      folders,
+      totals: index.totals,
+      agent,
+      syncedAt: index.syncedAt,
+    };
     return NextResponse.json(payload, { headers });
   } catch (error) {
     return driveErrorResponse(error, 'DRIVE_STATUS_ERROR');

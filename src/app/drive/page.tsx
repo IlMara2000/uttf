@@ -131,39 +131,46 @@ export default function DrivePage() {
     return response;
   }, []);
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError('');
-    try {
-      if (silent) {
-        // Solo numeri e stato: gli asset restano quelli gia' in pagina, quindi le
-        // anteprime non ricevono URL firmati nuovi e il browser non le riscarica.
-        const status = (await (await request('/api/drive/status')).json()) as DriveStatusPayload;
-        setData((previous) =>
-          previous
-            ? {
-                ...previous,
-                agent: status.agent,
-                folders: status.folders,
-                syncedAt: status.syncedAt,
-                totals: {
-                  ...previous.totals,
-                  assets: status.totals.assets,
-                  bytes: status.totals.bytes,
-                },
-              }
-            : previous,
-        );
-      } else {
-        setData((await (await request('/api/drive')).json()) as DriveIndexPayload);
+  const load = useCallback(
+    async (silent = false) => {
+      if (!silent) {
+        setLoading(true);
+        setError('');
       }
-    } catch (loadError) {
-      if (!silent) setData(null);
-      setError(loadError instanceof Error ? loadError.message : 'Indice del drive non disponibile.');
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [request]);
+      try {
+        if (silent) {
+          // Solo numeri e stato: gli asset restano quelli in pagina, quindi le
+          // anteprime non ricevono URL firmati nuovi e il browser non le riscarica.
+          const status = (await (await request('/api/drive/status')).json()) as DriveStatusPayload;
+          setData((previous) =>
+            previous
+              ? {
+                  ...previous,
+                  agent: status.agent,
+                  folders: status.folders,
+                  syncedAt: status.syncedAt,
+                  totals: status.totals,
+                }
+              : previous,
+          );
+          return;
+        }
+
+        setData((await (await request('/api/drive')).json()) as DriveIndexPayload);
+      } catch (loadError) {
+        // Un aggiornamento silenzioso non cancella dati o errori visibili: ci pensa
+        // il prossimo Aggiorna a mostrare cosa non va.
+        if (silent) return;
+        setData(null);
+        setError(
+          loadError instanceof Error ? loadError.message : 'Indice del drive non disponibile.',
+        );
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [request],
+  );
 
   useEffect(() => {
     let alive = true;
@@ -209,13 +216,15 @@ export default function DrivePage() {
   }, [access, load]);
 
   // Spazio e file cambiano anche senza di noi: si rileggono senza svuotare la griglia.
+  // Senza indice in pagina non c'è nulla da aggiornare in modo silenzioso.
+  const hasData = data !== null;
   useEffect(() => {
-    if (!access) return;
+    if (!access || !hasData) return;
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') void load(true);
     }, 60_000);
     return () => clearInterval(timer);
-  }, [access, load]);
+  }, [access, hasData, load]);
 
   async function syncIndex() {
     setSyncing(true);
@@ -499,7 +508,7 @@ export default function DrivePage() {
               </div>
             )}
 
-            {backup && data && (
+            {backup && (
               <section className={`mt-4 rounded-2xl border px-5 py-4 ${backup.tone}`}>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span aria-hidden className={`h-2 w-2 rounded-full ${backup.dot}`} />
@@ -578,8 +587,8 @@ export default function DrivePage() {
 
               <p className="text-xs text-zinc-500">
                 {visible.length} di {data.totals.assets} file
-                {data.totals.shown < data.totals.assets
-                  ? ` · mostrati i primi ${data.totals.shown}`
+                {assets.length < data.totals.assets
+                  ? ` · mostrati i primi ${assets.length}`
                   : ''}
                 {data.syncedAt
                   ? ` · aggiornato ${new Date(data.syncedAt).toLocaleString('it-IT')}`
@@ -587,11 +596,7 @@ export default function DrivePage() {
               </p>
             </div>
 
-            {loading ? (
-              <p role="status" className="mt-8 flex items-center gap-2 text-sm text-zinc-400">
-                <Loader2 size={16} className="animate-spin" /> Caricamento indice…
-              </p>
-            ) : visible.length === 0 ? (
+            {visible.length === 0 ? (
               <div className="mt-8 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-8 text-sm text-zinc-400">
                 {assets.length === 0 ? (
                   <>

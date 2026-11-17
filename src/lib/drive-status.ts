@@ -1,7 +1,12 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DriveError, fetchAgent } from '@/lib/drive-server';
-import type { DriveAgentStatus, DriveBackupStatus, DriveFolderSummary } from '@/lib/drive-model';
+import {
+  driveNumberOrNull,
+  type DriveAgentStatus,
+  type DriveBackupStatus,
+  type DriveFolderSummary,
+} from '@/lib/drive-model';
 
 /** Tutto lo stato del drive che non dipende dalle firme degli URL.
  * Sta qui perche' lo usano sia /api/drive sia /api/drive/status: la pagina puo'
@@ -33,11 +38,6 @@ type FolderRow = {
   total_bytes: number | string | null;
 };
 
-function numberOrNull(value: unknown) {
-  const number = Number(value);
-  return Number.isFinite(number) && number >= 0 ? number : null;
-}
-
 function textOrNull(value: unknown) {
   return typeof value === 'string' && value.trim() ? value : null;
 }
@@ -58,7 +58,7 @@ function backupStatus(health: AgentHealth | null): DriveBackupStatus {
     configured: mirror.configured === true,
     volume: textOrNull(mirror.volume),
     mounted: mirror.mounted === true,
-    pending: numberOrNull(mirror.pending) ?? 0,
+    pending: driveNumberOrNull(mirror.pending) ?? 0,
     lastCopyAt: textOrNull(mirror.lastCopyAt),
     lastError: textOrNull(mirror.lastError),
   };
@@ -94,10 +94,10 @@ export async function readAgentStatus(): Promise<DriveAgentStatus> {
   return {
     reachable: true,
     root: typeof health.root === 'string' ? health.root : null,
-    files: numberOrNull(health.files),
-    bytes: numberOrNull(health.bytes),
-    freeBytes: numberOrNull(health.disk?.free),
-    totalBytes: numberOrNull(health.disk?.total),
+    files: driveNumberOrNull(health.files),
+    bytes: driveNumberOrNull(health.bytes),
+    freeBytes: driveNumberOrNull(health.disk?.free),
+    totalBytes: driveNumberOrNull(health.disk?.total),
     backup: backupStatus(health),
     error: null,
   };
@@ -155,27 +155,27 @@ export async function readFolders(client: SupabaseClient): Promise<DriveFolderSu
   return folders;
 }
 
-export async function readTotals(client: SupabaseClient) {
-  const { data, error } = await client.from('drive_assets').select('size_bytes');
-  if (error) throw new DriveError('Totale dello spazio indicizzato non disponibile.', 500);
-
-  const rows = (data ?? []) as { size_bytes: number | string }[];
-  return {
-    assets: rows.length,
-    bytes: rows.reduce((sum, row) => sum + (Number(row.size_bytes) || 0), 0),
-  };
-}
-
-export async function readSyncedAt(client: SupabaseClient): Promise<string | null> {
+/** Totali e ultima scrittura in una riga sola: la vista aggrega in SQL, cosi'
+ * non si scaricano tutte le righe dell'indice (che PostgREST troncherebbe). */
+export async function readIndexSummary(client: SupabaseClient) {
   const { data, error } = await client
-    .from('drive_assets')
-    .select('updated_at')
-    .order('updated_at', { ascending: false })
-    .limit(1);
+    .from('drive_totals')
+    .select('asset_count, total_bytes, last_updated_at')
+    .maybeSingle<{
+      asset_count: number | string | null;
+      total_bytes: number | string | null;
+      last_updated_at: string | null;
+    }>();
+
   if (error) {
-    throw new DriveError('Lettura dello stato dell’indice non riuscita. Hai applicato la migrazione SQL?', 500);
+    throw new DriveError('Lettura dell’indice non riuscita. Hai applicato la migrazione SQL?', 500);
   }
 
-  const row = (data as { updated_at?: string }[] | null)?.[0];
-  return row?.updated_at ?? null;
+  return {
+    totals: {
+      assets: driveNumberOrNull(data?.asset_count) ?? 0,
+      bytes: driveNumberOrNull(data?.total_bytes) ?? 0,
+    },
+    syncedAt: data?.last_updated_at ?? null,
+  };
 }
