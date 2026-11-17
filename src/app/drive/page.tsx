@@ -102,6 +102,9 @@ export default function DrivePage() {
   const [uploadStatus, setUploadStatus] = useState('');
   const [busyAsset, setBusyAsset] = useState<string | null>(null);
   const [data, setData] = useState<DriveIndexPayload | null>(null);
+  // File nell'indice al momento dell'ultimo caricamento completo: serve a capire
+  // quanti ne sono comparsi dopo, senza contare il tetto dei 500 caricati.
+  const [baselineAssets, setBaselineAssets] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [folder, setFolder] = useState('');
@@ -156,12 +159,15 @@ export default function DrivePage() {
           return;
         }
 
-        setData((await (await request('/api/drive')).json()) as DriveIndexPayload);
+        const payload = (await (await request('/api/drive')).json()) as DriveIndexPayload;
+        setData(payload);
+        setBaselineAssets(payload.totals.assets);
       } catch (loadError) {
         // Un aggiornamento silenzioso non cancella dati o errori visibili: ci pensa
         // il prossimo Aggiorna a mostrare cosa non va.
         if (silent) return;
         setData(null);
+        setBaselineAssets(null);
         setError(
           loadError instanceof Error ? loadError.message : 'Indice del drive non disponibile.',
         );
@@ -368,6 +374,11 @@ export default function DrivePage() {
   // Se l'agente non risponde lo stato della copia sarebbe un falso "non configurata".
   const backup = data?.agent.reachable ? backupView(data.agent.backup) : null;
 
+  // Il refresh silenzioso aggiorna solo i numeri: se sono comparsi file nuovi la
+  // griglia è vecchia, e lo diciamo invece di ricaricare le anteprime da soli.
+  const pendingAssets =
+    data && baselineAssets !== null ? Math.max(0, data.totals.assets - baselineAssets) : 0;
+
   return (
     <main className="min-h-screen bg-zinc-950 p-5 text-white md:p-10">
       <div className="mx-auto max-w-6xl">
@@ -534,6 +545,31 @@ export default function DrivePage() {
                   </div>
                 </dl>
               </section>
+            )}
+
+            {pendingAssets > 0 && (
+              <div
+                role="status"
+                className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#ff914d]/30 bg-[#ff914d]/10 px-4 py-3 text-sm"
+              >
+                <p className="text-[#ffd7b8]">
+                  {pendingAssets === 1 ? '1 nuovo file' : `${pendingAssets} nuovi file`} sul disco
+                  dall’ultimo aggiornamento.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  disabled={loading}
+                  className={BTN_SECONDARY}
+                >
+                  {loading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <RefreshCw size={16} />
+                  )}
+                  Ricarica indice
+                </button>
+              </div>
             )}
 
             <div className="mt-6 flex flex-col gap-4">
