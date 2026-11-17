@@ -374,6 +374,10 @@ export default function DrivePage() {
   // Se l'agente non risponde lo stato della copia sarebbe un falso "non configurata".
   const backup = data?.agent.reachable ? backupView(data.agent.backup) : null;
 
+  // Sito deployato senza tunnel: sync, caricamenti e nuove cartelle passano
+  // dall'agente, quindi da qui fallirebbero sempre. Meglio non offrirli.
+  const agentRemote = data !== null && !data.agent.local && !data.agent.reachable;
+
   // Il refresh silenzioso aggiorna solo i numeri: se sono comparsi file nuovi la
   // griglia è vecchia, e lo diciamo invece di ricaricare le anteprime da soli.
   const pendingAssets =
@@ -404,7 +408,7 @@ export default function DrivePage() {
             <select
               value={uploadFolder}
               onChange={(event) => setUploadFolder(event.target.value)}
-              disabled={uploading || !access}
+              disabled={uploading || !access || agentRemote}
               aria-label="Cartella di destinazione del caricamento"
               className="h-10 rounded-lg border border-zinc-700/80 bg-zinc-950/50 px-3 text-sm text-zinc-200 outline-none transition-colors focus:border-[#ff914d]/45 disabled:opacity-50"
             >
@@ -417,7 +421,9 @@ export default function DrivePage() {
             </select>
             <label
               className={`${BTN_PRIMARY} ${
-                uploading || !access ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+                uploading || !access || agentRemote
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
               }`}
             >
               {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
@@ -439,7 +445,8 @@ export default function DrivePage() {
             <button
               type="button"
               onClick={() => void createFolder()}
-              disabled={creating || !access}
+              disabled={creating || !access || agentRemote}
+              title={agentRemote ? 'Cartelle: solo dal Mac, dove gira l’agente.' : undefined}
               className={BTN_SECONDARY}
             >
               {creating ? <Loader2 size={16} className="animate-spin" /> : <FolderPlus size={16} />}
@@ -448,7 +455,8 @@ export default function DrivePage() {
             <button
               type="button"
               onClick={() => void syncIndex()}
-              disabled={syncing || !access}
+              disabled={syncing || !access || agentRemote}
+              title={agentRemote ? 'Sincronizzazione: solo dal Mac, dove gira l’agente.' : undefined}
               className={BTN_PRIMARY}
             >
               {syncing ? <Loader2 size={16} className="animate-spin" /> : <HardDrive size={16} />}
@@ -524,6 +532,8 @@ export default function DrivePage() {
                       Dal Mac il drive funziona già: per usarlo anche dal sito serve il tunnel
                       Cloudflare verso l’agente, con il suo indirizzo in{' '}
                       <code className="font-mono">DRIVE_AGENT_URL</code> e il service token di Access.
+                      Da qui puoi solo consultare i file già indicizzati: sincronizzazione e
+                      caricamenti restano sul Mac.
                     </p>
                   )}
                 </div>
@@ -649,9 +659,19 @@ export default function DrivePage() {
                   <>
                     <p className="font-semibold text-zinc-200">Nessun file nell’indice.</p>
                     <p className="mt-2">
-                      Con Hiksemi collegato e l’agente attivo, premi{' '}
-                      <span className="text-[#ff914d]">Sincronizza indice</span>: l’indice legge i
-                      file già presenti sul disco senza ricaricarli.
+                      {agentRemote ? (
+                        <>
+                          L’indice lo costruisce l’agente sul Mac del disco: sincronizzalo da lì
+                          (pulsante <span className="text-[#ff914d]">Sincronizza indice</span>),
+                          oppure collega il tunnel Cloudflare per farlo anche da questo sito.
+                        </>
+                      ) : (
+                        <>
+                          Con Hiksemi collegato e l’agente attivo, premi{' '}
+                          <span className="text-[#ff914d]">Sincronizza indice</span>: l’indice
+                          legge i file già presenti sul disco senza ricaricarli.
+                        </>
+                      )}
                     </p>
                   </>
                 ) : (
