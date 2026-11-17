@@ -1,0 +1,248 @@
+import 'server-only';
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
+import { getStaffRole } from '@/lib/staff-access';
+import { driveKindFromMime, isDriveId, type DriveKind } from '@/lib/drive-model';
+
+/** Tutto cio' che parla con l'agente locale o firma i suoi URL resta sul server. */
+
+const AGENT_TIMEOUT_MS = 6000;
+const DEFAULT_AGENT_URL = 'http://127.0.0.1:8787';
+const MEDIA_TTL_MS = 60 * 60 * 1000;
+
+export class DriveError extends Error {
+  status: number;
+
+  constructor(message: string, status = 502) {
+    super(message);
+    this.name = 'DriveError';
+    this.status = status;
+  }
+}
+
+export type DriveMediaVariant = 'thumb' | 'file';
+
+export function driveAgentUrl() {
+  return (process.env.DRIVE_AGENT_URL?.trim() || DEFAULT_AGENT_URL).replace(/\/+$/, '');
+}
+
+/** timeoutMs = 0 disattiva il timeout: serve ai trasferimenti con Range. */
+export async function fetchAgent(
+  pathname: string,
+  init: RequestInit = {},
+  timeoutMs = AGENT_TIMEOUT_MS,
+) {
+  return fetch(`${driveAgentUrl()}${pathname}`, {
+    ...init,
+    headers: (init.headers as Record<string, string>) || {},
+    cache: 'no-store',
+    ...(timeoutMs > 0 ? { signal: AbortSignal.timeout(timeoutMs) } : {}),
+  });
+}
+
+export type IndexedAsset = {
+  remoteId: string;
+  name: string;
+  folderPath: string;
+  relPath: string;
+  mime: string;
+  kind: DriveKind;
+  sizeBytes: number;
+  sha256: string;
+  duplicateOf: string | null;
+  width: number | null;
+  height: number | null;
+  durationSeconds: number | null;
+  hasThumb: boolean;
+  capturedAt: string;
+};
+
+type AgentAsset = Record<string, unknown>;
+
+function text(value: unknown, maxLength: number) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  return trimmed.length > 0 && trimmed.length <= maxLength ? trimmed : '';
+}
+
+function positiveInteger(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? Math.round(number) : null;
+}
+
+/** Scarta le righe dell'agente che non rispettano i vincoli delle tabelle. */
+export function toIndexedAsset(raw: AgentAsset): IndexedAsset | null {
+  const remoteId = raw.id;
+  if (!isDriveId(remoteId)) return null;
+
+  const name = text(raw.name, 180);
+  const relPath = text(raw.relPath, 1024);
+  const sha256 = text(raw.sha256, 64).toLowerCase();
+  const sizeBytes = Number(raw.size);
+  const createdAt = text(raw.createdAt, 40);
+
+  if (!name || !relPath || !/^[0-9a-f]{64}$/.test(sha256) || !(sizeBytes > 0)) return null;
+  const captured = new Date(createdAt);
+  if (Number.isNaN(captured.getTime())) return null;
+
+  const mime = text(raw.mime, 160) || 'application/octet-stream';
+  const folderPath = typeof raw.folder === 'string' ? text(raw.folder, 512) : '';
+  const duplicateOf = isDriveId(raw.duplicateOf) && raw.duplicateOf !== remoteId ? raw.duplicateOf : null;
+  const duration = Number(raw.duration);
+
+  return {
+    remoteId,
+    name,
+    folderPath,
+    relPath,
+    mime,
+    kind: driveKindFromMime(mime),
+    sizeBytes: Math.round(sizeBytes),
+    sha256,
+    duplicateOf,
+    width: positiveInteger(raw.width),
+    height: positiveInteger(raw.height),
+    durationSeconds: Number.isFinite(duration) && duration > 0 ? duration : null,
+    hasThumb: raw.thumb === true,
+    capturedAt: captured.toISOString(),
+  };
+}
+
+export async function fetchAgentIndex() {
+  let response: Response;
+  try {
+    response = await fetchAgent('/api/files');
+  } catch {
+    throw new DriveError(
+      "L'agente del drive non risponde: deve girare sullo stesso Mac del gestionale, con Hiksemi collegato.",
+      503,
+    );
+  }
+  if (!response.ok) {
+    throw new DriveError(`L'agente del drive ha risposto ${response.status}.`, 502);
+  }
+
+  const payload = (await response.json().catch(() => null)) as
+    | { root?: unknown; assets?: unknown }
+    | null;
+  if (!payload || !Array.isArray(payload.assets)) {
+    throw new DriveError("Risposta dell'agente non riconosciuta.", 502);
+  }
+
+  const assets = payload.assets
+    .map((item) => (item && typeof item === 'object' ? toIndexedAsset(item as AgentAsset) : null))
+    .filter((item): item is IndexedAsset => item !== null);
+
+  return {
+    root: typeof payload.root === 'string' ? payload.root : null,
+    assets,
+  };
+}
+
+function mediaSecret() {
+  const value = process.env.DRIVE_MEDIA_SECRET?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!value) throw new DriveError('Configurazione server non disponibile.', 500);
+  return value;
+}
+
+function mediaSignature(id: string, variant: DriveMediaVariant, expiresAt: number) {
+  return createHmac('sha256', mediaSecret())
+    .update(`v1|${variant}|${id}|${expiresAt}`)
+    .digest('base64url');
+}
+
+/** Token breve nell'URL: <img> e <video> non possono mandare header Authorization. */
+export function signDriveMedia(id: string, variant: DriveMediaVariant, ttlMs = MEDIA_TTL_MS) {
+  const expiresAt = Date.now() + ttlMs;
+  return `${expiresAt}.${mediaSignature(id, variant, expiresAt)}`;
+}
+
+export function verifyDriveMedia(
+  id: string,
+  variant: DriveMediaVariant,
+  value: string | null,
+) {
+  if (!value) return false;
+  const [expiresRaw, signature] = value.split('.');
+  const expiresAt = Number(expiresRaw);
+  if (!signature || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return false;
+
+  let given: Buffer;
+  let expected: Buffer;
+  try {
+    given = Buffer.from(signature, 'base64url');
+    expected = Buffer.from(mediaSignature(id, variant, expiresAt), 'base64url');
+  } catch {
+    return false;
+  }
+  return given.length === expected.length && timingSafeEqual(given, expected);
+}
+
+let anonClient: SupabaseClient | null = null;
+let adminClient: SupabaseClient | null = null;
+
+function supabaseUrl() {
+  const value = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!value) throw new DriveError('Configurazione Supabase mancante.', 500);
+  return value;
+}
+
+function anonKey() {
+  const value = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!value) throw new DriveError('Configurazione Supabase pubblica mancante.', 500);
+  return value;
+}
+
+export function driveAnonClient() {
+  if (!anonClient) {
+    anonClient = createClient(supabaseUrl(), anonKey(), {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+  }
+  return anonClient;
+}
+
+export function driveAdminClient() {
+  if (!adminClient) {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) {
+      throw new DriveError(
+        'Configurazione server mancante: aggiungi SUPABASE_SERVICE_ROLE_KEY.',
+        500,
+      );
+    }
+    adminClient = createClient(supabaseUrl(), serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+  }
+  return adminClient;
+}
+
+/** Stessa verifica delle altre API staff: token Bearer + allowlist authorized_users. */
+export async function requireDriveStaff(request: Request) {
+  const token = request.headers.get('authorization')?.match(/^Bearer (.+)$/)?.[1] || '';
+  if (!token) throw new DriveError('Accesso staff richiesto.', 401);
+
+  const {
+    data: { user },
+    error,
+  } = await driveAnonClient().auth.getUser(token);
+  if (error || !user) throw new DriveError('Sessione staff non valida.', 401);
+
+  const client = driveAdminClient();
+  const role = await getStaffRole(client, user as User);
+  if (!role) throw new DriveError('Accesso staff richiesto.', 403);
+
+  return { client, user: user as User, role };
+}
+
+export function driveErrorResponse(error: unknown, context: string) {
+  if (error instanceof DriveError) {
+    return Response.json({ error: error.message }, { status: error.status, headers: { 'Cache-Control': 'private, no-store' } });
+  }
+  console.error(context);
+  return Response.json(
+    { error: 'Operazione non riuscita. Riprova.' },
+    { status: 500, headers: { 'Cache-Control': 'private, no-store' } },
+  );
+}

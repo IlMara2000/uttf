@@ -13,6 +13,7 @@ import {
   Loader2,
   Sparkles,
   FileText,
+  HardDrive,
   ArrowLeft,
   CalendarDays,
   Users,
@@ -37,7 +38,7 @@ const ShiftPlanner = dynamic(() => import('@/components/ShiftPlanner'));
 const NotesManager = dynamic(() => import('@/components/NotesManager'));
 const AccountSettings = dynamic(() => import('@/components/AccountSettings'));
 
-type ActiveView = 'menu' | 'calendar' | 'publish' | 'notes' | 'newsletter' | 'reviews';
+type ActiveView = 'menu' | 'calendar' | 'publish' | 'drive' | 'notes' | 'newsletter' | 'reviews';
 
 type NewsletterSubscriber = {
   created_at: string;
@@ -403,6 +404,13 @@ export default function Dashboard() {
       subtitle: 'Pubblica e gestisci i contenuti',
       icon: <Layers size={18} />,
       action: () => setActiveView('publish'),
+    },
+    {
+      key: 'drive' as ActiveView,
+      title: 'Drive',
+      subtitle: 'Foto e video sul disco locale',
+      icon: <HardDrive size={18} />,
+      action: () => router.push('/drive'),
     },
     {
       key: 'notes' as ActiveView,
