@@ -29,10 +29,21 @@ export function driveAgentUrl() {
 /** Service token di Cloudflare Access: lo presenta il server Next al tunnel.
  * Il browser non lo vede mai e il disco non e' raggiungibile senza. */
 function accessHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+
   const clientId = process.env.CF_ACCESS_CLIENT_ID?.trim();
   const clientSecret = process.env.CF_ACCESS_CLIENT_SECRET?.trim();
-  if (!clientId || !clientSecret) return {};
-  return { 'CF-Access-Client-Id': clientId, 'CF-Access-Client-Secret': clientSecret };
+  if (clientId && clientSecret) {
+    headers['CF-Access-Client-Id'] = clientId;
+    headers['CF-Access-Client-Secret'] = clientSecret;
+  }
+
+  // Stesso segreto che l'agente usa per le firme: qui autorizza le rotte di
+  // controllo (elenco, cartelle, cancellazioni) quando si passa dal tunnel.
+  const token = process.env.DRIVE_MEDIA_SECRET?.trim();
+  if (token) headers['x-drive-token'] = token;
+
+  return headers;
 }
 
 /** timeoutMs = 0 disattiva il timeout: serve ai trasferimenti con Range. */

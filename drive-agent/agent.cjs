@@ -33,6 +33,9 @@
  * Accesso diretto (tunnel): con DRIVE_MEDIA_SECRET gli URL /file/:id e gli upload
  * devono portare exp+sig (HMAC-SHA256). DRIVE_ALLOWED_ORIGIN concede il CORS al
  * solo gestionale, cosi' il browser carica e riproduce senza passare da Vercel.
+ * Con lo stesso segreto le rotte di controllo (elenco file, cartelle,
+ * cancellazioni, pagina) accettano dall'esterno solo l'header `x-drive-token`:
+ * le chiamate fatte dal Mac su 127.0.0.1 non hanno bisogno di nulla.
  */
 
 const http = require('node:http');
@@ -398,6 +401,33 @@ function signatureValid(url, mode, target) {
   if (!Number.isFinite(expiresAt) || expiresAt < Date.now() || given.length === 0) return false;
 
   const expected = Buffer.from(signedValue(mode, target, expiresAt), 'base64url');
+  return given.length === expected.length && crypto.timingSafeEqual(given, expected);
+}
+
+/* ── token per le rotte di controllo ───────────────────────────────────── */
+
+/** Richiesta arrivata dall'esterno (tunnel, LAN): non ha l'host di loopback e
+ * Cloudflare ci mette i suoi header. Quelle fatte dal Mac restano locali. */
+function fromOutside(req) {
+  if (req.headers['cf-ray'] || req.headers['cf-connecting-ip']) return true;
+  const host = String(req.headers.host || '');
+  return !/^(127\.0\.0\.1|localhost|\[::1\])(:|$)/.test(host);
+}
+
+/** Elenco file, cartelle, cancellazioni e pagina di consultazione non hanno una
+ * firma come /file e /api/files: fuori dal Mac valgono solo col token condiviso
+ * col gestionale. Senza DRIVE_MEDIA_SECRET l'agente resta aperto come prima. */
+function requiresAgentToken(req, pathname) {
+  if (!MEDIA_SECRET) return false;
+  if (req.method === 'POST' && pathname === '/api/files') return false; // firma HMAC
+  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/file/')) return false;
+  if (req.method === 'GET' && pathname === '/api/health') return false; // controllo di stato
+  return fromOutside(req);
+}
+
+function tokenValid(req) {
+  const given = Buffer.from(String(req.headers['x-drive-token'] || ''));
+  const expected = Buffer.from(MEDIA_SECRET);
   return given.length === expected.length && crypto.timingSafeEqual(given, expected);
 }
 
@@ -1050,6 +1080,12 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
       return res.end();
+    }
+
+    // Dall'esterno servono il token: elenco, cartelle e cancellazioni non sono
+    // protetti da una firma come i file.
+    if (requiresAgentToken(req, pathname) && !tokenValid(req)) {
+      return sendJson(res, 401, { error: 'token dell’agente mancante o errato' });
     }
 
     if (req.method === 'POST' && pathname === '/api/files') {
