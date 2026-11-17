@@ -1,8 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import { useState, type MouseEvent } from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import type { MouseEvent } from 'react';
+import BookingPanel from '@/components/BookingPanel';
+import WeeklyHours from '@/components/WeeklyHours';
+import StaffBookingEditor from '@/components/StaffBookingEditor';
 
 const destination = encodeURIComponent('Via dei Biancospini, 4, 20089 Rozzano MI, Italia');
 const directions = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
@@ -20,6 +23,8 @@ function openDirections(event: MouseEvent<HTMLAnchorElement>) {
 }
 
 export default function VisitSection() {
+  const [bookingOpen, setBookingOpen] = useState(false);
+
   return (
     <section className="visit-stage" aria-labelledby="visit-title">
       <Image src="/bg-uttf.jpg" alt="" fill sizes="100vw" className="visit-background" />
@@ -28,9 +33,16 @@ export default function VisitSection() {
           <span className="eyebrow">Ci vediamo a Rozzano</span>
           <h2 id="visit-title">Il nostro punto<br />di incontro.</h2>
           <p>Via dei Biancospini, 4 · Rozzano (MI)</p>
-          <a className="text-link" href="mailto:ass.uttf@gmail.com">
-            Scrivici da qui via Mail <ArrowUpRight size={17} />
-          </a>
+          <button
+            type="button"
+            className="text-link booking-trigger"
+            aria-haspopup="dialog"
+            aria-expanded={bookingOpen}
+            onClick={() => setBookingOpen(true)}
+          >
+            Vieni a trovarci, dai <ArrowUpRight size={17} />
+          </button>
+          <StaffBookingEditor />
         </div>
         <div className="visit-map">
           <iframe
@@ -45,8 +57,10 @@ export default function VisitSection() {
               Come raggiungerci <ArrowUpRight size={18} />
             </a>
           </div>
+          <WeeklyHours />
         </div>
       </div>
+      <BookingPanel key={String(bookingOpen)} open={bookingOpen} onClose={() => setBookingOpen(false)} />
     </section>
   );
 }

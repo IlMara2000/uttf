@@ -1665,5 +1665,239 @@
   }
 }
 
+/* Booking panel, weekly hours and staff editor. */
+.booking-trigger {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.booking-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 151;
+  width: min(560px, calc(100% - 32px));
+  max-height: 88dvh;
+  overflow: auto;
+  background: #fff;
+  color: #161616;
+  border: 2px solid #161616;
+  border-radius: 22px;
+  box-shadow: 8px 8px 0 #ff914d;
+  font-family: var(--font-sans), sans-serif;
+}
+.booking-body {
+  padding: 34px 30px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.booking-title {
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  margin-top: 10px;
+}
+.booking-intro {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #161616;
+}
+.booking-note,
+.booking-hint {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #575757;
+}
+.booking-subtitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 12px;
+}
+.booking-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.booking-day h4 {
+  font-size: 13px;
+  font-weight: 700;
+}
+.booking-slots,
+.staff-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.booking-slots li,
+.staff-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 2px solid #161616;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+.clay-button.small {
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 12px;
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 #161616;
+}
+.clay-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.booking-back {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+.booking-apertura {
+  margin-top: 14px;
+}
+.booking-body .editorial-form {
+  gap: 10px;
+}
+.booking-body select {
+  background: #fff;
+  color: #161616;
+  padding: 14px 16px;
+  border: 2px solid #161616;
+  border-radius: 10px;
+  width: 100%;
+  font: 14px var(--font-sans), sans-serif;
+}
+.booking-body > .clay-button,
+.booking-body > .text-link {
+  align-self: flex-start;
+}
+.weekly-hours {
+  border-top: 2px solid #161616;
+  margin-top: 26px;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.weekly-hours h3 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  margin-top: 8px;
+}
+.weekly-hours > p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #d6d6d6;
+}
+.weekly-hours .booking-note {
+  color: #d6d6d6;
+}
+.weekly-hours .booking-note a {
+  color: #ff914d;
+  font-weight: 700;
+}
+.weekly-hours-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 13px;
+  background: #fff;
+  color: #161616;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.weekly-hours-table th,
+.weekly-hours-table td {
+  border: 1px solid #161616;
+  padding: 10px 12px;
+  text-align: left;
+}
+.weekly-hours-table thead th {
+  background: #161616;
+  color: #fff;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.weekly-hours-table tbody th {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.staff-edit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  background: #fff;
+  border: 2px solid #161616;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 #161616;
+}
+.staff-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.staff-tabs button {
+  border: 2px solid #161616;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.staff-tabs button.active {
+  background: #ff914d;
+}
+.staff-form h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.staff-actions {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.staff-day {
+  border: 2px solid #161616;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.staff-day legend {
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0 6px;
+}
+.staff-day label {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 @media (max-width: 520px) {
 }
