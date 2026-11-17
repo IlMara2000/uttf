@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { DriveError, fetchAgent } from '@/lib/drive-server';
+import { DriveError, driveAgentUrl, fetchAgent } from '@/lib/drive-server';
 import {
   driveNumberOrNull,
   type DriveAgentStatus,
@@ -64,17 +64,30 @@ function backupStatus(health: AgentHealth | null): DriveBackupStatus {
   };
 }
 
+/** Su Vercel (o con un URL non locale) l'agente non è raggiungibile da qui:
+ * il messaggio deve dirlo, non suggerire comandi launchctl sul Mac. */
+function agentIsLocal() {
+  if (process.env.VERCEL) return false;
+  return /^http:\/\/(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/.test(driveAgentUrl());
+}
+
+const OFFLINE_LOCAL =
+  'Agente del drive non raggiungibile: i file restano sul disco, ma anteprime e originali non sono disponibili.';
+const OFFLINE_REMOTE =
+  'Il gestionale gira su Vercel e non raggiunge l’agente, che ascolta solo sul Mac del disco: senza tunnel il drive resta vuoto qui.';
+
 export async function readAgentStatus(): Promise<DriveAgentStatus> {
+  const local = agentIsLocal();
   const offline: DriveAgentStatus = {
     reachable: false,
+    local,
     root: null,
     files: null,
     bytes: null,
     freeBytes: null,
     totalBytes: null,
     backup: backupOffline,
-    error:
-      'Agente del drive non raggiungibile: i file restano sul disco, ma anteprime e originali non sono disponibili.',
+    error: local ? OFFLINE_LOCAL : OFFLINE_REMOTE,
   };
 
   let response: Response;
@@ -93,6 +106,7 @@ export async function readAgentStatus(): Promise<DriveAgentStatus> {
 
   return {
     reachable: true,
+    local,
     root: typeof health.root === 'string' ? health.root : null,
     files: driveNumberOrNull(health.files),
     bytes: driveNumberOrNull(health.bytes),

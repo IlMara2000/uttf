@@ -50,6 +50,8 @@ export type DriveBackupStatus = {
 
 export type DriveAgentStatus = {
   reachable: boolean;
+  /** Agente raggiungibile solo da questo Mac (loopback): dal sito deployato no. */
+  local: boolean;
   root: string | null;
   files: number | null;
   bytes: number | null;

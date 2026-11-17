@@ -510,11 +510,22 @@ export default function DrivePage() {
                 <TriangleAlert size={18} className="mt-0.5 shrink-0" />
                 <div className="min-w-0">
                   <p>{data.agent.error}</p>
-                  <p className="mt-1 text-xs text-amber-200/80">
-                    L’agente ascolta solo in locale: controlla che Hiksemi sia collegato e il job attivo
-                    (<code className="font-mono">launchctl kickstart -k gui/$(id -u)/com.uttf.drive-agent</code>),
-                    poi premi Sincronizza indice.
-                  </p>
+                  {data.agent.local ? (
+                    <p className="mt-1 text-xs text-amber-200/80">
+                      L’agente ascolta solo in locale: controlla che Hiksemi sia collegato e il job
+                      attivo (
+                      <code className="font-mono">
+                        launchctl kickstart -k gui/$(id -u)/com.uttf.drive-agent
+                      </code>
+                      ), poi premi Sincronizza indice.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-amber-200/80">
+                      Dal Mac il drive funziona già: per usarlo anche dal sito serve il tunnel
+                      Cloudflare verso l’agente, con il suo indirizzo in{' '}
+                      <code className="font-mono">DRIVE_AGENT_URL</code> e il service token di Access.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
