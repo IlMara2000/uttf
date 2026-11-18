@@ -54,9 +54,15 @@ Serve un Vercel Access Token in un file fuori dal repo, leggibile solo da te:
 
 ```sh
 mkdir -p "$HOME/Library/Application Support/UTTF"
-printf 'VERCEL_TOKEN=%s\n' 'IL_TOKEN' > "$HOME/Library/Application Support/UTTF/vercel.env"
-chmod 600 "$HOME/Library/Application Support/UTTF/vercel.env"
+read -rs -p 'Token Vercel: ' VERCEL_TOKEN && \
+  printf 'VERCEL_TOKEN=%s\n' "$VERCEL_TOKEN" > "$HOME/Library/Application Support/UTTF/vercel.env" && \
+  chmod 600 "$HOME/Library/Application Support/UTTF/vercel.env" && \
+  sh "$HOME/Library/Application Support/UTTF/drive-quick-tunnel.sh" --sync
 ```
+
+Il `read` non lascia il token nella history. Il token della sessione CLI (`vercel
+login`) non va bene: scade in poche ore e l'API non permette di crearne uno nuovo
+con quella sessione (`403 Cannot create tokens for this app`).
 
 Meglio se **scoped al progetto `uttf-app`**: [vercel.com/account/tokens](https://vercel.com/account/tokens)
 → Create Token, Scope `uttf-app`. Lo script legge solo `VERCEL_TOKEN`; gli
