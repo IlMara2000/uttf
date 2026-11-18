@@ -10,6 +10,7 @@ import {
   FolderPlus,
   HardDrive,
   ImageOff,
+  MoreHorizontal,
   Loader2,
   RefreshCw,
   Search,
@@ -111,8 +112,6 @@ export default function DrivePage() {
   const [folder, setFolder] = useState('');
   const [folderMenu, setFolderMenu] = useState<string | null>(null);
   const [folderBusy, setFolderBusy] = useState<string | null>(null);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressed = useRef(false);
   const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
 
   // Token in memoria, aggiornato da onAuthStateChange. Una getSession() per
@@ -366,33 +365,6 @@ export default function DrivePage() {
     } finally {
       setCreating(false);
     }
-  }
-
-  function startLongPress(folderPath: string) {
-    if (!canUseAgent) return;
-    longPressed.current = false;
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    longPressTimer.current = setTimeout(() => {
-      longPressed.current = true;
-      setFolderMenu(folderPath);
-    }, 450);
-  }
-
-  function cancelLongPress() {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }
-
-  function handleFolderClick(folderPath: string) {
-    if (longPressed.current) {
-      longPressed.current = false;
-      return;
-    }
-    setFolderMenu(null);
-    setFolder(folderPath);
-    setUploadFolder(folderPath);
   }
 
   async function renameFolder(folderPath: string) {
@@ -721,16 +693,14 @@ export default function DrivePage() {
                   <Folder size={14} /> Tutte
                 </button>
                 {folders.map((item) => (
-                  <div key={item.path} className="relative" data-folder-menu>
+                  <div key={item.path} className="relative flex items-center gap-1" data-folder-menu>
                     <button
                       type="button"
-                      onClick={() => handleFolderClick(item.path)}
-                      onMouseDown={() => startLongPress(item.path)}
-                      onMouseUp={cancelLongPress}
-                      onMouseLeave={cancelLongPress}
-                      onTouchStart={() => startLongPress(item.path)}
-                      onTouchEnd={cancelLongPress}
-                      onTouchMove={cancelLongPress}
+                      onClick={() => {
+                        setFolderMenu(null);
+                        setFolder(item.path);
+                        setUploadFolder(item.path);
+                      }}
                       disabled={folderBusy === item.path}
                       className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors select-none ${
                         folder === item.path
@@ -740,6 +710,18 @@ export default function DrivePage() {
                     >
                       <Folder size={14} /> {item.path}
                       <span className="tabular-nums opacity-60">{item.assetCount}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setFolderMenu(folderMenu === item.path ? null : item.path);
+                      }}
+                      disabled={folderBusy === item.path}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950/50 text-zinc-400 transition-colors hover:text-zinc-200 disabled:opacity-50"
+                      aria-label={`Gestisci cartella ${item.path}`}
+                    >
+                      <MoreHorizontal size={14} />
                     </button>
                     <div
                       className={`absolute left-0 top-full z-20 mt-1 min-w-[150px] origin-top-left overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-900 shadow-xl shadow-black/40 transition-all duration-150 ${
@@ -809,7 +791,7 @@ export default function DrivePage() {
                 {visible.map((asset) => (
                   <article
                     key={asset.id}
-                    className="overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/25 transition-colors hover:border-[#ff914d]/35"
+                    className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/25 transition-colors hover:border-[#ff914d]/35"
                   >
                     <a
                       href={asset.directFileUrl ?? asset.fileUrl}
