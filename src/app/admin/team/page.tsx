@@ -1,9 +1,11 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { UserPlus, Trash2, Fingerprint } from 'lucide-react'
 import { motion } from 'framer-motion'
 import ManagementBottomLogo from '@/components/ManagementBottomLogo'
+import { TOKEN_EXPIRY_MARGIN_MS } from '@/lib/auth-cookie'
 
 type TeamProfile = {
   id: string;
@@ -12,7 +14,9 @@ type TeamProfile = {
 }
 
 export default function AdminTeamPage() {
+  const router = useRouter()
   const [profiles, setProfiles] = useState<TeamProfile[]>([])
+  const [authLoading, setAuthLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('') // AGGIUNTO EMAIL
   const [role, setRole] = useState('staff')
@@ -24,9 +28,22 @@ export default function AdminTeamPage() {
   }, [])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchTeam()
-  }, [fetchTeam])
+    async function init() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token || (session.expires_at ?? 0) * 1000 - Date.now() < TOKEN_EXPIRY_MARGIN_MS) {
+        router.replace('/login?next=/admin/team')
+        return
+      }
+      const { data: { user } } = await supabase.auth.getUser(session.access_token)
+      if (!user) {
+        router.replace('/login?next=/admin/team')
+        return
+      }
+      setAuthLoading(false)
+      void fetchTeam()
+    }
+    void init()
+  }, [fetchTeam, router])
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,8 +74,16 @@ export default function AdminTeamPage() {
     else void fetchTeam();
   }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
+        <span className="text-sm text-zinc-500">Caricamento…</span>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-6 md:p-12 bg-transparent min-h-screen text-white font-sans selection:bg-orange-500">
+    <div data-page="admin-team" className="p-6 md:p-12 bg-transparent min-h-screen text-white font-sans selection:bg-orange-500">
       <header className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-orange-500 mb-4">

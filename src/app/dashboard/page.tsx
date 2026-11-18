@@ -5,6 +5,7 @@ import { escapeCsvCell } from '@/lib/csv';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/errors';
+import { TOKEN_EXPIRY_MARGIN_MS } from '@/lib/auth-cookie';
 import {
   Send,
   LogOut,
@@ -199,11 +200,20 @@ export default function Dashboard() {
   useEffect(() => {
     async function init() {
       const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token || (session.expires_at ?? 0) * 1000 - Date.now() < TOKEN_EXPIRY_MARGIN_MS) {
+        router.replace('/login?next=/dashboard');
+        return;
+      }
+
+      const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await supabase.auth.getUser(session.access_token);
 
       if (!user) {
-        router.replace('/login');
+        router.replace('/login?next=/dashboard');
         return;
       }
 
@@ -458,7 +468,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="relative flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-zinc-950 font-sans text-zinc-100 antialiased">
+    <div data-page="dashboard" className="relative flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-zinc-950 font-sans text-zinc-100 antialiased">
       <div
         className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_100%_60%_at_50%_-15%,rgba(255,145,77,0.09),transparent_55%),radial-gradient(ellipse_70%_50%_at_100%_50%,rgba(255,145,77,0.04),transparent)]"
         aria-hidden
