@@ -56,9 +56,16 @@ export default function LoginPage() {
       
       // Accesso consentito
       router.replace(getSafeNextPath());
-    } catch {
-      // Se l'account non esiste o la password è errata, finisce qui
-      alert("Accesso non riuscito. Verifica email e password.");
+    } catch (error) {
+      // Il login usa lo stesso budget di richieste dei refresh: con il limite
+      // esaurito anche la password giusta viene rifiutata, e dire "credenziali
+      // errate" manderebbe fuori strada.
+      const status = (error as { status?: number } | null)?.status;
+      alert(
+        status === 429
+          ? "Troppi tentativi di accesso ravvicinati. Aspetta qualche minuto e riprova."
+          : "Accesso non riuscito. Verifica email e password.",
+      );
       setLoading(false);
     }
   };
