@@ -57,12 +57,12 @@ export default function LoginPage() {
       // Accesso consentito
       router.replace(getSafeNextPath());
     } catch (error) {
-      // Il login usa lo stesso budget di richieste dei refresh: con il limite
-      // esaurito anche la password giusta viene rifiutata, e dire "credenziali
-      // errate" manderebbe fuori strada.
-      const status = (error as { status?: number } | null)?.status;
+      // Il login condivide il budget di richieste dei refresh: a limite esaurito
+      // anche la password giusta viene rifiutata, e "credenziali errate"
+      // manderebbe fuori strada.
+      const rateLimited = (error as { status?: number } | null)?.status === 429;
       alert(
-        status === 429
+        rateLimited
           ? "Troppi tentativi di accesso ravvicinati. Aspetta qualche minuto e riprova."
           : "Accesso non riuscito. Verifica email e password.",
       );
