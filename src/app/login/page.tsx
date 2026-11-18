@@ -7,6 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
+const SESSION_CHECK_TIMEOUT_MS = 3000;
+
 function getSafeNextPath() {
   const requestedPath = new URLSearchParams(window.location.search).get('next');
 
@@ -29,20 +31,33 @@ export default function LoginPage() {
 
   // 1. CONTROLLO SESSIONE: Se sei già loggato, vai dritto alla dashboard
   useEffect(() => {
-    const checkExistingSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        // L'utente aveva già fatto l'accesso in passato
-        router.replace(getSafeNextPath());
-      } else {
-        // Nessun accesso precedente, mostriamo il form
-        setLoading(false);
-        setIsCheckingSession(false);
-      }
+    let cancelled = false;
+    const showForm = () => {
+      if (cancelled) return;
+      setLoading(false);
+      setIsCheckingSession(false);
     };
 
-    checkExistingSession();
+    // Il lock di gotrue a volte non si rilascia (AbortError "Lock broken by
+    // another request"): senza un tetto il controllo non finisce mai e il form
+    // non compare, quindi non si puo' nemmeno fare login. Passati 3s si mostra
+    // comunque il form; se la sessione arriva dopo ed e' valida si entra lo stesso.
+    const timer = setTimeout(showForm, SESSION_CHECK_TIMEOUT_MS);
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled && data.session) {
+        clearTimeout(timer);
+        router.replace(getSafeNextPath());
+        return;
+      }
+      // Nessun accesso precedente (o controllo fallito): mostriamo il form.
+      showForm();
+    }, showForm);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
