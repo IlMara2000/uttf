@@ -122,7 +122,7 @@ export default function DrivePage() {
   const [moveTargetOpen, setMoveTargetOpen] = useState(false);
   const [selectionBusy, setSelectionBusy] = useState(false);
   const selectionModeRef = useRef(false);
-  const longPressRef = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
 
   // Token in memoria, aggiornato da onAuthStateChange. Una getSession() per
@@ -456,23 +456,20 @@ export default function DrivePage() {
     );
   }
 
-  function beginLongPress(id: string) {
+  function beginLongPress() {
     cancelLongPress();
     // Già in selezione: un tocco prolungato non deve azzerare i file già scelti.
     if (selectionModeRef.current) return;
-    longPressRef.current = {
-      id,
-      timer: setTimeout(() => {
-        longPressRef.current = null;
-        // Solo la modalità: nessun file pre-selezionato.
-        startSelection();
-      }, 450),
-    };
+    longPressRef.current = setTimeout(() => {
+      longPressRef.current = null;
+      // Solo la modalità: nessun file pre-selezionato.
+      startSelection();
+    }, 450);
   }
 
   function cancelLongPress() {
     if (!longPressRef.current) return;
-    clearTimeout(longPressRef.current.timer);
+    clearTimeout(longPressRef.current);
     longPressRef.current = null;
   }
 
@@ -540,11 +537,9 @@ export default function DrivePage() {
   async function renameSelected() {
     const asset = (data?.assets ?? []).find((item) => item.id === selected[0]);
     if (!asset) return;
-    setMoveTargetOpen(false);
-    const value = window.prompt('Nuovo nome del file', asset.name);
-    // Annullato o nome invariato: la selezione resta com'era.
-    if (value === null) return;
-    const nextName = value.trim();
+    const nextName = window.prompt('Nuovo nome del file', asset.name)?.trim() ?? '';
+    // Annullato, vuoto o invariato: la selezione resta com'era e il pannello
+    // resta aperto; a operazione riuscita ci pensa exitSelection.
     if (!nextName || nextName === asset.name) return;
     await runSelectionAction({ action: 'rename', ids: [asset.id], name: nextName });
   }
@@ -589,10 +584,10 @@ export default function DrivePage() {
   const moveTargets = useMemo(() => {
     const all = ['', ...folders.map((item) => item.path)];
     const from = new Set(
-      selected.map((id) => assets.find((asset) => asset.id === id)?.folderPath ?? ''),
+      assets.filter((asset) => selected.includes(asset.id)).map((asset) => asset.folderPath),
     );
     if (from.size !== 1) return all;
-    const [only] = [...from];
+    const [only] = from;
     return all.filter((item) => item !== only);
   }, [assets, folders, selected]);
 
@@ -1058,7 +1053,7 @@ export default function DrivePage() {
                       target="_blank"
                       rel="noreferrer"
                       draggable={false}
-                      onPointerDown={() => beginLongPress(asset.id)}
+                      onPointerDown={() => beginLongPress()}
                       onPointerUp={cancelLongPress}
                       onPointerLeave={cancelLongPress}
                       onPointerCancel={cancelLongPress}
