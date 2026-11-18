@@ -10,8 +10,8 @@
  *   diverso   la dimensione non corrisponde all'indice (copia vecchia o troncata)
  *   corrotto  la dimensione torna ma il contenuto e' cambiato (hash diverso)
  *
- *   node drive-agent/backup-verify.cjs
- *   node drive-agent/backup-verify.cjs --mirror-volume=/Volumes/XUSB_2TB
+ *   node drive-agent/backup-verify.cjs --mirror-volume=<cartella di copia>
+ *   node drive-agent/backup-verify.cjs --mirror-volume=<cartella> --root=<cartella drive>
  *   node drive-agent/backup-verify.cjs --size-only    (niente hash: veloce, non vede i corrotti)
  *   node drive-agent/backup-verify.cjs --json
  *
@@ -27,11 +27,11 @@ const MIRROR_SUBDIR = 'Drive Under the Tower Factory';
 const MANIFEST_NAME = '.uttf-manifest.json';
 
 const USAGE =
-  'Uso: node drive-agent/backup-verify.cjs [--root=<cartella drive>] [--mirror-volume=/Volumes/XUSB_2TB] [--size-only] [--json]';
+  'Uso: node drive-agent/backup-verify.cjs --mirror-volume=<cartella di copia> [--root=<cartella drive>] [--size-only] [--json]';
 
 const CONFIG = {
   root: process.env.DRIVE_ROOT || '/Volumes/HIKSEMI 1/Drive Under the Tower Factory',
-  mirrorVolume: process.env.DRIVE_MIRROR_VOLUME || '/Volumes/XUSB_2TB',
+  mirrorVolume: process.env.DRIVE_MIRROR_VOLUME || '',
   hash: true,
   json: false,
   help: false,
@@ -110,6 +110,12 @@ async function main() {
   if (CONFIG.help) {
     console.log(USAGE);
     return 0;
+  }
+
+  if (!CONFIG.mirrorVolume) {
+    throw new SetupError(
+      'nessun disco di copia indicato: passa --mirror-volume=<cartella> (oppure imposta DRIVE_MIRROR_VOLUME)',
+    );
   }
 
   const root = path.resolve(CONFIG.root);
