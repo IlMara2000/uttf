@@ -92,7 +92,8 @@ export async function PATCH(request: Request) {
   }
 }
 
-/** Cancella una cartella (e il suo contenuto) sul disco del drive. */
+/** Elimina una cartella sul disco del drive lasciando i file: l'agente li
+ * sposta nella cartella superiore, così il contenuto non si perde. */
 export async function DELETE(request: Request) {
   try {
     await requireDriveStaff(request);

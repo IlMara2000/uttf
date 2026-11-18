@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
+  Check,
   ChevronLeft,
   Folder,
   FolderPlus,
@@ -13,8 +14,10 @@ import {
   MoreHorizontal,
   Loader2,
   RefreshCw,
+  Pencil,
   Search,
   Tag,
+  Trash2,
   TriangleAlert,
   Upload,
   X,
@@ -112,6 +115,14 @@ export default function DrivePage() {
   const [folder, setFolder] = useState('');
   const [folderMenu, setFolderMenu] = useState<string | null>(null);
   const [folderBusy, setFolderBusy] = useState<string | null>(null);
+  // Selezione multipla: si apre tenendo premuto su una scheda (o col pulsante
+  // Seleziona) senza pre-selezionare nulla, poi si toccano i file da gestire.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [moveTargetOpen, setMoveTargetOpen] = useState(false);
+  const [selectionBusy, setSelectionBusy] = useState(false);
+  const selectionModeRef = useRef(false);
+  const longPressRef = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null);
   const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
 
   // Token in memoria, aggiornato da onAuthStateChange. Una getSession() per
@@ -394,7 +405,11 @@ export default function DrivePage() {
   }
 
   async function deleteFolder(folderPath: string) {
-    if (!window.confirm(`Cancellare la cartella "${folderPath}" e il suo contenuto?`)) {
+    if (
+      !window.confirm(
+        `Eliminare la cartella "${folderPath}"? I file non si cancellano: passano nella cartella superiore.`,
+      )
+    ) {
       setFolderMenu(null);
       return;
     }
@@ -420,6 +435,128 @@ export default function DrivePage() {
     }
   }
 
+  function startSelection() {
+    selectionModeRef.current = true;
+    setSelectionMode(true);
+    setSelected([]);
+    setMoveTargetOpen(false);
+  }
+
+  function exitSelection() {
+    selectionModeRef.current = false;
+    setSelectionMode(false);
+    setSelected([]);
+    setMoveTargetOpen(false);
+    setSelectionBusy(false);
+  }
+
+  function toggleSelected(id: string) {
+    setSelected((previous) =>
+      previous.includes(id) ? previous.filter((item) => item !== id) : [...previous, id],
+    );
+  }
+
+  function beginLongPress(id: string) {
+    cancelLongPress();
+    longPressRef.current = {
+      id,
+      timer: setTimeout(() => {
+        longPressRef.current = null;
+        // Solo la modalità: nessun file pre-selezionato.
+        startSelection();
+      }, 450),
+    };
+  }
+
+  function cancelLongPress() {
+    if (!longPressRef.current) return;
+    clearTimeout(longPressRef.current.timer);
+    longPressRef.current = null;
+  }
+
+  /** Chiamate comuni alle azioni sulla selezione: agente, indice, griglia. */
+  async function runSelectionAction(body: Record<string, unknown>, done?: () => void) {
+    setSelectionBusy(true);
+    setError('');
+    try {
+      await request('/api/drive/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      await request('/api/drive/sync', { method: 'POST' });
+      await load();
+      done?.();
+      exitSelection();
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'Operazione non riuscita.');
+    } finally {
+      setSelectionBusy(false);
+    }
+  }
+
+  async function moveSelected(target: string) {
+    if (selected.length === 0) return;
+    await runSelectionAction({ action: 'move', ids: selected, folder: target });
+  }
+
+  async function createFolderFromSelection() {
+    if (selected.length === 0) return;
+    const suggested = folder ? `${folder}/` : '';
+    const value = window.prompt(
+      'Nome della nuova cartella che raccoglie i file selezionati',
+      suggested,
+    );
+    if (!value?.trim()) return;
+    const target = value.trim();
+
+    setSelectionBusy(true);
+    setError('');
+    try {
+      await request('/api/drive/folders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: target }),
+      });
+      await request('/api/drive/files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'move', ids: selected, folder: target }),
+      });
+      await request('/api/drive/sync', { method: 'POST' });
+      await load();
+      setFolder(target);
+      setUploadFolder(target);
+      exitSelection();
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'Cartella non creata.');
+    } finally {
+      setSelectionBusy(false);
+    }
+  }
+
+  async function renameSelected() {
+    const asset = (data?.assets ?? []).find((item) => item.id === selected[0]);
+    if (!asset) return;
+    setMoveTargetOpen(false);
+    const value = window.prompt('Nuovo nome del file', asset.name);
+    if (!value?.trim() || value.trim() === asset.name) {
+      exitSelection();
+      return;
+    }
+    await runSelectionAction({ action: 'rename', ids: [asset.id], name: value.trim() });
+  }
+
+  async function deleteSelected() {
+    if (selected.length === 0) return;
+    const question =
+      selected.length === 1
+        ? 'Cestinare il file selezionato?'
+        : `Cestinare i ${selected.length} file selezionati?`;
+    if (!window.confirm(question)) return;
+    await runSelectionAction({ action: 'delete', ids: selected });
+  }
+
   async function changeTag(asset: DriveAsset, action: 'add' | 'remove', tagName?: string) {
     const value = action === 'add' ? window.prompt(`Nuovo tag per "${asset.name}"`) : tagName;
     if (!value) return;
@@ -442,6 +579,9 @@ export default function DrivePage() {
 
   const folders = useMemo(() => data?.folders ?? [], [data]);
   const assets = useMemo(() => data?.assets ?? [], [data]);
+
+  // Destinazioni possibili per lo spostamento: radice e ogni cartella reale.
+  const moveTargets = ['', ...folders.map((item) => item.path)].filter((item) => item !== folder);
 
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -523,6 +663,15 @@ export default function DrivePage() {
             >
               {creating ? <Loader2 size={16} className="animate-spin" /> : <FolderPlus size={16} />}
               Nuova cartella
+            </button>
+            <button
+              type="button"
+              onClick={() => (selectionMode ? exitSelection() : startSelection())}
+              disabled={!canUseAgent || assets.length === 0}
+              className={BTN_SECONDARY}
+            >
+              {selectionMode ? <X size={16} /> : <Check size={16} />}
+              {selectionMode ? 'Annulla selezione' : 'Seleziona'}
             </button>
             <button
               type="button"
@@ -663,6 +812,91 @@ export default function DrivePage() {
               </div>
             )}
 
+            {selectionMode && (
+              <div className="mt-4 rounded-xl border border-[#ff914d]/30 bg-[#ff914d]/10 px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-[#ffd7b8]">
+                    {selected.length === 0
+                      ? 'Tocca i file da gestire'
+                      : `${selected.length} ${selected.length === 1 ? 'file selezionato' : 'file selezionati'}`}
+                  </p>
+                  <div className="ml-auto flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void createFolderFromSelection()}
+                      disabled={selected.length === 0 || selectionBusy || !canUseAgent}
+                      className={`${BTN_SECONDARY} h-9 px-3 text-xs`}
+                    >
+                      {selectionBusy ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <FolderPlus size={14} />
+                      )}
+                      Crea cartella
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMoveTargetOpen((open) => !open)}
+                      disabled={selected.length === 0 || selectionBusy || !canUseAgent}
+                      className={`${BTN_SECONDARY} h-9 px-3 text-xs`}
+                    >
+                      <Folder size={14} /> Sposta in…
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void renameSelected()}
+                      disabled={selected.length !== 1 || selectionBusy || !canUseAgent}
+                      className={`${BTN_SECONDARY} h-9 px-3 text-xs`}
+                    >
+                      <Pencil size={14} /> Rinomina
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void deleteSelected()}
+                      disabled={selected.length === 0 || selectionBusy || !canUseAgent}
+                      className={`${BTN} h-9 border border-red-500/40 bg-red-500/10 px-3 text-xs text-red-300 hover:bg-red-500/20`}
+                    >
+                      {selectionBusy ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                      Elimina
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exitSelection}
+                      className={`${BTN_SECONDARY} h-9 px-3 text-xs`}
+                    >
+                      <X size={14} /> Annulla
+                    </button>
+                  </div>
+                </div>
+
+                {moveTargetOpen && (
+                  <div className="mt-3 rounded-xl border border-zinc-700/80 bg-zinc-900/70 p-2">
+                    <p className="px-2 pb-1 text-[10px] uppercase tracking-wider text-zinc-500">
+                      Sposta i file selezionati in
+                    </p>
+                    <div className="flex max-h-48 flex-col overflow-y-auto">
+                      {moveTargets.map((target) => (
+                        <button
+                          key={target || 'root'}
+                          type="button"
+                          disabled={selectionBusy}
+                          onClick={() => void moveSelected(target)}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                        >
+                          <Folder size={14} className="text-[#ff914d]" />
+                          {target || 'Radice del drive'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="mt-6 flex flex-col gap-4">
               <div className="relative">
                 <Search
@@ -793,12 +1027,41 @@ export default function DrivePage() {
                     key={asset.id}
                     className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/25 transition-colors hover:border-[#ff914d]/35"
                   >
+                    {selectionMode && (
+                      <span
+                        aria-hidden
+                        className={`pointer-events-none absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border ${
+                          selected.includes(asset.id)
+                            ? 'border-[#ff914d] bg-[#ff914d] text-zinc-950'
+                            : 'border-white/40 bg-zinc-950/60 text-transparent'
+                        }`}
+                      >
+                        <Check size={14} />
+                      </span>
+                    )}
                     <a
                       href={asset.directFileUrl ?? asset.fileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex aspect-[4/3] items-center justify-center bg-zinc-950/60"
-                      title={`Apri ${asset.name}`}
+                      draggable={false}
+                      onPointerDown={() => beginLongPress(asset.id)}
+                      onPointerUp={cancelLongPress}
+                      onPointerLeave={cancelLongPress}
+                      onPointerCancel={cancelLongPress}
+                      onContextMenu={(event) => {
+                        // Pressione prolungata col tasto destro: apre la selezione.
+                        event.preventDefault();
+                        startSelection();
+                      }}
+                      onClick={(event) => {
+                        if (!selectionModeRef.current) return;
+                        event.preventDefault();
+                        toggleSelected(asset.id);
+                      }}
+                      className={`flex aspect-[4/3] items-center justify-center bg-zinc-950/60 ${
+                        selected.includes(asset.id) ? 'ring-2 ring-inset ring-[#ff914d]' : ''
+                      }`}
+                      title={selectionMode ? `Seleziona ${asset.name}` : `Apri ${asset.name}`}
                     >
                       {asset.thumbUrl ? (
                         <img

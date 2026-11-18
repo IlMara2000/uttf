@@ -17,10 +17,14 @@
  *   GET    /thumb/:id        anteprima WebP
  *   GET    /file/:id         originale, con Range per i video
  *   DELETE /api/files/:id    sposta nel cestino (.uttf-drive/trash)
+ *   PATCH  /api/files/:id?name=Nuovo.jpg   rinomina un file
+ *   POST   /api/files/move   body JSON { ids, folder }   sposta i file
+ *   POST   /api/files/delete body JSON { ids }           cestina i file
  *   GET    /api/folders      elenco delle cartelle (anche vuote)
  *   POST   /api/folders?folder=Foto/2026   crea la cartella
  *   PATCH  /api/folders?folder=Vecchia&to=Nuova   rinomina la cartella
- *   DELETE /api/folders?folder=Foto/2026   cancella la cartella (e il suo contenuto)
+ *   DELETE /api/folders?folder=Foto/2026   elimina la cartella e lascia i file
+ *          nella cartella superiore: il contenuto non si perde mai
  *
  * Ascolta su 127.0.0.1: l'unico modo per arrivare ai file e' il gestionale, che
  * richiede il login staff e firma gli URL di anteprime e originali. Con --host=
@@ -217,6 +221,42 @@ async function openUnique(folderAbs, fileName) {
     }
   }
   throw new Error(`troppe copie di ${fileName}`);
+}
+
+/** Nome libero per uno spostamento: niente sovrascritture nella cartella di arrivo. */
+async function uniqueEntry(dirAbs, name, isDirectory) {
+  const ext = isDirectory ? '' : path.extname(name);
+  const stem = isDirectory ? name : path.basename(name, ext);
+  for (let attempt = 1; attempt <= 9999; attempt += 1) {
+    const candidate = attempt === 1 ? name : `${stem} (${attempt})${ext}`;
+    const exists = await fsp.stat(path.join(dirAbs, candidate)).catch(() => null);
+    if (!exists) return candidate;
+  }
+  throw new Error(`troppe copie di ${name}`);
+}
+
+/* ── corpo JSON ────────────────────────────────────────────────────────── */
+
+/** Corpo JSON delle azioni multiple: piccolo e con un tetto esplicito. */
+async function readJsonBody(req, limit = 64 * 1024) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > limit) throw new Error('richiesta troppo grande');
+    chunks.push(chunk);
+  }
+  if (size === 0) return null;
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function requestedIds(payload) {
+  if (!payload || !Array.isArray(payload.ids)) return [];
+  return [...new Set(payload.ids.filter((id) => typeof id === 'string' && id.length > 0))];
 }
 
 /* ── indice ────────────────────────────────────────────────────────────── */
@@ -665,6 +705,8 @@ async function handleRenameFolder(res, url) {
   return sendJson(res, 200, { folder: to });
 }
 
+/** Elimina la cartella senza perdere nulla: i file (e le sottocartelle) salgono
+ * nella cartella superiore, poi la cartella ormai vuota si toglie dal disco. */
 async function handleDeleteFolder(res, url) {
   const folder = sanitizeFolder(url.searchParams.get('folder'));
   if (!folder) return sendJson(res, 400, { error: 'nome cartella mancante' });
@@ -678,30 +720,141 @@ async function handleDeleteFolder(res, url) {
   }
   if (!stat.isDirectory()) return sendJson(res, 400, { error: 'non è una cartella' });
 
-  const target = path.join(TRASH_DIR, `${Date.now()}-${path.basename(folder)}`);
+  const parent = folder.includes('/') ? folder.slice(0, folder.lastIndexOf('/')) : '';
+  const parentAbs = path.join(ROOT, parent);
+  const moves = [];
+
   try {
-    await fsp.mkdir(path.dirname(target), { recursive: true });
-    await fsp.rename(abs, target);
+    await fsp.mkdir(parentAbs, { recursive: true });
+    const entries = await fsp.readdir(abs, { withFileTypes: true });
+    for (const entry of entries) {
+      const name = await uniqueEntry(parentAbs, entry.name, entry.isDirectory());
+      await fsp.rename(path.join(abs, entry.name), path.join(parentAbs, name));
+      moves.push({ from: `${folder}/${entry.name}`, to: parent ? `${parent}/${name}` : name });
+    }
   } catch (error) {
-    return sendJson(res, 500, { error: `cancellazione non riuscita: ${error.message}` });
+    return sendJson(res, 500, { error: `cartella non eliminata: ${error.message}` });
   }
 
-  // Rimuove dall'indice tutti i file della cartella (e dei suoi figli), insieme
-  // alle anteprime che altrimenti resterebbero orfane su disco.
-  const prefix = folder + '/';
-  const removed = state.assets.filter(
-    (asset) => asset.folder === folder || asset.folder.startsWith(prefix),
-  );
-  state.assets = state.assets.filter(
-    (asset) => asset.folder !== folder && !asset.folder.startsWith(prefix),
-  );
-  for (const asset of removed) {
-    await fsp.rm(path.join(THUMB_DIR, `${asset.id}.webp`), { force: true }).catch(() => {});
+  // Se qualcosa è rimasto (permessi, file bloccati) la cartella resta: meglio un
+  // errore che un contenuto sparito.
+  try {
+    await fsp.rmdir(abs);
+  } catch (error) {
+    return sendJson(res, 500, {
+      error: `cartella non vuota, niente eliminato: ${error.message}`,
+    });
+  }
+
+  // L'indice segue i file spostati: id, hash e anteprime restano gli stessi.
+  for (const asset of state.assets) {
+    const move = moves.find(
+      (item) => asset.relPath === item.from || asset.relPath.startsWith(item.from + '/'),
+    );
+    if (!move) continue;
+    asset.relPath = move.to + asset.relPath.slice(move.from.length);
+    asset.folder = path.posix.dirname(asset.relPath);
+    if (asset.folder === '.') asset.folder = '';
   }
   await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
 
-  log('cartella cancellata:', folder);
-  return sendJson(res, 200, { folder, trashed: path.relative(ROOT, target) });
+  log(`cartella eliminata: ${folder} (${moves.length} elementi passati in ${parent || 'radice'})`);
+  return sendJson(res, 200, { folder, moved: moves.length, parent });
+}
+
+/* ── spostamenti, rinomine e cancellazioni dei file ────────────────────── */
+
+/** Rinomina un singolo file restando nella sua cartella. */
+async function renameAsset(res, id, url) {
+  const asset = state.assets.find((item) => item.id === id);
+  if (!asset) return sendJson(res, 404, { error: 'file non indicizzato' });
+
+  const nextName = sanitizeName(url.searchParams.get('name'));
+  if (!nextName || nextName === 'file') return sendJson(res, 400, { error: 'nome non valido' });
+  if (nextName === asset.name) return sendJson(res, 400, { error: 'il nome è già questo' });
+
+  const source = assetPath(asset.relPath);
+  if (!source) return sendJson(res, 400, { error: 'percorso non valido' });
+
+  const target = path.join(path.dirname(source), nextName);
+  if (await fsp.stat(target).catch(() => null)) {
+    return sendJson(res, 409, { error: 'esiste già un file con questo nome' });
+  }
+
+  try {
+    await fsp.rename(source, target);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      return sendJson(res, 500, { error: `rinomina non riuscita: ${error.message}` });
+    }
+    // File sparito dal disco: l'indice resta coerente col nome nuovo.
+  }
+
+  asset.name = nextName;
+  asset.relPath = path.relative(ROOT, target);
+  asset.mime = mimeOf(nextName);
+  asset.kind = kindOf(asset.mime);
+  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+
+  log('file rinominato:', id, '->', asset.relPath);
+  return sendJson(res, 200, { id: asset.id, name: asset.name, relPath: asset.relPath });
+}
+
+/** Sposta i file selezionati in una cartella esistente (o nella radice). */
+async function handleMoveAssets(req, res) {
+  const payload = await readJsonBody(req);
+  const ids = requestedIds(payload);
+  if (ids.length === 0) return sendJson(res, 400, { error: 'nessun file selezionato' });
+
+  const folder = sanitizeFolder(payload && payload.folder);
+  const destAbs = path.join(ROOT, folder);
+  try {
+    await fsp.mkdir(destAbs, { recursive: true });
+  } catch (error) {
+    return sendJson(res, 500, { error: `cartella di destinazione non disponibile: ${error.message}` });
+  }
+
+  const moved = [];
+  for (const id of ids) {
+    const asset = state.assets.find((item) => item.id === id);
+    if (!asset || asset.folder === folder) continue;
+
+    const source = assetPath(asset.relPath);
+    if (!source) continue;
+
+    const name = await uniqueEntry(destAbs, asset.name, false);
+    try {
+      await fsp.rename(source, path.join(destAbs, name));
+    } catch (error) {
+      if (error.code === 'ENOENT') continue;
+      throw error;
+    }
+
+    asset.name = name;
+    asset.folder = folder;
+    asset.relPath = path.relative(ROOT, path.join(destAbs, name));
+    moved.push(asset.id);
+  }
+
+  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+  log(`spostati ${moved.length} file in ${folder || 'radice'}`);
+  return sendJson(res, 200, { moved: moved.length, folder });
+}
+
+/** Cestina i file selezionati uno per uno, come la cancellazione singola. */
+async function handleDeleteAssets(req, res) {
+  const payload = await readJsonBody(req);
+  const ids = requestedIds(payload);
+  if (ids.length === 0) return sendJson(res, 400, { error: 'nessun file selezionato' });
+
+  const deleted = [];
+  for (const id of ids) {
+    if (await trashAsset(id)) deleted.push(id);
+  }
+
+  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+  log(`cestinati ${deleted.length} file`);
+  return sendJson(res, 200, { deleted: deleted.length });
 }
 
 /* ── copia di sicurezza su un secondo disco ────────────────────────────── */
@@ -1109,20 +1262,19 @@ function renderIndexPage() {
 
 /* ── server ────────────────────────────────────────────────────────────── */
 
-async function deleteAsset(res, id) {
+/** Sposta un file nel cestino e lo toglie dall'indice. false = id sconosciuto. */
+async function trashAsset(id) {
   const index = state.assets.findIndex((asset) => asset.id === id);
-  if (index === -1) return sendJson(res, 404, { error: 'file non indicizzato' });
+  if (index === -1) return false;
 
   const asset = state.assets[index];
   const source = assetPath(asset.relPath);
   const target = path.join(TRASH_DIR, `${Date.now()}-${path.basename(asset.relPath)}`);
 
-  let trashed = false;
   if (source) {
     try {
       // Stesso volume: rename, nessuna copia.
       await fsp.rename(source, target);
-      trashed = true;
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
       // File gia' sparito dal disco: esce solo dall'indice.
@@ -1131,13 +1283,13 @@ async function deleteAsset(res, id) {
 
   await fsp.rm(path.join(THUMB_DIR, `${asset.id}.webp`), { force: true }).catch(() => {});
   state.assets.splice(index, 1);
-  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+  return true;
+}
 
-  return sendJson(res, 200, {
-    trashed,
-    to: trashed ? path.relative(ROOT, target) : null,
-    missing: !trashed,
-  });
+async function deleteAsset(res, id) {
+  if (!(await trashAsset(id))) return sendJson(res, 404, { error: 'file non indicizzato' });
+  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+  return sendJson(res, 200, { trashed: true });
 }
 
 const server = http.createServer(async (req, res) => {
@@ -1192,6 +1344,18 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'DELETE' && pathname === '/api/folders') {
       return await handleDeleteFolder(res, url);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/files/move') {
+      return await handleMoveAssets(req, res);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/files/delete') {
+      return await handleDeleteAssets(req, res);
+    }
+
+    if (req.method === 'PATCH' && pathname.startsWith('/api/files/')) {
+      return await renameAsset(res, pathname.slice('/api/files/'.length), url);
     }
 
     if (req.method === 'GET' && pathname === '/api/health') {
