@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { TOKEN_EXPIRY_MARGIN_MS } from '@/lib/auth-cookie';
 import { getStaffRole } from '@/lib/staff-access';
 import {
   formatDriveBytes,
@@ -112,16 +113,36 @@ export default function DrivePage() {
   const [folderBusy, setFolderBusy] = useState<string | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressed = useRef(false);
+  const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
 
-  const request = useCallback(async (path: string, init: RequestInit = {}) => {
+  // Token in memoria, aggiornato da onAuthStateChange. Una getSession() per
+  // chiamata acquisiva il lock di auth-js: caricamento, polling e azioni a
+  // raffica finivano in fila, e una sessione in scadenza faceva partire il
+  // refresh da ogni chiamata.
+  const getAccessToken = useCallback(async () => {
+    const cached = tokenRef.current;
+    // Stesso margine di auth-js (TOKEN_EXPIRY_MARGIN_MS = 90 s): sotto quella
+    // soglia si lascia rinnovare a getSession(), che attende il refresh una volta sola.
+    if (cached && cached.expiresAt * 1000 - Date.now() > TOKEN_EXPIRY_MARGIN_MS) return cached.token;
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    if (!session?.access_token) throw new Error('Accedi all’Area Staff per aprire il drive.');
+    if (!session?.access_token) {
+      tokenRef.current = null;
+      return null;
+    }
+    tokenRef.current = { token: session.access_token, expiresAt: session.expires_at ?? 0 };
+    return session.access_token;
+  }, []);
+
+  const request = useCallback(async (path: string, init: RequestInit = {}) => {
+    const token = await getAccessToken();
+    if (!token) throw new Error('Accedi all’Area Staff per aprire il drive.');
 
     const response = await fetch(path, {
       ...init,
-      headers: { ...init.headers, Authorization: `Bearer ${session.access_token}` },
+      headers: { ...init.headers, Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
 
@@ -136,7 +157,7 @@ export default function DrivePage() {
     }
 
     return response;
-  }, []);
+  }, [getAccessToken]);
 
   const load = useCallback(
     async (silent = false) => {
@@ -188,6 +209,9 @@ export default function DrivePage() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      tokenRef.current = session?.access_token
+        ? { token: session.access_token, expiresAt: session.expires_at ?? 0 }
+        : null;
       const current = ++generation;
       setAccess(false);
       if (!session) {
@@ -265,10 +289,8 @@ export default function DrivePage() {
     const files = Array.from(fileList ?? []);
     if (files.length === 0) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.access_token) {
+    const token = await getAccessToken();
+    if (!token) {
       setError('Accedi all’Area Staff per caricare file.');
       return;
     }
@@ -278,11 +300,7 @@ export default function DrivePage() {
     try {
       for (const [index, file] of files.entries()) {
         setUploadStatus(`Carico ${index + 1}/${files.length} · ${file.name}`);
-        const directUrl = await requestDirectUploadUrl(
-          session.access_token,
-          file.name,
-          uploadFolder,
-        );
+        const directUrl = await requestDirectUploadUrl(token, file.name, uploadFolder);
 
         await new Promise<void>((resolve, reject) => {
           const params = new URLSearchParams({ name: file.name });
@@ -291,7 +309,7 @@ export default function DrivePage() {
           const xhr = new XMLHttpRequest();
           // Diretto al tunnel: il limite di 4,5 MB delle funzioni Vercel non vale.
           xhr.open('POST', directUrl ?? `/api/drive/upload?${params.toString()}`);
-          if (!directUrl) xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+          if (!directUrl) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
           xhr.setRequestHeader('Content-Type', 'application/octet-stream');
           xhr.upload.onprogress = (event) => {
             if (!event.lengthComputable) return;
