@@ -458,6 +458,8 @@ export default function DrivePage() {
 
   function beginLongPress(id: string) {
     cancelLongPress();
+    // Già in selezione: un tocco prolungato non deve azzerare i file già scelti.
+    if (selectionModeRef.current) return;
     longPressRef.current = {
       id,
       timer: setTimeout(() => {
@@ -540,11 +542,11 @@ export default function DrivePage() {
     if (!asset) return;
     setMoveTargetOpen(false);
     const value = window.prompt('Nuovo nome del file', asset.name);
-    if (!value?.trim() || value.trim() === asset.name) {
-      exitSelection();
-      return;
-    }
-    await runSelectionAction({ action: 'rename', ids: [asset.id], name: value.trim() });
+    // Annullato o nome invariato: la selezione resta com'era.
+    if (value === null) return;
+    const nextName = value.trim();
+    if (!nextName || nextName === asset.name) return;
+    await runSelectionAction({ action: 'rename', ids: [asset.id], name: nextName });
   }
 
   async function deleteSelected() {
@@ -580,8 +582,19 @@ export default function DrivePage() {
   const folders = useMemo(() => data?.folders ?? [], [data]);
   const assets = useMemo(() => data?.assets ?? [], [data]);
 
-  // Destinazioni possibili per lo spostamento: radice e ogni cartella reale.
-  const moveTargets = ['', ...folders.map((item) => item.path)].filter((item) => item !== folder);
+  // Destinazioni possibili per lo spostamento: radice e ogni cartella reale,
+  // meno quella dove stanno già tutti i file scelti. Con una selezione mista
+  // ogni destinazione è legittima, radice compresa (nella vista "Tutte" la
+  // vecchia regola toglieva proprio la radice).
+  const moveTargets = useMemo(() => {
+    const all = ['', ...folders.map((item) => item.path)];
+    const from = new Set(
+      selected.map((id) => assets.find((asset) => asset.id === id)?.folderPath ?? ''),
+    );
+    if (from.size !== 1) return all;
+    const [only] = [...from];
+    return all.filter((item) => item !== only);
+  }, [assets, folders, selected]);
 
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -958,6 +971,7 @@ export default function DrivePage() {
                       <MoreHorizontal size={14} />
                     </button>
                     <div
+                      inert={folderMenu !== item.path}
                       className={`absolute left-0 top-full z-20 mt-1 min-w-[150px] origin-top-left overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-900 shadow-xl shadow-black/40 transition-all duration-150 ${
                         folderMenu === item.path
                           ? 'scale-100 opacity-100'
@@ -1051,7 +1065,7 @@ export default function DrivePage() {
                       onContextMenu={(event) => {
                         // Pressione prolungata col tasto destro: apre la selezione.
                         event.preventDefault();
-                        startSelection();
+                        if (!selectionModeRef.current) startSelection();
                       }}
                       onClick={(event) => {
                         if (!selectionModeRef.current) return;
