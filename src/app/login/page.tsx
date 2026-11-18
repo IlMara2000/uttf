@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { clearRefreshBlock, supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,41 +23,29 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  // Impostiamo loading a true di default per nascondere il form mentre controlliamo la sessione
-  const [loading, setLoading] = useState(true); 
+  // Il form non è ancora a schermo durante il controllo: `loading` serve solo al submit.
+  const [loading, setLoading] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   
   const router = useRouter();
 
   // 1. CONTROLLO SESSIONE: Se sei già loggato, vai dritto alla dashboard
   useEffect(() => {
-    let cancelled = false;
-    const showForm = () => {
-      if (cancelled) return;
-      setLoading(false);
-      setIsCheckingSession(false);
-    };
-
     // Il lock di gotrue a volte non si rilascia (AbortError "Lock broken by
-    // another request"): senza un tetto il controllo non finisce mai e il form
-    // non compare, quindi non si puo' nemmeno fare login. Passati 3s si mostra
-    // comunque il form; se la sessione arriva dopo ed e' valida si entra lo stesso.
-    const timer = setTimeout(showForm, SESSION_CHECK_TIMEOUT_MS);
+    // another request") e getSession() non torna: senza un tetto il form non
+    // comparirebbe mai e non si potrebbe fare login. Passati 3s si mostra
+    // comunque; se una sessione valida arriva dopo, il redirect scatta lo stesso.
+    const timer = setTimeout(() => setIsCheckingSession(false), SESSION_CHECK_TIMEOUT_MS);
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled && data.session) {
-        clearTimeout(timer);
-        router.replace(getSafeNextPath());
-        return;
-      }
-      // Nessun accesso precedente (o controllo fallito): mostriamo il form.
-      showForm();
-    }, showForm);
-
-    return () => {
-      cancelled = true;
+    const settle = (session: unknown) => {
       clearTimeout(timer);
+      if (session) router.replace(getSafeNextPath());
+      else setIsCheckingSession(false);
     };
+
+    supabase.auth.getSession().then(({ data }) => settle(data.session), () => settle(null));
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -68,8 +56,10 @@ export default function LoginPage() {
       // 2. VERIFICA ACCOUNT: Supabase controlla in automatico se l'account esiste nel suo database Auth
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      
-      // Accesso consentito
+
+      // Accesso consentito: la sessione nuova non deve ereditare il cooldown
+      // di un refresh fallito prima del login.
+      clearRefreshBlock();
       router.replace(getSafeNextPath());
     } catch (error) {
       // Il login condivide il budget di richieste dei refresh: a limite esaurito
