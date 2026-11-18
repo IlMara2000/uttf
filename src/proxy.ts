@@ -2,6 +2,7 @@ import { getStaffRole } from './lib/staff-access'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { sessionFromCookies, TOKEN_EXPIRY_MARGIN_MS } from './lib/auth-cookie'
 
 const protectedPaths = ['/dashboard', '/admin', '/drive']
 
@@ -39,6 +40,18 @@ export async function proxy(request: NextRequest) {
     return redirectToLogin(request)
   }
 
+  // Prima di costruire il client: `createServerClient` refresha già nel suo
+  // initialize quando il cookie è scaduto, quindi qui non deve nemmeno nascere.
+  const session = sessionFromCookies(request.cookies.getAll(), supabaseUrl)
+  if (!session) {
+    return redirectToLogin(request)
+  }
+
+  // Scaduto o in scadenza: il browser rinnova e torna qui, un solo refresher.
+  if (session.expiresAt * 1000 - Date.now() < TOKEN_EXPIRY_MARGIN_MS) {
+    return redirectToLogin(request)
+  }
+
   let response = NextResponse.next({ request })
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -58,7 +71,7 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser(session.accessToken)
 
   if (error || !user) {
     return redirectToLogin(request)
