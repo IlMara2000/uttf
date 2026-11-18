@@ -24,6 +24,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
  */
 const BLOCK_KEY = 'uttf:auth-refresh-blocked-until';
 const COOLDOWN_MS = 5 * 60_000;
+/** Sotto i 5s di `lockAcquireTimeout`: il lock non resta occupato abbastanza per essere rubato. */
+const REFRESH_TIMEOUT_MS = 3000;
 
 function blockedUntil(): number {
   if (typeof window === 'undefined') return 0;
@@ -33,6 +35,12 @@ function blockedUntil(): number {
 function blockRefresh() {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(BLOCK_KEY, String(Date.now() + COOLDOWN_MS));
+}
+
+/** Un login riuscito porta una sessione nuova: il cooldown di un refresh vecchio non serve piu'. */
+export function clearRefreshBlock() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(BLOCK_KEY);
 }
 
 function isRefreshRequest(input: RequestInfo | URL): boolean {
@@ -63,7 +71,11 @@ const guardedFetch: typeof fetch = async (input, init) => {
   }
 
   try {
-    const response = await fetch(input, init);
+    // Il lock di gotrue resta occupato finché la fetch è in volo: con una richiesta
+    // appesa, dopo 5s un'altra tab lo ruba e questa viene abortita ("Lock ... was
+    // released because another request stole it"). Chiusa a 3s, il lock si libera
+    // prima della soglia del furto.
+    const response = await fetch(input, { ...init, signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS) });
     if (!response.ok) blockRefresh();
     return response;
   } catch (error) {
