@@ -78,12 +78,9 @@ export async function POST(request: Request) {
       updated_at: now,
     }));
 
-    for (const group of chunk(rows, UPSERT_CHUNK)) {
-      const { error } = await client.from('drive_assets').upsert(group, { onConflict: 'remote_id' });
-      if (error) throw error;
-    }
-
-    // Il disco e' la fonte di verita': quello che non c'e' piu' esce dall'indice.
+    // Il disco e' la fonte di verita': prima esce dall'indice quello che non c'e' piu'
+    // (rel_path e' univoco: un file nuovo allo stesso percorso di uno vecchio
+    // farebbe fallire l'inserimento), poi si aggiunge e aggiorna il resto.
     // PostgREST tronca a 1000 righe per default: si scorre a pagine per non
     // lasciare orfani oltre il limite.
     const existing: { remote_id: string }[] = [];
@@ -103,6 +100,11 @@ export async function POST(request: Request) {
 
     for (const group of chunk(stale, UPSERT_CHUNK)) {
       const { error } = await client.from('drive_assets').delete().in('remote_id', group);
+      if (error) throw error;
+    }
+
+    for (const group of chunk(rows, UPSERT_CHUNK)) {
+      const { error } = await client.from('drive_assets').upsert(group, { onConflict: 'remote_id' });
       if (error) throw error;
     }
 
