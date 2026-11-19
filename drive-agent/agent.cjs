@@ -1455,6 +1455,12 @@ function shutdown(signal) {
   saveQueue.catch(() => {}).then(done);
 }
 
+// Un upload da 1,9 GB su questo disco va a ~1 MB/s, cioè molto oltre i 5
+// minuti: i limiti predefiniti di Node (requestTimeout 300 s) chiudevano la
+// connessione a metà e l'upload abortiva sempre. Il tempo lo decide il client.
+server.requestTimeout = 0;
+server.headersTimeout = 0;
+
 (async () => {
   await loadIndex();
   server.listen(CONFIG.port, CONFIG.host, () => {
