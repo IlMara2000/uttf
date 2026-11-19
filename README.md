@@ -57,3 +57,11 @@ Non riabilitare le vecchie policy permissive dopo le migrazioni.
 
 Controlli: `npm test`, `npm run lint`, `npm run build`, `npm audit`.
 Le chiavi server vanno nelle variabili d'ambiente, mai in variabili `NEXT_PUBLIC_`.
+
+## Hook pre-commit
+
+Dopo il clone abilita il controllo che blocca il commit di file `.env*`:
+
+```sh
+./scripts/install-hooks.sh
+```
