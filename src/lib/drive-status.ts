@@ -12,7 +12,7 @@ import {
  * Sta qui perche' lo usano sia /api/drive sia /api/drive/status: la pagina puo'
  * aggiornare numeri e stato senza rigenerare le firme delle anteprime. */
 
-const AGENT_TIMEOUT_MS = 3000;
+const AGENT_TIMEOUT_MS = 8000;
 
 type AgentMirror = {
   configured?: unknown;
@@ -74,7 +74,7 @@ function agentIsLocal() {
 const OFFLINE_LOCAL =
   'Agente del drive non raggiungibile: i file restano sul disco, ma anteprime e originali non sono disponibili.';
 const OFFLINE_REMOTE =
-  'Il gestionale gira su Vercel e non raggiunge l’agente, che ascolta solo sul Mac del disco: senza tunnel il drive resta vuoto qui.';
+  'Il sito non raggiunge l’agente sul Mac: controlla che il Mac sia acceso, Hiksemi collegato e il tunnel attivo, poi premi Aggiorna.';
 
 export async function readAgentStatus(): Promise<DriveAgentStatus> {
   const local = agentIsLocal();
@@ -90,12 +90,17 @@ export async function readAgentStatus(): Promise<DriveAgentStatus> {
     error: local ? OFFLINE_LOCAL : OFFLINE_REMOTE,
   };
 
-  let response: Response;
-  try {
-    response = await fetchAgent('/api/health', {}, AGENT_TIMEOUT_MS);
-  } catch {
-    return offline;
+  // Il Quick Tunnel ogni tanto perde una richiesta: un secondo tentativo evita
+  // di mostrare "agente non raggiungibile" per un singolo intoppo.
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 2 && !response; attempt += 1) {
+    try {
+      response = await fetchAgent('/api/health', {}, AGENT_TIMEOUT_MS);
+    } catch {
+      response = null;
+    }
   }
+  if (!response) return offline;
 
   if (!response.ok) {
     return { ...offline, error: `L'agente ha risposto ${response.status}.` };
