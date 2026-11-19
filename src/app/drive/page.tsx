@@ -122,6 +122,7 @@ export default function DrivePage() {
   const [moveTargetOpen, setMoveTargetOpen] = useState(false);
   const [selectionBusy, setSelectionBusy] = useState(false);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const failedPollsRef = useRef(0);
   const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
 
   // Token in memoria, aggiornato da onAuthStateChange. Una getSession() per
@@ -179,11 +180,17 @@ export default function DrivePage() {
           // Solo numeri e stato: gli asset restano quelli in pagina, quindi le
           // anteprime non ricevono URL firmati nuovi e il browser non le riscarica.
           const status = (await (await request('/api/drive/status')).json()) as DriveStatusPayload;
+          // Un solo controllo fallito non spegne l'agente in pagina: serve il secondo di fila.
+          if (status.agent.reachable) failedPollsRef.current = 0;
+          else failedPollsRef.current += 1;
           setData((previous) =>
             previous
               ? {
                   ...previous,
-                  agent: status.agent,
+                  agent:
+                    !status.agent.reachable && previous.agent.reachable && failedPollsRef.current < 2
+                      ? previous.agent
+                      : status.agent,
                   folders: status.folders,
                   syncedAt: status.syncedAt,
                   totals: status.totals,
@@ -769,10 +776,8 @@ export default function DrivePage() {
                     </p>
                   ) : (
                     <p className="mt-1 text-xs text-amber-200/80">
-                      Dal Mac il drive funziona già: per usarlo anche dal sito serve il tunnel
-                      Cloudflare verso l’agente, con il suo indirizzo in{' '}
-                      <code className="font-mono">DRIVE_AGENT_URL</code> e il service token di Access.
-                      Da qui puoi solo consultare i file già indicizzati.
+                      Di solito basta un minuto: il tunnel si riconnette da solo. Se resta così,
+                      riavvia l’agente sul Mac. Intanto puoi consultare i file già indicizzati.
                     </p>
                   )}
                 </div>
