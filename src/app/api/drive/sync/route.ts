@@ -98,9 +98,18 @@ export async function POST(request: Request) {
     const keep = new Set(rows.map((row) => row.remote_id));
     const stale = existing.map((row) => row.remote_id).filter((id) => !keep.has(id));
 
-    for (const group of chunk(stale, UPSERT_CHUNK)) {
-      const { error } = await client.from('drive_assets').delete().in('remote_id', group);
-      if (error) throw error;
+    // Cancellazioni a gruppi in parallelo: dopo un grosso svuotamento del disco
+    // sono migliaia di righe e in serie sforano il tempo massimo della funzione.
+    const staleGroups = chunk(stale, UPSERT_CHUNK);
+    for (let index = 0; index < staleGroups.length; index += 6) {
+      const results = await Promise.all(
+        staleGroups
+          .slice(index, index + 6)
+          .map((group) => client.from('drive_assets').delete().in('remote_id', group)),
+      );
+      for (const { error } of results) {
+        if (error) throw error;
+      }
     }
 
     for (const group of chunk(rows, UPSERT_CHUNK)) {

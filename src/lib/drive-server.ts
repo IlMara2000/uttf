@@ -134,7 +134,7 @@ export async function fetchAgentIndex() {
   // continua sul Mac e basta premere di nuovo per avere il resto.
   let rescanError: string | null = null;
   try {
-    const rescan = await fetchAgent('/api/rescan', { method: 'POST' }, 50_000);
+    const rescan = await fetchAgent('/api/rescan', { method: 'POST' }, 20_000);
     if (!rescan.ok) {
       const body = (await rescan.json().catch(() => null)) as { error?: unknown } | null;
       rescanError = typeof body?.error === 'string' ? body.error : `HTTP ${rescan.status}`;
