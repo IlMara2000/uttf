@@ -7,10 +7,15 @@ import Link from 'next/link';
 import {
   Check,
   ChevronLeft,
+  ChevronRight,
+  Clock,
+  Film,
   Folder,
   FolderPlus,
   HardDrive,
   ImageOff,
+  LayoutGrid,
+  List,
   MoreHorizontal,
   Loader2,
   RefreshCw,
@@ -33,17 +38,40 @@ import {
   type DriveStatusPayload,
 } from '@/lib/drive-model';
 
+const TOOL =
+  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-zinc-300 transition-colors hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-40';
+const SIDE =
+  'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] transition-colors';
+const SIDE_ON = 'bg-[#ff914d]/20 font-semibold text-white';
+const SIDE_OFF = 'text-zinc-300 hover:bg-white/5';
+
+/** Cartella in stile Finder, nei colori del sito. */
+function FolderIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 52" className={className} aria-hidden>
+      <defs>
+        <linearGradient id="uttf-folder-back" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#d9732f" />
+          <stop offset="1" stopColor="#b85a1c" />
+        </linearGradient>
+        <linearGradient id="uttf-folder-front" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffb27a" />
+          <stop offset="1" stopColor="#ff914d" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M4 8a5 5 0 0 1 5-5h14.5a5 5 0 0 1 3.8 1.7l2.4 2.8a3 3 0 0 0 2.3 1H55a5 5 0 0 1 5 5v31a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5Z"
+        fill="url(#uttf-folder-back)"
+      />
+      <rect x="4" y="16" width="56" height="33" rx="5" fill="url(#uttf-folder-front)" />
+      <rect x="4" y="16" width="56" height="2" rx="1" fill="#fff" opacity=".28" />
+    </svg>
+  );
+}
+
 const BTN =
   'inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50';
-const BTN_PRIMARY = `${BTN} bg-[#ff914d] text-zinc-950 hover:opacity-95`;
 const BTN_SECONDARY = `${BTN} border border-zinc-700/80 bg-zinc-950/50 text-zinc-200 hover:border-zinc-600 hover:bg-zinc-800/50`;
-
-function assetMeta(asset: DriveAsset) {
-  const parts = [asset.folderPath || 'radice', formatDriveBytes(asset.sizeBytes)];
-  if (asset.width && asset.height) parts.push(`${asset.width}×${asset.height}`);
-  if (asset.durationSeconds) parts.push(`${Math.round(asset.durationSeconds)}s`);
-  return parts.join(' · ');
-}
 
 /** URL firmato per caricare direttamente al tunnel: null = si passa dal proxy Next. */
 async function requestDirectUploadUrl(token: string, name: string, folder: string) {
@@ -121,6 +149,8 @@ export default function DrivePage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [moveTargetOpen, setMoveTargetOpen] = useState(false);
   const [selectionBusy, setSelectionBusy] = useState(false);
+  const [view, setView] = useState<'icons' | 'list'>('icons');
+  const [showAll, setShowAll] = useState(false);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const failedPollsRef = useRef(0);
   const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
@@ -610,21 +640,6 @@ export default function DrivePage() {
     return all.filter((item) => item !== only);
   }, [assets, folders, selected]);
 
-  const visible = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return assets.filter((asset) => {
-      const inFolder =
-        !folder || asset.folderPath === folder || asset.folderPath.startsWith(`${folder}/`);
-      const hit =
-        !term ||
-        [asset.name, asset.relPath, ...asset.tags.map((tag) => tag.name)]
-          .join(' ')
-          .toLowerCase()
-          .includes(term);
-      return inFolder && hit;
-    });
-  }, [assets, folder, search]);
-
   // Se l'agente non risponde lo stato della copia sarebbe un falso "non configurata".
   const backup = data?.agent.reachable ? backupView(data.agent.backup) : null;
 
@@ -637,9 +652,151 @@ export default function DrivePage() {
   const pendingAssets =
     data && baselineAssets !== null ? Math.max(0, data.totals.assets - baselineAssets) : 0;
 
+  const searching = search.trim().length > 0;
+
+  const openFolder = useCallback((path: string) => {
+    setFolderMenu(null);
+    setShowAll(false);
+    setFolder(path);
+    setUploadFolder(path);
+  }, []);
+
+  // Sottocartelle dirette della cartella aperta, come nel Finder. Le intermedie
+  // che non risultano nell'indice si ricavano dai percorsi dei discendenti.
+  const childFolders = useMemo(() => {
+    const prefix = folder ? `${folder}/` : '';
+    const map = new Map<string, { path: string; name: string; count: number }>();
+    for (const item of folders) {
+      if (prefix && !item.path.startsWith(prefix)) continue;
+      const rest = item.path.slice(prefix.length);
+      if (!rest) continue;
+      const name = rest.split('/')[0];
+      const path = `${prefix}${name}`;
+      const entry = map.get(path) ?? { path, name, count: 0 };
+      entry.count = Math.max(entry.count, item.assetCount);
+      map.set(path, entry);
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'it', { numeric: true }));
+  }, [folders, folder]);
+
+  const breadcrumb = useMemo(() => {
+    const parts = folder ? folder.split('/') : [];
+    return parts.map((name, index) => ({ name, path: parts.slice(0, index + 1).join('/') }));
+  }, [folder]);
+
+  // Ricerca e "Tutti i file" guardano tutto l'indice (dentro la cartella aperta);
+  // altrimenti si vedono solo i file direttamente contenuti, come nel Finder.
+  const files = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return assets.filter((asset) => {
+      if (term) {
+        const inside =
+          !folder || asset.folderPath === folder || asset.folderPath.startsWith(`${folder}/`);
+        if (!inside) return false;
+        return [asset.name, asset.relPath, ...asset.tags.map((tag) => tag.name)]
+          .join(' ')
+          .toLowerCase()
+          .includes(term);
+      }
+      if (showAll) return true;
+      return asset.folderPath === folder;
+    });
+  }, [assets, folder, search, showAll]);
+
+  const shownFolders = searching || showAll ? [] : childFolders;
+  const title = showAll ? 'Tutti i file' : (breadcrumb[breadcrumb.length - 1]?.name ?? 'Drive');
+
+  function openProps(asset: DriveAsset) {
+    return {
+      href: asset.directFileUrl ?? asset.fileUrl,
+      target: '_blank',
+      rel: 'noreferrer',
+      draggable: false,
+      onPointerDown: () => beginLongPress(),
+      onPointerUp: cancelLongPress,
+      onPointerLeave: cancelLongPress,
+      onPointerCancel: cancelLongPress,
+      onClick: (event: { preventDefault: () => void }) => {
+        if (!selectionMode) return;
+        event.preventDefault();
+        toggleSelected(asset.id);
+      },
+      title: selectionMode ? `Seleziona ${asset.name}` : `Apri ${asset.name}`,
+    };
+  }
+
+  function tagChips(asset: DriveAsset) {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-1">
+        {asset.tags.map((tag) => (
+          <span
+            key={tag.id}
+            className="inline-flex items-center gap-1 rounded-full bg-[#ff914d]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#ff914d]"
+          >
+            {tag.name}
+            <button
+              type="button"
+              aria-label={`Rimuovi tag ${tag.name}`}
+              disabled={busyAsset === asset.id}
+              onClick={() => void changeTag(asset, 'remove', tag.name)}
+              className="hover:text-white disabled:opacity-40"
+            >
+              <X size={10} />
+            </button>
+          </span>
+        ))}
+        <button
+          type="button"
+          disabled={busyAsset === asset.id}
+          onClick={() => void changeTag(asset, 'add')}
+          className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-zinc-500 transition-colors hover:bg-white/10 hover:text-zinc-200 disabled:opacity-40"
+        >
+          {busyAsset === asset.id ? (
+            <Loader2 size={10} className="animate-spin" />
+          ) : (
+            <Tag size={10} />
+          )}
+          Tag
+        </button>
+      </div>
+    );
+  }
+
+  function thumbFallback(asset: DriveAsset, size: number) {
+    return asset.kind === 'video' ? <Film size={size} /> : <ImageOff size={size} />;
+  }
+
+  function folderMenuPanel(path: string) {
+    return (
+      <div
+        inert={folderMenu !== path}
+        className={`absolute right-1 top-9 z-30 min-w-[150px] origin-top-right overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-900/95 shadow-xl shadow-black/50 backdrop-blur transition-all duration-150 ${
+          folderMenu === path ? 'scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => void renameFolder(path)}
+          disabled={folderBusy === path}
+          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+        >
+          <Pencil size={13} /> Rinomina
+        </button>
+        <button
+          type="button"
+          onClick={() => void deleteFolder(path)}
+          disabled={folderBusy === path}
+          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+        >
+          <Trash2 size={13} /> Cancella
+        </button>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 p-5 text-white md:p-10">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 text-zinc-400 transition-colors hover:text-white"
@@ -647,69 +804,15 @@ export default function DrivePage() {
           <ChevronLeft size={18} /> Gestionale
         </Link>
 
-        <div className="mt-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-widest text-[#ff914d]">Area Staff / Media</p>
-            <h1 className="mt-3 flex items-center gap-3 text-3xl font-bold">
-              <HardDrive size={26} className="shrink-0 text-[#ff914d]" /> Drive foto e video
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-400">
-              I file restano sul disco Hiksemi: qui c’è l’indice con hash e tag, le anteprime le
-              genera l’agente locale. Nessun byte caricato su Supabase.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <label
-              className={`${BTN_PRIMARY} ${
-                uploading || !canUseAgent
-                  ? 'pointer-events-none opacity-50'
-                  : 'cursor-pointer'
-              }`}
-            >
-              {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-              Carica{uploadFolder ? ` in ${uploadFolder.split('/').pop()}` : ' file'}
-              <input
-                type="file"
-                multiple
-                hidden
-                onChange={(event) => {
-                  void uploadFiles(event.target.files);
-                  event.target.value = '';
-                }}
-              />
-            </label>
-            <button type="button" onClick={() => void load()} disabled={loading} className={BTN_SECONDARY}>
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-              Aggiorna
-            </button>
-            <button
-              type="button"
-              onClick={() => void createFolder()}
-              disabled={creating || !canUseAgent}
-              className={BTN_SECONDARY}
-            >
-              {creating ? <Loader2 size={16} className="animate-spin" /> : <FolderPlus size={16} />}
-              Nuova cartella
-            </button>
-            <button
-              type="button"
-              onClick={() => (selectionMode ? exitSelection() : startSelection())}
-              disabled={!canUseAgent || assets.length === 0}
-              className={BTN_SECONDARY}
-            >
-              {selectionMode ? <X size={16} /> : <Check size={16} />}
-              {selectionMode ? 'Annulla selezione' : 'Seleziona'}
-            </button>
-            <button
-              type="button"
-              onClick={() => void syncIndex()}
-              disabled={syncing || !canUseAgent}
-              className={BTN_PRIMARY}
-            >
-              {syncing ? <Loader2 size={16} className="animate-spin" /> : <HardDrive size={16} />}
-              Sincronizza Hardisk
-            </button>
-          </div>
+        <div className="mt-6">
+          <p className="text-xs uppercase tracking-widest text-[#ff914d]">Area Staff / Media</p>
+          <h1 className="mt-2 flex items-center gap-3 text-2xl font-bold md:text-3xl">
+            <HardDrive size={24} className="shrink-0 text-[#ff914d]" /> Drive foto e video
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400">
+            I file restano sul disco Hiksemi: qui c’è l’indice con hash e tag, le anteprime le
+            genera l’agente locale. Nessun byte caricato su Supabase.
+          </p>
         </div>
 
         {error && (
@@ -738,28 +841,6 @@ export default function DrivePage() {
 
         {access && data && (
           <>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { label: 'File indicizzati', value: String(data.totals.assets) },
-                { label: 'Spazio indicizzato', value: formatDriveBytes(data.totals.bytes) },
-                { label: 'Cartelle', value: String(folders.length) },
-                {
-                  label: 'Liberi sul disco',
-                  value: data.agent.freeBytes !== null ? formatDriveBytes(data.agent.freeBytes) : '--',
-                },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-zinc-800/80 bg-zinc-900/25 p-5"
-                >
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
-                    {stat.label}
-                  </p>
-                  <p className="mt-1 text-2xl font-bold tabular-nums text-white">{stat.value}</p>
-                </div>
-              ))}
-            </div>
-
             {!data.agent.reachable && (
               <div className="mt-4 flex gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
                 <TriangleAlert size={18} className="mt-0.5 shrink-0" />
@@ -922,229 +1003,470 @@ export default function DrivePage() {
               </div>
             )}
 
-            <div className="mt-6 flex flex-col gap-4">
-              <div className="relative">
-                <Search
-                  size={16}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"
-                />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Cerca per nome, percorso o tag"
-                  className="w-full rounded-xl border border-zinc-800/80 bg-zinc-950/50 py-3 pl-11 pr-4 text-sm text-white placeholder:text-zinc-600 outline-none transition-colors focus:border-[#ff914d]/45"
-                />
-              </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/30 shadow-2xl shadow-black/40">
+              {/* Barra degli strumenti, come la finestra del Finder */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-2 border-b border-zinc-800/80 bg-zinc-900/70 px-3 py-2.5">
+                <div className="mr-1 hidden items-center gap-1.5 sm:flex" aria-hidden>
+                  <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+                  <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+                  <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+                </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setFolder('');
-                    setUploadFolder('');
-                  }}
-                  className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors ${
-                    folder === ''
-                      ? 'bg-[#ff914d] text-zinc-950'
-                      : 'border border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:text-zinc-200'
-                  }`}
+                  onClick={() =>
+                    openFolder(folder.includes('/') ? folder.slice(0, folder.lastIndexOf('/')) : '')
+                  }
+                  disabled={!folder && !showAll}
+                  className={TOOL}
+                  aria-label="Cartella superiore"
+                  title="Cartella superiore"
                 >
-                  <Folder size={14} /> Tutte
+                  <ChevronLeft size={18} />
                 </button>
-                {folders.map((item) => (
-                  <div key={item.path} className="relative flex items-center gap-1" data-folder-menu>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFolderMenu(null);
-                        setFolder(item.path);
-                        setUploadFolder(item.path);
-                      }}
-                      disabled={folderBusy === item.path}
-                      className={`inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors select-none ${
-                        folder === item.path
-                          ? 'bg-[#ff914d] text-zinc-950'
-                          : 'border border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:text-zinc-200'
-                      } ${folderBusy === item.path ? 'opacity-50' : ''}`}
-                    >
-                      <Folder size={14} /> {item.path}
-                      <span className="tabular-nums opacity-60">{item.assetCount}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setFolderMenu(folderMenu === item.path ? null : item.path);
-                      }}
-                      disabled={folderBusy === item.path}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950/50 text-zinc-400 transition-colors hover:text-zinc-200 disabled:opacity-50"
-                      aria-label={`Gestisci cartella ${item.path}`}
-                    >
-                      <MoreHorizontal size={14} />
-                    </button>
-                    <div
-                      inert={folderMenu !== item.path}
-                      className={`absolute left-0 top-full z-20 mt-1 min-w-[150px] origin-top-left overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-900 shadow-xl shadow-black/40 transition-all duration-150 ${
-                        folderMenu === item.path
-                          ? 'scale-100 opacity-100'
-                          : 'pointer-events-none scale-95 opacity-0'
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => void renameFolder(item.path)}
-                        disabled={folderBusy === item.path}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold text-zinc-200 transition-colors hover:bg-zinc-800 disabled:opacity-50"
-                      >
-                        Rinomina
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void deleteFolder(item.path)}
-                        disabled={folderBusy === item.path}
-                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-50"
-                      >
-                        Cancella
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <p className="text-xs text-zinc-500">
-                {visible.length} di {data.totals.assets} file
-                {assets.length < data.totals.assets
-                  ? ` · mostrati i primi ${assets.length}`
-                  : ''}
-                {data.syncedAt
-                  ? ` · aggiornato ${new Date(data.syncedAt).toLocaleString('it-IT')}`
-                  : ''}
-              </p>
-            </div>
-
-            {visible.length === 0 ? (
-              <div className="mt-8 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/20 p-8 text-sm text-zinc-400">
-                {assets.length === 0 ? (
-                  <>
-                    <p className="font-semibold text-zinc-200">Nessun file nell’indice.</p>
-                    <p className="mt-2">
-                      {canUseAgent ? (
-                        <>
-                          Con Hiksemi collegato e l’agente attivo, premi{' '}
-                          <span className="text-[#ff914d]">Sincronizza Hardisk</span>: l’indice
-                          legge i file già presenti sul disco senza ricaricarli.
-                        </>
-                      ) : (
-                        <>
-                          L’indice lo costruisce l’agente sul Mac del disco: sincronizzalo da lì,
-                          oppure collega il tunnel Cloudflare per farlo anche da questo sito.
-                        </>
-                      )}
-                    </p>
-                  </>
-                ) : (
-                  <p>Nessun file corrisponde a questa ricerca.</p>
-                )}
-              </div>
-            ) : (
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {visible.map((asset) => (
-                  <article
-                    key={asset.id}
-                    className="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/25 transition-colors hover:border-[#ff914d]/35"
+                <nav
+                  aria-label="Percorso"
+                  className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto whitespace-nowrap text-sm"
+                >
+                  <button
+                    type="button"
+                    onClick={() => openFolder('')}
+                    className={`rounded-md px-2 py-1 transition-colors hover:bg-white/10 ${
+                      !folder && !showAll ? 'font-semibold text-white' : 'text-zinc-400'
+                    }`}
                   >
-                    {selectionMode && (
-                      <span
-                        aria-hidden
-                        className={`pointer-events-none absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border ${
-                          selected.includes(asset.id)
-                            ? 'border-[#ff914d] bg-[#ff914d] text-zinc-950'
-                            : 'border-white/40 bg-zinc-950/60 text-transparent'
+                    {showAll ? 'Tutti i file' : 'Drive'}
+                  </button>
+                  {breadcrumb.map((part, index) => (
+                    <span key={part.path} className="flex items-center gap-0.5">
+                      <ChevronRight size={14} className="shrink-0 text-zinc-600" />
+                      <button
+                        type="button"
+                        onClick={() => openFolder(part.path)}
+                        className={`rounded-md px-2 py-1 transition-colors hover:bg-white/10 ${
+                          index === breadcrumb.length - 1 ? 'font-semibold text-white' : 'text-zinc-400'
                         }`}
                       >
-                        <Check size={14} />
-                      </span>
-                    )}
-                    <a
-                      href={asset.directFileUrl ?? asset.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      draggable={false}
-                      onPointerDown={() => beginLongPress()}
-                      onPointerUp={cancelLongPress}
-                      onPointerLeave={cancelLongPress}
-                      onPointerCancel={cancelLongPress}
-                      onClick={(event) => {
-                        if (!selectionMode) return;
-                        event.preventDefault();
-                        toggleSelected(asset.id);
+                        {part.name}
+                      </button>
+                    </span>
+                  ))}
+                </nav>
+
+                <div className="flex items-center rounded-lg bg-zinc-800/70 p-0.5" role="group" aria-label="Vista">
+                  <button
+                    type="button"
+                    onClick={() => setView('icons')}
+                    aria-pressed={view === 'icons'}
+                    title="Vista a icone"
+                    className={`inline-flex h-7 w-8 items-center justify-center rounded-md transition-colors ${
+                      view === 'icons' ? 'bg-zinc-600/70 text-white' : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <LayoutGrid size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setView('list')}
+                    aria-pressed={view === 'list'}
+                    title="Vista a elenco"
+                    className={`inline-flex h-7 w-8 items-center justify-center rounded-md transition-colors ${
+                      view === 'list' ? 'bg-zinc-600/70 text-white' : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <List size={15} />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-0.5">
+                  <label
+                    className={`${TOOL} ${
+                      uploading || !canUseAgent ? 'pointer-events-none opacity-40' : 'cursor-pointer'
+                    }`}
+                    title={`Carica${uploadFolder ? ` in ${uploadFolder.split('/').pop()}` : ' file'}`}
+                  >
+                    {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                    <input
+                      type="file"
+                      multiple
+                      hidden
+                      onChange={(event) => {
+                        void uploadFiles(event.target.files);
+                        event.target.value = '';
                       }}
-                      className={`flex aspect-[4/3] items-center justify-center bg-zinc-950/60 ${
-                        selected.includes(asset.id) ? 'ring-2 ring-inset ring-[#ff914d]' : ''
-                      }`}
-                      title={selectionMode ? `Seleziona ${asset.name}` : `Apri ${asset.name}`}
-                    >
-                      {asset.thumbUrl ? (
-                        <img
-                          src={asset.thumbUrl}
-                          alt={asset.name}
-                          loading="lazy"
-                          className="h-full w-full object-cover"
-                        />
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void createFolder()}
+                    disabled={creating || !canUseAgent}
+                    className={TOOL}
+                    title="Nuova cartella"
+                    aria-label="Nuova cartella"
+                  >
+                    {creating ? <Loader2 size={16} className="animate-spin" /> : <FolderPlus size={16} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => (selectionMode ? exitSelection() : startSelection())}
+                    disabled={!canUseAgent || assets.length === 0}
+                    className={`${TOOL} ${selectionMode ? 'bg-[#ff914d]/20 text-[#ff914d]' : ''}`}
+                    title={selectionMode ? 'Annulla selezione' : 'Seleziona'}
+                    aria-label={selectionMode ? 'Annulla selezione' : 'Seleziona'}
+                  >
+                    {selectionMode ? <X size={16} /> : <Check size={16} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void load()}
+                    disabled={loading}
+                    className={TOOL}
+                    title="Aggiorna"
+                    aria-label="Aggiorna"
+                  >
+                    {loading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void syncIndex()}
+                    disabled={syncing || !canUseAgent}
+                    className={`${TOOL} w-auto gap-1.5 px-2.5 text-xs font-semibold text-[#ff914d]`}
+                    title="Sincronizza Hardisk"
+                  >
+                    {syncing ? <Loader2 size={15} className="animate-spin" /> : <HardDrive size={15} />}
+                    <span className="hidden md:inline">Sincronizza Hardisk</span>
+                  </button>
+                </div>
+
+                <div className="relative w-full sm:w-56">
+                  <Search
+                    size={14}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                  />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Cerca"
+                    aria-label="Cerca per nome, percorso o tag"
+                    className="h-8 w-full rounded-lg border border-zinc-700/60 bg-zinc-950/60 pl-8 pr-3 text-sm text-white placeholder:text-zinc-500 outline-none transition-colors focus:border-[#ff914d]/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-[220px_minmax(0,1fr)]">
+                {/* Barra laterale */}
+                <aside className="hidden max-h-[70vh] overflow-y-auto border-r border-zinc-800/80 bg-zinc-950/40 p-3 md:block">
+                  <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Preferiti
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openFolder('');
+                      setShowAll(true);
+                    }}
+                    className={`${SIDE} ${showAll ? SIDE_ON : SIDE_OFF}`}
+                  >
+                    <Clock size={15} className="shrink-0 text-[#ff914d]" />
+                    <span className="min-w-0 flex-1 truncate">Tutti i file</span>
+                    <span className="tabular-nums text-[11px] opacity-60">{data.totals.assets}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openFolder('')}
+                    className={`${SIDE} ${!showAll && !folder ? SIDE_ON : SIDE_OFF}`}
+                  >
+                    <HardDrive size={15} className="shrink-0 text-[#ff914d]" />
+                    <span className="min-w-0 flex-1 truncate">Drive</span>
+                  </button>
+
+                  <p className="px-2 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                    Cartelle
+                  </p>
+                  {folders.length === 0 && <p className="px-2 text-xs text-zinc-600">Nessuna cartella</p>}
+                  {folders.map((item) => {
+                    const depth = item.path.split('/').length - 1;
+                    const active = !showAll && folder === item.path;
+                    return (
+                      <button
+                        key={item.path}
+                        type="button"
+                        onClick={() => openFolder(item.path)}
+                        style={{ paddingLeft: 8 + depth * 14 }}
+                        title={item.path}
+                        className={`${SIDE} ${active ? SIDE_ON : SIDE_OFF}`}
+                      >
+                        <Folder size={15} className="shrink-0 fill-[#ff914d]/30 text-[#ff914d]" />
+                        <span className="min-w-0 flex-1 truncate">{item.path.split('/').pop()}</span>
+                        <span className="tabular-nums text-[11px] opacity-60">{item.assetCount}</span>
+                      </button>
+                    );
+                  })}
+                </aside>
+
+                {/* Contenuto */}
+                <section className="min-h-[420px] min-w-0 p-4 md:p-5" aria-label={title}>
+                  {shownFolders.length === 0 && files.length === 0 ? (
+                    <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 text-center text-sm text-zinc-400">
+                      <FolderIcon className="h-20 w-20 opacity-40" />
+                      {assets.length === 0 ? (
+                        <>
+                          <p className="font-semibold text-zinc-200">Nessun file nell’indice.</p>
+                          <p className="max-w-md">
+                            {canUseAgent ? (
+                              <>
+                                Con Hiksemi collegato e l’agente attivo, premi{' '}
+                                <span className="text-[#ff914d]">Sincronizza Hardisk</span>: l’indice legge i
+                                file già presenti sul disco senza ricaricarli.
+                              </>
+                            ) : (
+                              <>
+                                L’indice lo costruisce l’agente sul Mac del disco: sincronizzalo da
+                                lì, oppure collega il tunnel Cloudflare per farlo anche da questo sito.
+                              </>
+                            )}
+                          </p>
+                        </>
+                      ) : searching ? (
+                        <p>Nessun file corrisponde a questa ricerca.</p>
                       ) : (
-                        <span className="flex flex-col items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
-                          <ImageOff size={22} /> {asset.kind}
-                        </span>
+                        <p>Questa cartella è vuota.</p>
                       )}
-                    </a>
+                    </div>
+                  ) : view === 'icons' ? (
+                    <div className="space-y-6">
+                      {shownFolders.length > 0 && (
+                        <div>
+                          {files.length > 0 && (
+                            <h2 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                              Cartelle
+                            </h2>
+                          )}
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                            {shownFolders.map((item) => (
+                              <div
+                                key={item.path}
+                                data-folder-menu
+                                className={`group relative rounded-xl transition-colors hover:bg-white/5 ${
+                                  folderBusy === item.path ? 'opacity-50' : ''
+                                }`}
+                                onContextMenu={(event) => {
+                                  event.preventDefault();
+                                  setFolderMenu(item.path);
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => openFolder(item.path)}
+                                  disabled={folderBusy === item.path}
+                                  className="flex w-full flex-col items-center gap-1 p-3 text-center select-none"
+                                  title={`Apri ${item.path}`}
+                                >
+                                  <FolderIcon className="h-20 w-20 drop-shadow-lg transition-transform duration-150 group-hover:scale-105" />
+                                  <span className="line-clamp-2 w-full break-words text-xs font-medium text-zinc-100">
+                                    {item.name}
+                                  </span>
+                                  <span className="text-[10px] tabular-nums text-zinc-500">
+                                    {item.count} {item.count === 1 ? 'elemento' : 'elementi'}
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setFolderMenu(folderMenu === item.path ? null : item.path);
+                                  }}
+                                  disabled={folderBusy === item.path}
+                                  className="absolute right-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900/80 text-zinc-300 opacity-100 transition-opacity hover:text-white md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                                  aria-label={`Gestisci cartella ${item.path}`}
+                                >
+                                  <MoreHorizontal size={14} />
+                                </button>
+                                {folderMenuPanel(item.path)}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                    <div className="space-y-2 p-4">
-                      <p className="truncate text-sm font-semibold text-zinc-100" title={asset.name}>
-                        {asset.name}
-                      </p>
-                      <p className="truncate text-[11px] text-zinc-500">{assetMeta(asset)}</p>
-                      <p className="font-mono text-[10px] text-zinc-600">
-                        {asset.sha256.slice(0, 12)}
-                        {asset.duplicateOf ? ' · duplicato' : ''}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                        {asset.tags.map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#ff914d]/30 bg-[#ff914d]/10 px-2 py-0.5 text-[10px] font-semibold text-[#ff914d]"
+                      {files.length > 0 && (
+                        <div>
+                          {shownFolders.length > 0 && (
+                            <h2 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                              File
+                            </h2>
+                          )}
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                            {files.map((asset) => (
+                              <article
+                                key={asset.id}
+                                className="group relative flex flex-col items-center gap-1 rounded-xl p-2 text-center transition-colors hover:bg-white/5"
+                              >
+                                {selectionMode && (
+                                  <span
+                                    aria-hidden
+                                    className={`pointer-events-none absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border ${
+                                      selected.includes(asset.id)
+                                        ? 'border-[#ff914d] bg-[#ff914d] text-zinc-950'
+                                        : 'border-white/40 bg-zinc-950/60 text-transparent'
+                                    }`}
+                                  >
+                                    <Check size={14} />
+                                  </span>
+                                )}
+                                <a
+                                  {...openProps(asset)}
+                                  className={`flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-lg border border-zinc-700/60 bg-zinc-950/70 shadow-md shadow-black/30 ${
+                                    selected.includes(asset.id) ? 'ring-2 ring-[#ff914d]' : ''
+                                  }`}
+                                >
+                                  {asset.thumbUrl ? (
+                                    <img
+                                      src={asset.thumbUrl}
+                                      alt={asset.name}
+                                      loading="lazy"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-zinc-600">{thumbFallback(asset, 26)}</span>
+                                  )}
+                                </a>
+                                <p
+                                  className="mt-1 w-full truncate px-1 text-xs font-medium text-zinc-100"
+                                  title={asset.name}
+                                >
+                                  {asset.name}
+                                </p>
+                                <p className="w-full truncate px-1 text-[10px] text-zinc-500">
+                                  {(searching || showAll) && asset.folderPath
+                                    ? `${asset.folderPath} · `
+                                    : ''}
+                                  {formatDriveBytes(asset.sizeBytes)}
+                                  {asset.width && asset.height ? ` · ${asset.width}×${asset.height}` : ''}
+                                  {asset.duplicateOf ? ' · duplicato' : ''}
+                                </p>
+                                {tagChips(asset)}
+                              </article>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-sm">
+                      <div className="hidden grid-cols-[minmax(0,1fr)_90px_80px_minmax(0,1fr)] gap-3 border-b border-zinc-800/80 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 md:grid">
+                        <span>Nome</span>
+                        <span>Dimensione</span>
+                        <span>Tipo</span>
+                        <span>Tag</span>
+                      </div>
+                      {shownFolders.map((item, index) => (
+                        <div
+                          key={item.path}
+                          data-folder-menu
+                          onContextMenu={(event) => {
+                            event.preventDefault();
+                            setFolderMenu(item.path);
+                          }}
+                          className={`group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-3 py-1.5 transition-colors hover:bg-white/5 md:grid-cols-[minmax(0,1fr)_90px_80px_minmax(0,1fr)] ${
+                            index % 2 ? 'bg-white/[0.02]' : ''
+                          } ${folderBusy === item.path ? 'opacity-50' : ''}`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => openFolder(item.path)}
+                            disabled={folderBusy === item.path}
+                            className="flex min-w-0 items-center gap-3 text-left"
                           >
-                            {tag.name}
+                            <FolderIcon className="h-7 w-7 shrink-0" />
+                            <span className="truncate font-medium text-zinc-100">{item.name}</span>
+                          </button>
+                          <span className="text-xs tabular-nums text-zinc-500">
+                            {item.count} {item.count === 1 ? 'elemento' : 'elementi'}
+                          </span>
+                          <span className="hidden text-xs text-zinc-500 md:block">Cartella</span>
+                          <span className="relative hidden justify-self-end md:block">
                             <button
                               type="button"
-                              aria-label={`Rimuovi tag ${tag.name}`}
-                              disabled={busyAsset === asset.id}
-                              onClick={() => void changeTag(asset, 'remove', tag.name)}
-                              className="hover:text-white disabled:opacity-40"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setFolderMenu(folderMenu === item.path ? null : item.path);
+                              }}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-zinc-400 hover:text-white"
+                              aria-label={`Gestisci cartella ${item.path}`}
                             >
-                              <X size={10} />
+                              <MoreHorizontal size={14} />
                             </button>
                           </span>
-                        ))}
-                        <button
-                          type="button"
-                          disabled={busyAsset === asset.id}
-                          onClick={() => void changeTag(asset, 'add')}
-                          className="inline-flex items-center gap-1 rounded-full border border-zinc-700/80 px-2 py-0.5 text-[10px] font-semibold text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200 disabled:opacity-40"
+                          {folderMenuPanel(item.path)}
+                        </div>
+                      ))}
+                      {files.map((asset, index) => (
+                        <div
+                          key={asset.id}
+                          className={`relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-3 py-1.5 transition-colors hover:bg-white/5 md:grid-cols-[minmax(0,1fr)_90px_80px_minmax(0,1fr)] ${
+                            (index + shownFolders.length) % 2 ? 'bg-white/[0.02]' : ''
+                          } ${selected.includes(asset.id) ? 'bg-[#ff914d]/15 ring-1 ring-[#ff914d]/60' : ''}`}
                         >
-                          {busyAsset === asset.id ? (
-                            <Loader2 size={10} className="animate-spin" />
-                          ) : (
-                            <Tag size={10} />
-                          )}
-                          Tag
-                        </button>
-                      </div>
+                          <a {...openProps(asset)} className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-7 w-9 shrink-0 items-center justify-center overflow-hidden rounded bg-zinc-950/70 text-zinc-600">
+                              {asset.thumbUrl ? (
+                                <img
+                                  src={asset.thumbUrl}
+                                  alt=""
+                                  loading="lazy"
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                thumbFallback(asset, 14)
+                              )}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block truncate text-zinc-100" title={asset.name}>
+                                {asset.name}
+                              </span>
+                              {(searching || showAll) && asset.folderPath && (
+                                <span className="block truncate text-[10px] text-zinc-500">
+                                  {asset.folderPath}
+                                </span>
+                              )}
+                            </span>
+                          </a>
+                          <span className="text-xs tabular-nums text-zinc-500">
+                            {formatDriveBytes(asset.sizeBytes)}
+                          </span>
+                          <span className="hidden text-xs capitalize text-zinc-500 md:block">
+                            {asset.kind}
+                            {asset.duplicateOf ? ' · dup.' : ''}
+                          </span>
+                          <span className="hidden md:block">{tagChips(asset)}</span>
+                        </div>
+                      ))}
                     </div>
-                  </article>
-                ))}
+                  )}
+                </section>
               </div>
-            )}
+
+              {/* Barra di stato */}
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-zinc-800/80 bg-zinc-900/70 px-4 py-2 text-[11px] text-zinc-500">
+                <p className="tabular-nums">
+                  {shownFolders.length + files.length}{' '}
+                  {shownFolders.length + files.length === 1 ? 'elemento' : 'elementi'}
+                  {selectionMode && selected.length > 0 ? ` · ${selected.length} selezionati` : ''}
+                  {assets.length < data.totals.assets ? ` · mostrati i primi ${assets.length} file` : ''}
+                </p>
+                <p className="tabular-nums">
+                  {data.totals.assets} file · {formatDriveBytes(data.totals.bytes)} · {folders.length}{' '}
+                  cartelle ·{' '}
+                  {data.agent.freeBytes !== null
+                    ? `${formatDriveBytes(data.agent.freeBytes)} disponibili`
+                    : 'spazio libero non disponibile'}
+                  {data.syncedAt
+                    ? ` · aggiornato ${new Date(data.syncedAt).toLocaleString('it-IT')}`
+                    : ''}
+                </p>
+              </div>
+            </div>
           </>
         )}
 
