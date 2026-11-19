@@ -121,7 +121,6 @@ export default function DrivePage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [moveTargetOpen, setMoveTargetOpen] = useState(false);
   const [selectionBusy, setSelectionBusy] = useState(false);
-  const selectionModeRef = useRef(false);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tokenRef = useRef<{ token: string; expiresAt: number } | null>(null);
 
@@ -424,8 +423,13 @@ export default function DrivePage() {
       await request('/api/drive/sync', { method: 'POST' });
       await load();
       if (folder === folderPath || folder.startsWith(`${folderPath}/`)) {
-        setFolder('');
-        setUploadFolder('');
+        // I file recuperati finiscono nella cartella superiore: ci portiamo lì,
+        // non alla radice, così l'utente li ritrova subito.
+        const parent = folderPath.includes('/')
+          ? folderPath.slice(0, folderPath.lastIndexOf('/'))
+          : '';
+        setFolder(parent);
+        setUploadFolder(parent);
       }
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : 'Cancellazione non riuscita.');
@@ -436,14 +440,12 @@ export default function DrivePage() {
   }
 
   function startSelection() {
-    selectionModeRef.current = true;
     setSelectionMode(true);
     setSelected([]);
     setMoveTargetOpen(false);
   }
 
   function exitSelection() {
-    selectionModeRef.current = false;
     setSelectionMode(false);
     setSelected([]);
     setMoveTargetOpen(false);
@@ -459,7 +461,7 @@ export default function DrivePage() {
   function beginLongPress() {
     cancelLongPress();
     // Già in selezione: un tocco prolungato non deve azzerare i file già scelti.
-    if (selectionModeRef.current) return;
+    if (selectionMode) return;
     longPressRef.current = setTimeout(() => {
       longPressRef.current = null;
       // Solo la modalità: nessun file pre-selezionato.
@@ -474,7 +476,7 @@ export default function DrivePage() {
   }
 
   /** Chiamate comuni alle azioni sulla selezione: agente, indice, griglia. */
-  async function runSelectionAction(body: Record<string, unknown>, done?: () => void) {
+  async function runSelectionAction(body: Record<string, unknown>) {
     setSelectionBusy(true);
     setError('');
     try {
@@ -485,7 +487,6 @@ export default function DrivePage() {
       });
       await request('/api/drive/sync', { method: 'POST' });
       await load();
-      done?.();
       exitSelection();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : 'Operazione non riuscita.');
@@ -1057,13 +1058,8 @@ export default function DrivePage() {
                       onPointerUp={cancelLongPress}
                       onPointerLeave={cancelLongPress}
                       onPointerCancel={cancelLongPress}
-                      onContextMenu={(event) => {
-                        // Pressione prolungata col tasto destro: apre la selezione.
-                        event.preventDefault();
-                        if (!selectionModeRef.current) startSelection();
-                      }}
                       onClick={(event) => {
-                        if (!selectionModeRef.current) return;
+                        if (!selectionMode) return;
                         event.preventDefault();
                         toggleSelected(asset.id);
                       }}
