@@ -707,7 +707,7 @@ export default function DrivePage() {
               className={BTN_PRIMARY}
             >
               {syncing ? <Loader2 size={16} className="animate-spin" /> : <HardDrive size={16} />}
-              Hardisk
+              Sincronizza Hardisk
             </button>
           </div>
         </div>
@@ -772,7 +772,7 @@ export default function DrivePage() {
                       <code className="font-mono">
                         launchctl kickstart -k gui/$(id -u)/com.uttf.drive-agent
                       </code>
-                      ), poi premi Hardisk.
+                      ), poi premi Sincronizza Hardisk.
                     </p>
                   ) : (
                     <p className="mt-1 text-xs text-amber-200/80">
@@ -1031,7 +1031,7 @@ export default function DrivePage() {
                       {canUseAgent ? (
                         <>
                           Con Hiksemi collegato e l’agente attivo, premi{' '}
-                          <span className="text-[#ff914d]">Hardisk</span>: l’indice
+                          <span className="text-[#ff914d]">Sincronizza Hardisk</span>: l’indice
                           legge i file già presenti sul disco senza ricaricarli.
                         </>
                       ) : (
