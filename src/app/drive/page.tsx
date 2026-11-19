@@ -284,11 +284,22 @@ export default function DrivePage() {
   async function syncIndex() {
     setSyncing(true);
     setError('');
+    setUploadStatus('Analizzo la cartella dell’hardisk…');
     try {
-      await request('/api/drive/sync', { method: 'POST' });
+      const result = (await (await request('/api/drive/sync', { method: 'POST' })).json()) as {
+        synced?: number;
+        removed?: number;
+      };
       await load();
+      const removed = result.removed ?? 0;
+      setUploadStatus(
+        `✓ Hardisk analizzato: ${result.synced ?? 0} file${
+          removed > 0 ? `, ${removed} non più presenti tolti dall’elenco` : ', nessun file rimosso'
+        }`,
+      );
     } catch (syncError) {
-      setError(syncError instanceof Error ? syncError.message : 'Sincronizzazione non riuscita.');
+      setUploadStatus('');
+      setError(syncError instanceof Error ? syncError.message : 'Analisi dell’hardisk non riuscita.');
     } finally {
       setSyncing(false);
     }
@@ -689,7 +700,7 @@ export default function DrivePage() {
               className={BTN_PRIMARY}
             >
               {syncing ? <Loader2 size={16} className="animate-spin" /> : <HardDrive size={16} />}
-              Sincronizza indice
+              Hardisk
             </button>
           </div>
         </div>
@@ -754,7 +765,7 @@ export default function DrivePage() {
                       <code className="font-mono">
                         launchctl kickstart -k gui/$(id -u)/com.uttf.drive-agent
                       </code>
-                      ), poi premi Sincronizza indice.
+                      ), poi premi Hardisk.
                     </p>
                   ) : (
                     <p className="mt-1 text-xs text-amber-200/80">
@@ -816,7 +827,7 @@ export default function DrivePage() {
                   ) : (
                     <RefreshCw size={16} />
                   )}
-                  Ricarica indice
+                  Aggiorna elenco
                 </button>
               </div>
             )}
@@ -1015,7 +1026,7 @@ export default function DrivePage() {
                       {canUseAgent ? (
                         <>
                           Con Hiksemi collegato e l’agente attivo, premi{' '}
-                          <span className="text-[#ff914d]">Sincronizza indice</span>: l’indice
+                          <span className="text-[#ff914d]">Hardisk</span>: l’indice
                           legge i file già presenti sul disco senza ricaricarli.
                         </>
                       ) : (

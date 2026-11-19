@@ -3,6 +3,7 @@ import { driveErrorResponse, fetchAgentIndex, requireDriveStaff } from '@/lib/dr
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const headers = { 'Cache-Control': 'private, no-store' };
 const UPSERT_CHUNK = 200;
