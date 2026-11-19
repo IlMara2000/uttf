@@ -95,8 +95,8 @@ export async function POST(request: Request) {
       if (data.length < 1000) break;
     }
 
-    const keep = new Set(rows.map((row) => row.remote_id));
-    const stale = existing.map((row) => row.remote_id).filter((id) => !keep.has(id));
+        // Il sito comanda: la sincronizzazione non toglie mai righe.
+    const stale: string[] = [];
 
     // Cancellazioni a gruppi in parallelo: dopo un grosso svuotamento del disco
     // sono migliaia di righe e in serie sforano il tempo massimo della funzione.

@@ -12,7 +12,7 @@
  * API (usata anche dal gestionale):
  *   GET    /                 pagina di consultazione e upload
  *   GET    /api/files        indice completo
- *   POST   /api/rescan       analizza la cartella del disco e allinea l'indice
+ *   POST   /api/rescan       analizza la cartella del disco e aggiunge i file nuovi all'indice
  *   GET    /api/health       stato agente e spazio disco
  *   POST   /api/files?name=&folder=   body grezzo, risposta 201 { asset, duplicate }
  *   GET    /thumb/:id        anteprima WebP
@@ -988,11 +988,11 @@ async function rescanDisk() {
     }
   }
 
-  // Cio' che e' rimasto in "missing" non e' piu' sul disco: esce dall'indice.
+  // Il sito comanda: cio' che non e' piu' sul disco resta nell'indice (la scansione
+  // aggiunge e basta). Le cancellazioni passano solo dai comandi del sito.
   for (const list of missingBySha.values()) {
     for (const asset of list) {
-      await fsp.rm(path.join(THUMB_DIR, `${asset.id}.webp`), { force: true }).catch(() => {});
-      removed += 1;
+      state.assets.push(asset);
     }
   }
 
