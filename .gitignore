@@ -12,3 +12,20 @@ drive-agent/var/
 supabase/.temp/
 .vercel
 .freebuff/
+
+# Residui locali: copie di sicurezza datate e file di lavorazione.
+*.bak
+*.bak-*
+*.orig
+*.rej
+*.swp
+*~
+*.log
+*.pid
+*.tmp
+*.part
+
+# Ambienti e cache locali degli script Python (vedi AGENTS.md).
+.venv/
+.venv-pmd3/
+__pycache__/
