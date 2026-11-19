@@ -129,6 +129,23 @@ export function toIndexedAsset(raw: AgentAsset): IndexedAsset | null {
 }
 
 export async function fetchAgentIndex() {
+  // Prima l'agente rilegge la cartella del disco (file tolti, spostati, nuovi),
+  // poi si legge l'indice aggiornato. Se l'analisi supera il tempo massimo
+  // continua sul Mac e basta premere di nuovo per avere il resto.
+  let rescanError: string | null = null;
+  try {
+    const rescan = await fetchAgent('/api/rescan', { method: 'POST' }, 50_000);
+    if (!rescan.ok) {
+      const body = (await rescan.json().catch(() => null)) as { error?: unknown } | null;
+      rescanError = typeof body?.error === 'string' ? body.error : `HTTP ${rescan.status}`;
+    }
+  } catch {
+    /* analisi lunga o agente non aggiornato: si prosegue con l'indice che c'e' */
+  }
+  if (rescanError) {
+    throw new DriveError(`Analisi dell'hardisk non riuscita: ${rescanError}`, 502);
+  }
+
   let response: Response;
   try {
     response = await fetchAgent('/api/files');

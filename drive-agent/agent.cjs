@@ -12,6 +12,7 @@
  * API (usata anche dal gestionale):
  *   GET    /                 pagina di consultazione e upload
  *   GET    /api/files        indice completo
+ *   POST   /api/rescan       analizza la cartella del disco e allinea l'indice
  *   GET    /api/health       stato agente e spazio disco
  *   POST   /api/files?name=&folder=   body grezzo, risposta 201 { asset, duplicate }
  *   GET    /thumb/:id        anteprima WebP
@@ -857,6 +858,160 @@ async function handleDeleteAssets(req, res) {
   return sendJson(res, 200, { deleted: deleted.length });
 }
 
+/* ── analisi diretta della cartella del disco ──────────────────────────── */
+
+let rescanRun = null;
+
+/** Elenca i file veri della cartella: salta .uttf-drive e tutto cio' che inizia con '.'. */
+async function walkDisk() {
+  const found = new Map();
+  async function walk(dir) {
+    const entries = await fsp.readdir(dir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      if (entry.name.startsWith('.')) continue;
+      const absolute = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(absolute);
+      } else if (entry.isFile()) {
+        const stat = await fsp.stat(absolute).catch(() => null);
+        if (stat && stat.size > 0) {
+          found.set(path.relative(ROOT, absolute), { absolute, size: stat.size, mtimeMs: stat.mtimeMs });
+        }
+      }
+    }
+  }
+  await walk(ROOT);
+  return found;
+}
+
+async function hashFile(absolute) {
+  const hash = crypto.createHash('sha256');
+  await pipeline(fs.createReadStream(absolute), hash);
+  return hash.digest('hex');
+}
+
+/** Allinea l'indice al disco: via quello che non c'e' piu', dentro il nuovo.
+ * Un file spostato o rinominato (stesso contenuto) mantiene id e tag. */
+async function rescanDisk() {
+  const started = Date.now();
+  // Senza l'indice nella cartella il disco potrebbe non essere montato: meglio
+  // fermarsi che svuotare l'elenco.
+  if (!(await fsp.stat(INDEX_FILE).catch(() => null))) {
+    throw new Error('cartella del disco non raggiungibile: Hiksemi e\' collegato?');
+  }
+  const onDisk = await walkDisk();
+  if (onDisk.size === 0 && state.assets.length > 0) {
+    throw new Error('la cartella del disco risulta vuota: Hiksemi e\' collegato?');
+  }
+
+  const kept = [];
+  const missing = [];
+  for (const asset of state.assets) {
+    const entry = onDisk.get(asset.relPath);
+    if (entry && entry.size === asset.size) {
+      kept.push(asset);
+      onDisk.delete(asset.relPath);
+    } else {
+      missing.push(asset);
+    }
+  }
+  // onDisk ora contiene solo file nuovi o con dimensione cambiata.
+  const missingBySha = new Map();
+  for (const asset of missing) {
+    const list = missingBySha.get(asset.sha256) ?? [];
+    list.push(asset);
+    missingBySha.set(asset.sha256, list);
+  }
+
+  state.assets = kept;
+  let removed = 0;
+  let moved = 0;
+  let added = 0;
+  const shaSeen = new Map(kept.map((asset) => [asset.sha256, asset.id]));
+
+  const pending = [...onDisk.entries()];
+  let sinceSave = 0;
+  for (const [relPath, entry] of pending) {
+    let sha256;
+    try {
+      sha256 = await hashFile(entry.absolute);
+    } catch (error) {
+      log('scan: file illeggibile', relPath, '-', error.message);
+      continue;
+    }
+
+    const candidates = missingBySha.get(sha256);
+    const revived = candidates && candidates.length > 0 ? candidates.shift() : null;
+    if (revived) {
+      revived.relPath = relPath;
+      revived.name = path.basename(relPath);
+      revived.folder = path.dirname(relPath) === '.' ? '' : path.dirname(relPath);
+      revived.mime = mimeOf(revived.name);
+      revived.kind = kindOf(revived.mime);
+      revived.size = entry.size;
+      state.assets.push(revived);
+      moved += 1;
+      continue;
+    }
+
+    const mime = mimeOf(relPath);
+    const asset = {
+      id: crypto.randomUUID(),
+      name: path.basename(relPath),
+      folder: path.dirname(relPath) === '.' ? '' : path.dirname(relPath),
+      relPath,
+      size: entry.size,
+      mime,
+      kind: kindOf(mime),
+      sha256,
+      duplicateOf: shaSeen.get(sha256) ?? null,
+      createdAt: new Date(entry.mtimeMs).toISOString(),
+      width: null,
+      height: null,
+      duration: null,
+      thumb: false,
+    };
+    try {
+      await makeThumbnail(asset, entry.absolute);
+    } catch (error) {
+      log('scan: anteprima non riuscita per', asset.name, '-', error.message);
+    }
+    if (!shaSeen.has(sha256)) shaSeen.set(sha256, asset.id);
+    state.assets.push(asset);
+    added += 1;
+    queueMirror(asset.relPath);
+
+    sinceSave += 1;
+    if (sinceSave >= 25) {
+      sinceSave = 0;
+      await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+    }
+  }
+
+  // Cio' che e' rimasto in "missing" non e' piu' sul disco: esce dall'indice.
+  for (const list of missingBySha.values()) {
+    for (const asset of list) {
+      await fsp.rm(path.join(THUMB_DIR, `${asset.id}.webp`), { force: true }).catch(() => {});
+      removed += 1;
+    }
+  }
+
+  await persistIndex().catch((error) => log('ERRORE salvataggio indice:', error.message));
+  void pumpMirror();
+  log(`scan disco: +${added} nuovi, ${moved} spostati, -${removed} spariti, totale ${state.assets.length} (${Date.now() - started}ms)`);
+  return { added, moved, removed, total: state.assets.length };
+}
+
+/** Una sola analisi alla volta: chi arriva mentre ne gira una aspetta la stessa. */
+function runRescan() {
+  if (!rescanRun) {
+    rescanRun = rescanDisk().finally(() => {
+      rescanRun = null;
+    });
+  }
+  return rescanRun;
+}
+
 /* ── copia di sicurezza su un secondo disco ────────────────────────────── */
 
 const MIRROR_SUBDIR = 'Drive Under the Tower Factory';
@@ -1324,6 +1479,15 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/files') {
       return await handleUpload(req, res, url);
+    }
+
+    if (req.method === 'POST' && pathname === '/api/rescan') {
+      try {
+        return sendJson(res, 200, await runRescan());
+      } catch (error) {
+        log('ERRORE scan disco:', error.message);
+        return sendJson(res, 500, { error: error.message });
+      }
     }
 
     if (req.method === 'GET' && pathname === '/api/files') {
