@@ -5,9 +5,14 @@ dominio `uttf.vercel.app`, funzioni in `iad1`); database, auth e file stanno su
 **Supabase**. Questo documento elenca cosa va cambiato, in che ordine, e i punti
 del codice che **non** funzionano su Workers così come sono.
 
+**Fase 1 completata**: i tre blocchi di codice sono risolti, `wrangler.jsonc` e
+`open-next.config.ts` esistono, e il Worker è stato compilato e avviato in
+workerd in locale (`opennextjs-cloudflare build` e `preview`). Non è stato
+deployato nulla e la produzione resta su Vercel.
+
 Riferimenti verificati: `opennext.js.org/cloudflare`, `developers.cloudflare.com/workers/framework-guides/web-apps/opennext`.
-Il pacchetto `@opennextjs/cloudflare` supporta tutte le minor e patch di
-Next.js 16 (il progetto è su 16.4.3). Cloudflare ora consiglia **vinext** per le
+Il progetto è su Next **16.4.5** con `@opennextjs/cloudflare` **1.20.18**, la
+combinazione richiesta dall'adapter (peer `next >= 16.4.5`). Cloudflare ora consiglia **vinext** per le
 app nuove, ma per un'app già in produzione il percorso è **OpenNext**: esegue il
 vero `next build` e adatta l'output a workerd.
 
@@ -24,9 +29,9 @@ vero `next build` e adatta l'output a workerd.
 
 | Punto | File | Perché blocca | Rimedio |
 |---|---|---|---|
-| Lettura del font da disco | `src/app/api/registrations/route.ts` (~riga 171): `readFile('./public/fonts/NotoSans-Regular.ttf')` | Su Workers non esiste un filesystem: `node:fs` non è disponibile | Importare il font come modulo/asset (`import font from '...ttf'`) o servirlo dal binding `ASSETS`; togliere `outputFileTracingIncludes` |
-| Ottimizzazione immagini | 7 file usano `next/image`; `next.config.ts` dichiara `sharp` | `sharp` non gira su Workers; `/_next/image` richiede un binding | Attivare il binding **Cloudflare Images** (`IMAGES`) in `wrangler.jsonc`, oppure passare a `unoptimized` e servire formati già ottimizzati |
-| ISR | `src/app/page.tsx`: `export const revalidate = 60` | Senza cache configurata l'ISR non persiste tra isolate | `open-next.config.ts` con cache incrementale su **R2**, tag cache su **D1** e coda su Durable Object |
+| Lettura del font da disco | ~~`src/app/api/registrations/route.ts`~~ **risolto** | Su Workers non esiste un filesystem: `node:fs` non è disponibile | Fatto: `src/lib/registrations/font.ts` scarica il font da `public/fonts` con `fetch` (servito da `ASSETS`), con memo per isolate; `outputFileTracingIncludes` rimosso |
+| Ottimizzazione immagini | ~~`next.config.ts`~~ **risolto** | `sharp` non gira su Workers; `/_next/image` richiede un binding | Fatto: `images.unoptimized = true`. Le foto del gestionale sono già ridimensionate a 1600 px in WebP dal browser (`src/lib/optimize-upload.ts`), quindi Cloudflare Images non serve |
+| ISR | `src/app/page.tsx`: `export const revalidate = 60` | Senza cache configurata l'ISR non persiste tra isolate | Fatto: `open-next.config.ts` con cache incrementale su **R2** (`NEXT_INC_CACHE_R2_BUCKET`), tag cache su **D1** (`NEXT_TAG_CACHE_D1`) e coda su Durable Object (`NEXT_CACHE_DO_QUEUE`). I binding vanno creati nella fase 2 |
 | Proxy media | `src/app/api/publications/media/[name]/route.ts` (`force-dynamic`) | Su Vercel è la voce di costo principale e ha il limite body 4,5 MB | Su Workers valutare R2 + binding diretto, o mantenere Supabase Storage con URL firmati |
 | Archivio su disco | `src/lib/drive-server.ts`, agente su `127.0.0.1:8787` | Su Workers non esiste rete locale verso il Mac | Cloudflare Tunnel + Access (già previste `CF_ACCESS_CLIENT_ID/SECRET` e `DRIVE_PUBLIC_URL`) |
 | Cron | `vercel.json` | I cron di Vercel non esistono su Cloudflare | Cron Trigger in `wrangler.jsonc` + `scheduled` handler che chiama `runRetention` da `src/lib/retention.ts` |
@@ -41,20 +46,28 @@ prima del cutover.
 ## Passi
 
 1. **Prima del trasloco** (sul codice, con Vercel ancora attivo):
-   - sostituire `readFile` del font con import/asset;
-   - decidere immagini: Cloudflare Images o `unoptimized`;
+   - ~~sostituire `readFile` del font con import/asset~~ (fatto);
+   - ~~decidere immagini: Cloudflare Images o `unoptimized`~~ (fatto: `unoptimized`);
+   - ~~`open-next.config.ts` con le cache ISR~~ (fatto);
    - esporre la retention anche come funzione pura (già fatto: `runRetention`);
    - aggiungere `RETENTION_TOKEN` all'ambiente e togliere la dipendenza da
      `CRON_SECRET` quando si passa ai Cron Trigger.
 2. Installare l'adapter: `npm i @opennextjs/cloudflare` e `npm i -D wrangler`.
-3. Creare `wrangler.jsonc` con `main: ".open-next/worker.js"`,
-   `compatibility_date`, `compatibility_flags: ["nodejs_compat", "global_fetch_strictly_public"]`,
-   `assets` con binding `ASSETS`, il binding `IMAGES`, la cache R2, il D1 della
-   tag cache e il self-reference del Worker.
-4. Creare `open-next.config.ts` con `defineCloudflareConfig()` e le tre cache.
-5. Build e prova locale: `npx opennextjs-cloudflare build`,
-   `npx opennextjs-cloudflare preview`. Rifare qui i controlli che oggi si fanno
-   su `next start`: pagine pubbliche, login staff, upload, PDF, cron.
+3. ~~Creare `wrangler.jsonc`~~ **fatto**: `main`, `compatibility_date`,
+   i due flag, `assets` con `ASSETS`, self-reference, R2, D1 e Durable Object.
+   Restano da creare le risorse e da sostituire l'id D1 segnaposto.
+   Il binding `IMAGES` è volutamente assente: le immagini sono `unoptimized`.
+4. ~~Creare `open-next.config.ts`~~ **fatto** con `defineCloudflareConfig()` e le
+   tre cache.
+5. **Build e prova locale** — fatta il 21 novembre 2026: `opennextjs-cloudflare
+   build` completa e `preview` serve `/`, `/privacy`, `/cookie`, `/sitemap.xml`,
+   `/api/health` e `/fonts/NotoSans-Regular.ttf` con i content-type corretti. La
+   fetch del font dall'interno del Worker restituisce 569.208 byte, quindi il
+   rimedio funziona su workerd. Da rifare qui i controlli che oggi si fanno su
+   `next start` con un database raggiungibile: login staff, upload, PDF, cron.
+   Nota: i Durable Object "interni" non vengono emulati da `wrangler dev` (la
+   coda di rivalidazione va provata con le risorse reali); il middleware Node
+   (`src/proxy.ts`) è supportato in modo sperimentale e va verificato al cutover.
 6. Creare le risorse Cloudflare (R2, D1, KV se serve) e caricare i secret con
    `wrangler secret put` (stessi nomi di `.env.example`).
 7. Deploy su un dominio di prova (`*.workers.dev`) e verificare:

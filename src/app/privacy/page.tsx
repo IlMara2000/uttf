@@ -15,7 +15,7 @@ import { LEGAL_ENTITY, legalAddress } from "@/lib/legal-entity";
 const purposes = [
   {
     purpose: "Erogazione del sito, sicurezza e prevenzione degli abusi",
-    data: "Indirizzo IP e log tecnici del fornitore di hosting, hash HMAC dell'IP per i limiti di invio",
+    data: "Indirizzo IP e log tecnici del fornitore di hosting, hash HMAC dell'IP per i limiti di invio, segnalazioni tecniche di errore senza dati dei moduli",
     basis: "Legittimo interesse del titolare alla sicurezza del servizio (art. 6.1.f GDPR)",
   },
   {
@@ -68,6 +68,7 @@ const retention = [
   ["Iscritti alla newsletter", "Fino alla revoca del consenso; in assenza di interazioni, cancellazione dopo 24 mesi"],
   ["Hash dell'IP per la prova del consenso newsletter", "Fino alla cancellazione dell'iscrizione: l'IP non è conservato in chiaro"],
   ["Log tecnici di hosting e sicurezza", "Secondo i tempi del fornitore (da poche ore a 7 giorni), salvo necessità di indagine"],
+  ["Errori tecnici applicativi (monitoraggio)", "Secondo il piano del fornitore (30 giorni), senza cookie né contenuti dei moduli"],
   ["Hash dell'IP per i limiti anti-abuso", "Finestra di 1 ora, poi cancellato"],
   ["Account dello staff", "Fino alla revoca dell'autorizzazione e per i 30 giorni successivi"],
   ["Documenti contabili e ricevute", "10 anni (art. 2220 c.c. e norme fiscali)"],
@@ -95,16 +96,20 @@ export default function PrivacyPage() {
           <p>
             Trattiamo i dati che ci fornisci per gestire la newsletter, le recensioni, le
             prenotazioni e le iscrizioni alle attività della Factory. Non vendiamo dati, non
-            facciamo profilazione pubblicitaria e non usiamo strumenti di analisi di terze
-            parti. Per foto e video chiediamo un consenso separato che puoi rifiutare senza
+            facciamo profilazione pubblicitaria e non usiamo strumenti di analisi statistica dei
+            visitatori. Usiamo solo un servizio di monitoraggio degli errori tecnici, configurato
+            per non raccogliere cookie né il contenuto dei moduli e per non associare gli eventi
+            a una persona. Per foto e video
+            chiediamo un consenso separato che puoi rifiutare senza
             perdere il posto. Puoi chiedere accesso, correzione, cancellazione e revoca in
             qualsiasi momento scrivendo a <a href={`mailto:${LEGAL_ENTITY.email}`}>{LEGAL_ENTITY.email}</a>.
           </p>
           <p lang="en">
             <strong>English summary.</strong> We process the data you send us to run our
             newsletter, reviews, bookings and workshop registrations. We do not sell data, we
-            do not run advertising profiling and we do not use third-party analytics. Photo
-            and video consent is separate and optional. You can exercise your rights at any
+            do not run advertising profiling and we do not use third-party analytics. We only
+            use an error-monitoring service configured not to collect cookies or form data and
+            not to link events to a person. Photo and video consent is separate and optional. You can exercise your rights at any
             time by writing to {LEGAL_ENTITY.email}. The Italian version of this notice
             prevails.
           </p>
@@ -148,7 +153,10 @@ export default function PrivacyPage() {
               <strong>Navigazione del sito.</strong> Il fornitore di hosting registra dati
               tecnici (indirizzo IP, data e ora, pagina richiesta, user agent) per erogare il
               servizio e contrastare abusi. Non utilizziamo Google Analytics, pixel pubblicitari
-              o altri strumenti di tracciamento. La mappa di Google e i video YouTube vengono
+              o altri strumenti di tracciamento. Se si verifica un errore tecnico, il messaggio
+              di errore viene inviato a un servizio di monitoraggio senza cookie, senza il
+              contenuto dei moduli e senza associarlo a una persona. La mappa di Google e i video
+              YouTube vengono
               caricati solo dopo un tuo clic.
             </li>
             <li>
@@ -245,6 +253,13 @@ export default function PrivacyPage() {
           <ul>
             <li><strong>Supabase Inc.</strong> — database, autenticazione e archiviazione dei file.</li>
             <li><strong>Vercel Inc.</strong> — hosting dell&rsquo;applicazione, CDN e log tecnici.</li>
+            <li>
+              <strong>Functional Software, Inc. (Sentry)</strong> — monitoraggio degli errori
+              tecnici del sito e dell&rsquo;applicazione. Riceve messaggio di errore, pagina e
+              stack trace; la configurazione esclude cookie, intestazioni HTTP, contenuti dei
+              moduli e dati identificativi dell&rsquo;utente, e non è usata per analisi statistiche
+              o profilazione.
+            </li>
             <li><strong>Cloudflare Inc.</strong> — tunnel e controllo degli accessi verso l&rsquo;archivio locale della sede.</li>
             <li><strong>Google Ireland Ltd / Google LLC</strong> — calendario, se attivato dallo staff, e mappe caricate solo su tua richiesta.</li>
             <li><strong>Groq Inc.</strong> — modello linguistico usato esclusivamente per riformulare testi redazionali scritti dallo staff. Non inviamo a questo fornitore dati di iscritti, partecipanti o recensioni inserite dal pubblico.</li>

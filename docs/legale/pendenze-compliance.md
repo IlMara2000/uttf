@@ -1,0 +1,176 @@
+# Pendenze aperte — aggiornato al 21 novembre 2026
+
+Questo file elenca **solo** ciò che resta da fare e che non è stato possibile
+chiudere io. Tutto il resto è stato fatto e verificato in questa tornata.
+
+---
+
+## 1. Chiuso oggi (con verifica)
+
+- **Next 16.4.5** e **@opennextjs/cloudflare 1.20.18**: la build OpenNext
+  completa e il Worker parte in workerd (`opennextjs-cloudflare preview`).
+- **`wrangler.jsonc`** con `ASSETS`, self-reference, R2, D1 e Durable Object;
+  **`open-next.config.ts`** con cache ISR su R2, tag cache su D1 e coda su DO;
+  **`cloudflare/d1-next-tag-cache.sql`** con la tabella `revalidations`.
+- **Font senza disco**: `src/lib/registrations/font.ts` legge il TTF da
+  `public/fonts`. Provato dentro workerd: 569.208 byte, magic TTF corretto.
+- **Immagini**: `unoptimized`, nessun binding `IMAGES`, nessun `sharp` a runtime.
+- **Sentry**: configurazione nei tre runtime, raccolta dati chiusa, filtri che
+  eliminano email e query string da messaggi e briciole.
+- **Informativa privacy 2.1** e cookie policy aggiornate con Sentry; registro
+  dei trattamenti (voce 11) e tabella fornitori allineati.
+- **Retention in produzione**: `CRON_SECRET` impostato su Vercel Production,
+  redeploy dello stesso codice, cron eseguito. Log reale:
+  `[retention] dry-run: {"newsletterSubscribers":0,"bookingReservations":0,"reviews":0,"activityRegistrations":0,"registrationFiles":0,"bookingRateLimits":1,"registrationRateLimits":1}`.
+  Nessun dato personale scaduto, due righe di rate limit già scadute.
+
+---
+
+## 2. Serve una tua azione: dati del titolare
+
+Campi vuoti in `src/lib/legal-entity.ts`, quindi assenti da `/privacy` e
+`/terms`:
+
+- [ ] codice fiscale
+- [ ] indirizzo PEC
+- [ ] numero di iscrizione al RUNTS
+- [ ] nome e cognome del legale rappresentante
+
+Quando li hai, passali qui: li inserisco, porto l'informativa alla versione 2.2
+con la data del giorno e rifaccio la build.
+
+---
+
+## 3. Sentry: creare il progetto (10 minuti, gratis)
+
+Non posso registrare un account a tuo nome: serve un'identità (email o accesso
+GitHub/Google) e l'accettazione dei termini. Il resto è già pronto.
+
+**Piano Developer — gratis, senza carta di credito, senza scadenza**
+
+| Voce | Limite |
+|---|---|
+| Errori al mese | 5.000 |
+| Utenti | 1 |
+| Storico eventi | 30 giorni |
+| Monitor uptime / cron inclusi | 1 + 1 |
+| Spazio log | 5 GB |
+
+Cosa succede oltre i 5.000 errori: gli eventi vengono **scartati**, non
+addebitati; il piano free non ha consumo a pagamento, quindi non arriva una
+bolletta. Si perde la visibilità fino al mese successivo: va impostato un avviso
+di quota nella dashboard.
+
+Passi:
+
+1. `sentry.io` → sign up (piano Developer).
+2. Crea un progetto di tipo **Next.js**, copia il **DSN**.
+3. Incollalo qui oppure impostalo tu:
+   `printf '%s' "<DSN>" | npx vercel env add NEXT_PUBLIC_SENTRY_DSN production`
+4. Fai il push: il deploy successivo carica il DSN e Sentry inizia a ricevere.
+5. Nella dashboard del progetto attiva l'opzione che **non conserva gli IP**.
+6. Accetta il DPA e archiviane il PDF; verifica la certificazione DPF (o SCC).
+7. Verifica con la pagina "Issue" di prova che arrivi un evento e che non
+   contenga email, header o body.
+
+---
+
+## 4. Migrazione del consenso newsletter (Supabase)
+
+Non ho credenziali del database e l'accesso è stato rimandato. L'API funziona
+anche senza le colonne (salva il contatto e salta la prova del consenso), ma
+finché la migrazione non è applicata la promessa dell'informativa non è
+mantenuta.
+
+Incolla questo nell'**SQL Editor** di Supabase:
+
+```sql
+alter table public.newsletter_subscribers
+  add column if not exists consent_at timestamptz,
+  add column if not exists consent_version text,
+  add column if not exists consent_ip_hash text;
+```
+
+Poi:
+
+- [ ] verifica che le tre colonne esistano
+- [ ] decidi sugli iscritti storici: riconferma via email o cancellazione
+
+---
+
+## 5. Uptime monitor (UptimeRobot, gratis)
+
+Va creato **dopo** il deploy del nuovo codice, perché `/api/health` oggi non è
+ancora in produzione.
+
+1. Account free su `uptimerobot.com` (50 monitor, 5 minuti, uso commerciale
+   ammesso, nessuna carta).
+2. New monitor → HTTP(s) → `https://uttf.vercel.app/api/health` → 5 minuti.
+3. Alert alla tua email.
+4. Consigliato: tipo **Keyword** con `"ok":true`.
+
+Serve anche a non far andare in pausa il progetto Supabase free (7 giorni senza
+richieste).
+
+---
+
+## 6. Retention: l'interruttore finale
+
+Oggi il job gira in **dry-run**: conta e non cancella. Il primo giro reale ha
+trovato 0 righe personali scadute.
+
+- [ ] Abilitare la cancellazione quando sei d'accordo:
+      `printf 'true' | npx vercel env add RETENTION_ENABLED production`
+      poi redeploy.
+
+Non l'ho attivato io perché da quel momento il job cancella davvero iscritti
+oltre 24 mesi, prenotazioni oltre 12 mesi, recensioni oltre 5 anni e richieste
+non accolte oltre 12 mesi. È irreversibile: la decisione è tua.
+
+---
+
+## 7. DPA e trasferimenti extra-UE
+
+Da fare con chi vi segue legalmente; a me servono solo le date per tenerne
+traccia.
+
+- [ ] Sentry / Functional Software, Inc. — DPA + DPF o SCC + opzione IP
+- [ ] Supabase — DPA incorporato nei ToS
+- [ ] Vercel — DPA
+- [ ] Cloudflare — DPA **prima** di attivare tunnel o Worker
+- [ ] GitHub — DPA
+- [ ] Google — DPA Workspace/Gmail e Cloud
+- [ ] Groq — DPA
+- [ ] Valutazione d'impatto del trasferimento (TIA) aggiornata
+
+---
+
+## 8. Fase 2 Cloudflare: risorse da creare
+
+Il codice è pronto e verificato in locale; mancano le risorse e il deploy.
+
+- [ ] `npx wrangler r2 bucket create uttf-crm-opennext-cache`
+- [ ] `npx wrangler d1 create uttf-tag-cache`
+- [ ] applicare `cloudflare/d1-next-tag-cache.sql` al D1
+- [ ] sostituire in `wrangler.jsonc` l'id D1 segnaposto
+      (`00000000-0000-0000-0000-000000000000`) con quello reale
+- [ ] `npx wrangler secret put` per i segreti (stessi nomi di `.env.example`)
+- [ ] `npx opennextjs-cloudflare deploy` su un dominio `*.workers.dev`
+- [ ] verificare su Cloudflare: login staff, upload allegati, PDF di
+      autorizzazione, cron di retention, cache ISR
+- [ ] ricordare che la coda Durable Object non è emulata in locale: va provata
+      con le risorse reali
+- [ ] il middleware Node (`src/proxy.ts`) è sperimentale su Cloudflare:
+      ricontrollare il redirect al login
+
+---
+
+## 9. Rischi da tenere d'occhio
+
+- **Messaggi di errore.** I filtri rimuovono email e query string, ma un codice
+  di errore esterno può contenere altri valori. Controlla i primi eventi reali.
+- **Quota Sentry** (5.000/mese): imposta l'avviso.
+- **Nessun backup automatico** su Supabase free: serve un `pg_dump` periodico.
+- **Vercel Hobby** è per uso non commerciale e può essere sospeso: è un ponte.
+- **Allergia o dati sanitari** nei campi liberi: vanno cancellati appena cessata
+  l'esigenza.

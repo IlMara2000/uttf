@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { createHash, createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { readJson } from "@/lib/request-json";
@@ -15,6 +13,7 @@ import {
   responseText,
 } from "@/lib/registrations/model";
 import { authorizationPdf } from "@/lib/registrations/document";
+import { notoSansBytes } from "@/lib/registrations/font";
 import { zipSync, strToU8 } from "fflate";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store" };
@@ -168,9 +167,7 @@ export async function POST(request: Request) {
             a,
             c,
             lab.title,
-            await readFile(
-              path.join(process.cwd(), "public/fonts/NotoSans-Regular.ttf"),
-            ),
+            await notoSansBytes(new URL(request.url).origin),
           ),
         ),
         type: "application/pdf",

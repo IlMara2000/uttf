@@ -102,8 +102,14 @@ export default function CookiePage() {
           <p>
             Non utilizziamo cookie &ldquo;di terza parte&rdquo; permanenti. Il fornitore di
             hosting può registrare log tecnici contenenti l&rsquo;indirizzo IP per finalità di
-            sicurezza e diagnostica: non sono cookie e sono conservati per il tempo strettamente
+            sicurezza e diagnostica:             non sono cookie e sono conservati per il tempo strettamente
             necessario, come descritto nell&rsquo;<Link href="/privacy">informativa privacy</Link>.
+          </p>
+          <p>
+            Anche il servizio di monitoraggio degli errori (<strong>Sentry</strong>) non installa
+            cookie e non legge la memoria locale: riceve la sola segnalazione tecnica
+            dell&rsquo;errore, con cookie, intestazioni HTTP e contenuti dei moduli esclusi per
+            configurazione.
           </p>
         </section>
 

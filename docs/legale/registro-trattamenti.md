@@ -27,6 +27,7 @@ sono gli stessi pubblicati in `/privacy` (§07) e applicati dal job
 | 8 | Archivio media su disco locale | Conservazione di foto e video delle attività | Partecipanti ripresi, staff | File multimediali e indice (nome, percorso, tag) | Art. 6.1.a per foto/video; 6.1.f per l'organizzazione dell'archivio | Disco locale (Hiksemi) + indice su Supabase; agent locale | Secondo il consenso; i metadati indicizzati seguono la vita dell'archivio |
 | 9 | Corrispondenza email | Risposta a richieste, informazioni, adempimenti | Chi scrive alla casella dell'associazione | Indirizzo, contenuto dei messaggi, allegati | Art. 6.1.b o 6.1.c GDPR | Google (Gmail) | Tempo necessario alla gestione, poi cancellazione periodica |
 | 10 | Testi social assistiti da AI | Bozze di contenuti per i canali social, solo su input dello staff | Nessun dato di interessati: si usano testi e brief interni | Testi forniti dallo staff | Art. 6.1.f / attività interna | Groq (inferenza), Vercel | Non conservati oltre la sessione di lavoro |
+| 11 | Monitoraggio degli errori applicativi (Sentry) | Diagnosi dei malfunzionamenti e sicurezza del servizio | Visitatori e staff, limitatamente agli errori generati | Messaggio di errore, pagina e stack trace. Esclusi per configurazione: cookie, intestazioni HTTP, body delle richieste, contenuto dei moduli, variabili locali e dati utente | Art. 6.1.f GDPR (sicurezza del servizio) | Functional Software, Inc. (Sentry), Vercel per l'inoltro | 30 giorni secondo il piano del fornitore |
 
 ## Categorie particolari (art. 9)
 
@@ -63,3 +64,6 @@ particolari e non è stata effettuata una DPIA.
 - Abilitare `RETENTION_ENABLED=true` dopo un primo giro in dry-run.
 - Verificare che gli account Supabase, Vercel, GitHub e Google dell'ente abbiano
   MFA attiva e che l'accesso sia limitato a chi serve.
+- Accettare e archiviare il DPA di Sentry (Functional Software, Inc.), verificare
+  la certificazione DPF o le SCC e attivare nella dashboard Sentry l'opzione che
+  non conserva gli indirizzi IP negli eventi.

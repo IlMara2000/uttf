@@ -244,6 +244,10 @@ function intake({ uploadFails = false, staff = false } = {}) {
     "@/lib/registrations/document": {
       authorizationPdf: async () => new Uint8Array([1, 2, 3]),
     },
+    "@/lib/registrations/font": {
+      // Il font arriva da public/fonts via fetch: qui il PDF e' gia' finto.
+      notoSansBytes: async () => new Uint8Array([0, 1, 2, 3]),
+    },
     "@/lib/registrations/server": {
       registrationAdmin: () => client,
       requireRegistrationStaff: async () => {
