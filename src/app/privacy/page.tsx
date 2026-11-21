@@ -66,6 +66,7 @@ const retention = [
   ["Prenotazioni e relativi contatti", "12 mesi dall'appuntamento, salvo obblighi di legge"],
   ["Recensioni pubblicate", "Fino alla revoca del consenso o alla richiesta di rimozione, e comunque non oltre 5 anni dalla pubblicazione"],
   ["Iscritti alla newsletter", "Fino alla revoca del consenso; in assenza di interazioni, cancellazione dopo 24 mesi"],
+  ["Hash dell'IP per la prova del consenso newsletter", "Fino alla cancellazione dell'iscrizione: l'IP non è conservato in chiaro"],
   ["Log tecnici di hosting e sicurezza", "Secondo i tempi del fornitore (da poche ore a 7 giorni), salvo necessità di indagine"],
   ["Hash dell'IP per i limiti anti-abuso", "Finestra di 1 ora, poi cancellato"],
   ["Account dello staff", "Fino alla revoca dell'autorizzazione e per i 30 giorni successivi"],
