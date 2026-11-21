@@ -114,18 +114,20 @@ richieste).
 
 ---
 
-## 6. Retention: l'interruttore finale
+## 6. Retention: attiva
 
-Oggi il job gira in **dry-run**: conta e non cancella. Il primo giro reale ha
-trovato 0 righe personali scadute.
+Fatto il 21 novembre 2026: `RETENTION_ENABLED=true` su Vercel Production,
+redeploy e primo giro reale. Log del giro: `delete` con
+`newsletterSubscribers:0, bookingReservations:0, reviews:0,
+activityRegistrations:0, registrationFiles:0, bookingRateLimits:1,
+registrationRateLimits:1`. Il giro successivo ha riportato tutto a zero, quindi
+la cancellazione è effettiva e il job è idempotente.
 
-- [ ] Abilitare la cancellazione quando sei d'accordo:
-      `printf 'true' | npx vercel env add RETENTION_ENABLED production`
-      poi redeploy.
+- [x] Cancellazione abilitata e verificata
 
-Non l'ho attivato io perché da quel momento il job cancella davvero iscritti
-oltre 24 mesi, prenotazioni oltre 12 mesi, recensioni oltre 5 anni e richieste
-non accolte oltre 12 mesi. È irreversibile: la decisione è tua.
+Il cron gira ogni giorno alle 04:00 UTC. Da qui in avanti cancella davvero
+iscritti oltre 24 mesi, prenotazioni oltre 12 mesi, recensioni oltre 5 anni e
+richieste non accolte oltre 12 mesi.
 
 ---
 
