@@ -1591,6 +1591,10 @@
 .public-site .visit-stage .booking-trigger { display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; background: var(--orange); color: #161616; border: 2px solid #161616; border-radius: 14px; padding: 14px 20px; font-weight: 700; box-shadow: 4px 5px 0 #161616; }
 .public-site .visit-map { min-width: 0; overflow: hidden; border: 1px solid #ffffff80; border-radius: 18px; background: #161616; }
 .public-site .visit-map iframe { display: block; width: 100%; height: 310px; border: 0; background: #eee; }
+.public-site .visit-map-placeholder { display: grid; place-content: center; gap: 14px; min-height: 310px; padding: 28px; background: #f4f4f5; color: #161616; text-align: center; }
+.public-site .visit-map-placeholder p { color: #3d3d3d; margin: 0; font-size: 14px; line-height: 1.6; max-width: 44ch; }
+.public-site .visit-map-placeholder .clay-button { background: #161616; color: #fff; border: 0; box-shadow: none; }
+.public-site .visit-map-placeholder a { text-decoration: underline; text-underline-offset: 3px; }
 .public-site .visit-map-actions { display: flex; justify-content: center; padding: 18px; border-top: 3px solid var(--orange); }
 .public-site .visit-map .clay-button { background: white; color: #161616; box-shadow: none; }
 @media (max-width: 800px) {
@@ -1600,6 +1604,7 @@
   .public-site .topline-access > span { display: none; }
   .public-site .topline-access a { padding-left: 12px; }
   .public-site .visit-map iframe { height: 280px; }
+  .public-site .visit-map-placeholder { min-height: 280px; padding: 20px; }
 }
 
 /* Editable laboratory panels. */

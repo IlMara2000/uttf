@@ -193,7 +193,9 @@ export default function PublicSiteShell({ children }: { children: ReactNode }) {
             </span>
             <div>
               <Link href="/privacy">Privacy</Link>
+              <Link href="/cookie">Cookie</Link>
               <Link href="/terms">Termini</Link>
+              <Link href="/accessibilita">Accessibilità</Link>
               <Link href="/login" prefetch={false}>
                 Area staff <ArrowUpRight size={12} />
               </Link>

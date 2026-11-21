@@ -1,13 +1,16 @@
+import { createHmac } from 'node:crypto';
 import { readJson } from '@/lib/request-json';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { getStaffRole } from '@/lib/staff-access';
+import { LEGAL_ENTITY } from '@/lib/legal-entity';
 
 type NewsletterPayload = {
   name?: unknown;
   email?: unknown;
   phone?: unknown;
   privacyAccepted?: unknown;
+  marketingAccepted?: unknown;
 };
 
 type NewsletterSubscriber = {
@@ -68,6 +71,17 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+/** Prova del consenso senza conservare l'IP in chiaro: hash HMAC, non reversibile. */
+function consentIpHash(request: Request) {
+  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  if (!secret) return null;
+  const ip =
+    request.headers.get('x-vercel-forwarded-for') ||
+    request.headers.get('x-forwarded-for') ||
+    'local';
+  return createHmac('sha256', secret).update(ip.split(',')[0].trim()).digest('hex');
+}
+
 export async function POST(request: Request) {
   let payload: NewsletterPayload;
 
@@ -85,8 +99,15 @@ export async function POST(request: Request) {
   const email = cleanString(payload.email, 320).toLowerCase();
   const phone = cleanString(payload.phone, 40);
 
-  if (payload.privacyAccepted !== true) {
-    return NextResponse.json({ error: 'Devi accettare la privacy per iscriverti.' }, { status: 400 });
+  // La newsletter è una comunicazione promozionale: oltre alla presa visione
+  // dell'informativa serve un consenso separato (art. 6.1.a GDPR, art. 130 del
+  // Codice privacy). Il consenso non è prestato in modo condizionato ad altri
+  // servizi e può essere revocato in ogni momento.
+  if (payload.privacyAccepted !== true || payload.marketingAccepted !== true) {
+    return NextResponse.json(
+      { error: 'Serve la presa visione dell’informativa e il consenso alla newsletter.' },
+      { status: 400 }
+    );
   }
 
   if (!name) {
@@ -97,10 +118,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Inserisci una email valida.' }, { status: 400 });
   }
 
+  const record = {
+    name,
+    email,
+    phone: phone || null,
+    consent_at: new Date().toISOString(),
+    consent_version: `privacy ${LEGAL_ENTITY.privacyVersion}`,
+    consent_ip_hash: consentIpHash(request),
+  };
+
   try {
-    const { error } = await getAdminSupabase()
-      .from('newsletter_subscribers')
-      .insert([{ name, email, phone: phone || null }]);
+    const admin = getAdminSupabase();
+    let { error } = await admin.from('newsletter_subscribers').insert([record]);
+
+    // Se la migrazione del consenso non è ancora stata applicata le colonne non
+    // esistono: salviamo comunque il contatto invece di perdere l'iscrizione.
+    if (error && (error.code === '42703' || error.code === 'PGRST204')) {
+      const { consent_at, consent_version, consent_ip_hash, ...legacy } = record;
+      void consent_at;
+      void consent_version;
+      void consent_ip_hash;
+      ({ error } = await admin.from('newsletter_subscribers').insert([legacy]));
+    }
 
     if (error?.code === '23505') {
       return NextResponse.json({ success: true });

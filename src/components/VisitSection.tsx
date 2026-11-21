@@ -24,6 +24,9 @@ function openDirections(event: MouseEvent<HTMLAnchorElement>) {
 
 export default function VisitSection() {
   const [bookingOpen, setBookingOpen] = useState(false);
+  // La mappa di Google è un contenuto di terze parti: la carichiamo solo dopo un
+  // clic esplicito, così nessun cookie di Google viene impostato in automatico.
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   return (
     <section className="visit-stage" aria-labelledby="visit-title">
@@ -45,13 +48,36 @@ export default function VisitSection() {
           <StaffBookingEditor />
         </div>
         <div className="visit-map">
-          <iframe
-            title="Mappa della sede: Via dei Biancospini 4, Rozzano"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2802.48206105437!2d9.14821617674218!3d45.38550393802996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4786e3955e840703%3A0xcf953330dfde366f!2sVia%20dei%20Biancospini%2C%204%2C%2020089%20Rozzano%20MI!5e0!3m2!1sit!2sit!4v1710000000000!5m2!1sit!2sit"
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+          {mapLoaded ? (
+            <iframe
+              title="Mappa della sede: Via dei Biancospini 4, Rozzano"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2802.48206105437!2d9.14821617674218!3d45.38550393802996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4786e3955e840703%3A0xcf953330dfde366f!2sVia%20dei%20Biancospini%2C%204%2C%2020089%20Rozzano%20MI!5e0!3m2!1sit!2sit!4v1710000000000!5m2!1sit!2sit"
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          ) : (
+            <div className="visit-map-placeholder">
+              <p>
+                La mappa è fornita da Google. Se la carichi, Google può ricevere il tuo
+                indirizzo IP e impostare cookie secondo la propria informativa.
+              </p>
+              <button
+                type="button"
+                className="clay-button"
+                onClick={() => setMapLoaded(true)}
+              >
+                Carica la mappa <ArrowUpRight size={17} />
+              </button>
+              <p>
+                Preferisci non caricarla?{" "}
+                <a href={directions} onClick={openDirections}>
+                  Apri le indicazioni
+                </a>
+                .
+              </p>
+            </div>
+          )}
           <div className="visit-map-actions">
             <a className="clay-button light" href={directions} onClick={openDirections}>
               Come raggiungerci <ArrowUpRight size={18} />

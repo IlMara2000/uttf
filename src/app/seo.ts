@@ -111,6 +111,20 @@ export const publicRoutes: PublicRoute[] = [
     priority: 0.35,
   },
   {
+    path: '/cookie',
+    title: 'Cookie policy',
+    description: 'Cookie e strumenti tecnici usati dal sito Under The Tower Factory: nessuna profilazione.',
+    changeFrequency: 'yearly',
+    priority: 0.25,
+  },
+  {
+    path: '/accessibilita',
+    title: 'Accessibilità',
+    description: 'Dichiarazione di accessibilità del sito Under The Tower Factory e canale per le segnalazioni.',
+    changeFrequency: 'yearly',
+    priority: 0.3,
+  },
+  {
     path: '/terms',
     title: 'Termini e condizioni',
     description: 'Termini, condizioni e regole d uso del sito Under The Tower Factory.',

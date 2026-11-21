@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import vm from 'node:vm';
 import ts from 'typescript';
 
@@ -54,6 +55,8 @@ function api(name, role = null) {
   return load(`src/app/api/${name}/route.ts`, {
     'next/server': nextMock, '@supabase/supabase-js': { createClient: () => supabase },
     '@/lib/staff-access': { getStaffRole }, '@/lib/request-json': { readJson },
+    'node:crypto': crypto,
+    '@/lib/legal-entity': { LEGAL_ENTITY: { privacyVersion: '2.0' } },
     'groq-sdk': { default: class { constructor() { throw new Error('Must not reach Groq'); } } },
   });
 }

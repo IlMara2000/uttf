@@ -89,6 +89,7 @@ export default function FeedPage() {
   const [subscriberEmail, setSubscriberEmail] = useState("");
   const [subscriberPhone, setSubscriberPhone] = useState("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [marketingAccepted, setMarketingAccepted] = useState(false);
 
   const newsletterTrigger = useRef<HTMLButtonElement>(null);
 
@@ -127,7 +128,11 @@ export default function FeedPage() {
   ) => {
     event.preventDefault();
     if (!privacyAccepted) {
-      setSubmitError("Accetta l’informativa privacy per iscriverti.");
+      setSubmitError("Conferma di aver letto l’informativa privacy per iscriverti.");
+      return;
+    }
+    if (!marketingAccepted) {
+      setSubmitError("Per iscriverti alla newsletter serve il consenso alle comunicazioni.");
       return;
     }
     setIsSubmitting(true);
@@ -141,6 +146,7 @@ export default function FeedPage() {
           email: subscriberEmail,
           phone: subscriberPhone,
           privacyAccepted,
+          marketingAccepted,
         }),
       });
       const data = (await response.json().catch(() => ({}))) as {
@@ -156,6 +162,7 @@ export default function FeedPage() {
       setSubscriberEmail("");
       setSubscriberPhone("");
       setPrivacyAccepted(false);
+      setMarketingAccepted(false);
       closeTimeoutRef.current = setTimeout(closeNewsletterModal, 3000);
     } catch (error) {
       setSubmitError(
@@ -321,11 +328,25 @@ export default function FeedPage() {
                       onChange={(e) => setPrivacyAccepted(e.target.checked)}
                     />
                     <span>
-                      Ho letto e accetto la{" "}
+                      Ho letto l’{" "}
                       <Link href="/privacy" target="_blank">
-                        Privacy / GDPR
-                      </Link>
-                      .
+                        informativa privacy
+                      </Link>{" "}
+                      sul trattamento dei dati. *
+                    </span>
+                  </label>
+                  <label className="consent-label">
+                    <input
+                      type="checkbox"
+                      name="marketing-consent"
+                      required
+                      disabled={isSubmitting}
+                      checked={marketingAccepted}
+                      onChange={(e) => setMarketingAccepted(e.target.checked)}
+                    />
+                    <span>
+                      Acconsento a ricevere la newsletter e le comunicazioni informative
+                      di UTTF via email. Posso revocare il consenso in qualsiasi momento. *
                     </span>
                   </label>
                   {submitError && <p role="alert">{submitError}</p>}

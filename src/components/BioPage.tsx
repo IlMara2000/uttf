@@ -473,7 +473,9 @@ export default function BioPage({
         <Link href="/">Under The Tower Factory</Link>
         <div>
           <Link href="/privacy">Privacy</Link>
+          <Link href="/cookie">Cookie</Link>
           <Link href="/terms">Termini</Link>
+          <Link href="/accessibilita">Accessibilità</Link>
         </div>
       </footer>
     </main>
