@@ -75,26 +75,35 @@ Passi:
 
 ---
 
-## 4. Migrazione del consenso newsletter (Supabase)
+## 4. Migrazione del consenso newsletter (Supabase) — chiusa
 
-Non ho credenziali del database e l'accesso è stato rimandato. L'API funziona
-anche senza le colonne (salva il contatto e salta la prova del consenso), ma
-finché la migrazione non è applicata la promessa dell'informativa non è
-mantenuta.
+Applicata il 21 novembre 2026 dall'**SQL Editor** del progetto
+`oieqtrfeoyfabyjirrqa` ("UTTF HUB"): è l'unica via per eseguire SQL senza la
+password del database, perché i segreti su Vercel sono di tipo Secret e
+`vercel env pull` li restituisce come `[SENSITIVE]`.
 
-Incolla questo nell'**SQL Editor** di Supabase:
+Stato prima: 5 colonne (`id`, `created_at`, `name`, `email`, `phone`).
+Dopo la `alter table ... add column if not exists`: `Success. No rows returned`.
 
-```sql
-alter table public.newsletter_subscribers
-  add column if not exists consent_at timestamptz,
-  add column if not exists consent_version text,
-  add column if not exists consent_ip_hash text;
-```
+Verifica su `information_schema.columns` per `newsletter_subscribers`:
 
-Poi:
+| Colonna | Tipo | Nullable | Default |
+|---|---|---|---|
+| `consent_at` | timestamp with time zone | YES | NULL |
+| `consent_ip_hash` | text | YES | NULL |
+| `consent_version` | text | YES | NULL |
 
-- [ ] verifica che le tre colonne esistano
+Nessun dato toccato: le colonne nascono vuote, le righe storiche restano senza
+prova del consenso, come previsto.
+
+- [x] verifica che le tre colonne esistano
 - [ ] decidi sugli iscritti storici: riconferma via email o cancellazione
+
+Nota: applicata a mano, quindi non compare in
+`supabase_migrations.schema_migrations`. Non è un problema: il file
+`supabase/migrations/20261119120000_newsletter_consent.sql` usa
+`add column if not exists`, perciò è ripetibile anche con un futuro
+`supabase db push` (che resta bloccato dalla password del database).
 
 ---
 
