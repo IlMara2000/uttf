@@ -97,10 +97,13 @@ Nessun dato toccato: le colonne nascono vuote, le righe storiche restano senza
 prova del consenso, come previsto.
 
 - [x] verifica che le tre colonne esistano
-- [ ] decidi sugli iscritti storici: riconferma via email o cancellazione
-      → operazione pronta in `docs/legale/newsletter-iscritti-storici.md` e in
-      `newsletter-storici.sql`; consigliata la cancellazione delle 3 righe,
-      perché con tre contatti la riconferma costa più di quanto renda
+- [x] iscritti storici: **cancellati** il 23 novembre 2026 (opzione A).
+      Eliminate 3 righe con `consent_at is null`, tutte del 13 maggio 2026:
+      `d22fcbf5-baac-4a56-bc4b-e85d6922bd3d`, `dea76d8c-55f5-4ba5-a358-e685415b96f2`,
+      `d90c3bfe-e4fe-466d-b306-c78b35dea47e`. Copia di sicurezza in
+      `newsletter-backup-2026-11-23.json` (fuori dal versionamento).
+      Verifica: `select count(*) ... where consent_at is null` → **0**; la tabella
+      ora contiene 0 righe. Dettagli in `docs/legale/newsletter-iscritti-storici.md`.
 
 Nota: applicata a mano, quindi non compare in
 `supabase_migrations.schema_migrations`. Non è un problema: il file

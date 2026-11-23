@@ -5,6 +5,25 @@ Aggiornato al 23 novembre 2026. Riguarda le **tre** righe di
 registrasse la prova del consenso: hanno `consent_at`, `consent_version` e
 `consent_ip_hash` a `null`.
 
+## Esito: opzione A eseguita il 23 novembre 2026
+
+Le tre righe sono state cancellate dal database di produzione
+(`public.newsletter_subscribers`, filtro `consent_at is null`):
+
+| id | nome | iscritto il |
+|---|---|---|
+| `d22fcbf5-baac-4a56-bc4b-e85d6922bd3d` | Brando Macchiarella | 13/05/2026 12:44 |
+| `dea76d8c-55f5-4ba5-a358-e685415b96f2` | Marco Pagliari | 13/05/2026 15:43 |
+| `d90c3bfe-e4fe-466d-b306-c78b35dea47e` | Lorenzo Cennamo | 13/05/2026 15:43 |
+
+Verifica successiva: `select count(*) from public.newsletter_subscribers where
+consent_at is null` → **0**; la tabella contiene ora 0 righe, quindi in
+dashboard non compare più nessun «Consenso non registrato». Copia di sicurezza
+con i valori completi: `newsletter-backup-2026-11-23.json` nella radice del
+progetto, esclusa da git (`.gitignore`). Non va pubblicata né committata: serve
+solo a ripristinare le righe se emergesse un errore. Trascorsi i termini di
+conservazione della corrispondenza, si può eliminare.
+
 ## Perché è una pendenza
 
 L'art. 7.1 GDPR chiede che il titolare sia in grado di **dimostrare** il
@@ -47,9 +66,10 @@ risponde entro il termine dichiarato va cancellato.
    (Newsletter) aggiungi una riga nelle note del mese: «23/11/2026 — cancellati
    n. 3 iscritti privi di prova del consenso».
 
-Chi la esegue: io, con la stessa via usata per la migrazione (API di
-amministrazione Supabase con il token della sessione del pannello). Serve solo
-il tuo via libera.
+Eseguita da me il 23 novembre 2026 con la stessa via usata per la migrazione
+(API di amministrazione Supabase con il token della sessione del pannello).
+Questa sezione resta come traccia di cosa è stato fatto e come eventualmente
+ripeterlo.
 
 ## B. Riconferma — passi
 

@@ -27,6 +27,8 @@ from (
 -- ---------------------------------------------------------------------------
 -- A. CANCELLAZIONE (opzione consigliata con 3 iscritti)
 --    Restituisce le righe eliminate: annota gli id nel registro delle attività.
+--    ESEGUITO il 23 novembre 2026: 3 righe eliminate, verifica finale 0.
+--    Gli id sono in docs/legale/pendenze-compliance.md §4.
 -- ---------------------------------------------------------------------------
 begin;
 

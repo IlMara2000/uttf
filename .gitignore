@@ -26,6 +26,8 @@ supabase/.temp/
 *.pid
 *.tmp
 *.part
+# Copie di sicurezza con dati personali (es. iscritti newsletter cancellati).
+newsletter-backup-*.json
 
 # Ambienti e cache locali degli script Python (vedi AGENTS.md).
 .venv/

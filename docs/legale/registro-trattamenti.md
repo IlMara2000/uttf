@@ -6,7 +6,7 @@ Contatto: ass.uttf@gmail.com
 
 Dati identificativi dell'ente (CF, PEC, numero RUNTS, legale rappresentante) da
 completare in `src/lib/legal-entity.ts`: nel registro vanno riportati identici a
-quella fonte. Ultima revisione: 21 novembre 2026.
+quella fonte. Ultima revisione: 23 novembre 2026.
 
 Il registro è interno: non va pubblicato. Va aggiornato quando cambia una
 finalità, un fornitore o un termine di conservazione. I termini qui indicati
@@ -59,11 +59,15 @@ particolari e non è stata effettuata una DPIA.
 - Archiviare i DPA dei fornitori (vedi `fornitori-dpa.md`).
 - Applicare `supabase/migrations/20261119120000_newsletter_consent.sql` per la
   prova del consenso.
-- Riconfermare o cancellare gli iscritti alla newsletter precedenti alla
-  registrazione del consenso.
 - Abilitare `RETENTION_ENABLED=true` dopo un primo giro in dry-run.
 - Verificare che gli account Supabase, Vercel, GitHub e Google dell'ente abbiano
   MFA attiva e che l'accesso sia limitato a chi serve.
 - Accettare e archiviare il DPA di Sentry (Functional Software, Inc.), verificare
   la certificazione DPF o le SCC e attivare nella dashboard Sentry l'opzione che
   non conserva gli indirizzi IP negli eventi.
+
+## Cronologia delle operazioni
+
+- **23/11/2026** — voce 1 (Newsletter): cancellati 3 iscritti del 13/05/2026
+  privi di prova del consenso (art. 7.1 e 5.2 GDPR). Nessun dato conservato;
+  copia di sicurezza locale esclusa dal versionamento.
