@@ -6,7 +6,7 @@ import {
   startOfWeek, endOfWeek, isSameMonth, isSameDay, eachDayOfInterval 
 } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { SHIFT_MARKER, SHIFT_TITLE_PREFIX, isShiftTask } from '@/components/ShiftPlanner';
 
 type CalendarEvent = {
@@ -85,6 +85,20 @@ export default function CalendarWidget() {
     if (profileData) setProfiles(profileData as CalendarProfile[]);
   }, [currentMonth]);
 
+  const deleteEvent = async (event: CalendarEvent) => {
+    if (!event.id) return;
+    if (!confirm('Eliminare questo evento dal calendario?')) return;
+    try {
+      const table = event.eventType === 'activity' ? 'activities' : 'tasks';
+      const { error } = await supabase.from(table).delete().eq('id', event.id);
+      if (error) throw error;
+      await fetchEvents();
+      window.dispatchEvent(new Event('refreshCalendar'));
+    } catch (err) {
+      alert('Errore eliminazione: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchEvents();
@@ -113,7 +127,9 @@ export default function CalendarWidget() {
 
     return assignedIds.map((id) => {
       const profile = profiles.find((item) => item.id === id);
-      return profile?.account_color || getFallbackColor(id);
+      // Account orfano/rimosso: pin grigio neutro invece del colore fallback
+      if (!profile) return '#6b7280';
+      return profile.account_color || getFallbackColor(id);
     });
   };
 
@@ -280,7 +296,7 @@ export default function CalendarWidget() {
                           />
                         ))}
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-1 flex-col">
                     <span className={`text-[10px] font-black uppercase italic ${e.eventType === 'activity' ? 'text-white' : 'text-zinc-300'}`}>
                       {getEventTitle(e)}
                     </span>
@@ -288,6 +304,16 @@ export default function CalendarWidget() {
                       {getEventLabel(e)}
                     </span>
                   </div>
+                  {e.eventType !== 'google' && (
+                    <button
+                      type="button"
+                      onClick={() => void deleteEvent(e)}
+                      className="shrink-0 text-red-500 transition-transform hover:scale-110"
+                      aria-label="Elimina evento"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
                 
                 {/* RENDER DELLA DESCRIZIONE SE ESISTE */}

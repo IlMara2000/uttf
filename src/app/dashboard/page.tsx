@@ -453,7 +453,7 @@ export default function Dashboard() {
     },
     {
       key: 'video',
-      title: 'Videochiamate',
+      title: 'VideoCall',
       subtitle: 'Chiama lo staff in browser',
       icon: <Video size={18} />,
       action: () => router.push('/videochiamate'),
@@ -643,7 +643,7 @@ export default function Dashboard() {
                     onClick={() => router.push('/videochiamate')}
                     className={BTN_SECONDARY}
                   >
-                    <Video size={16} className="shrink-0" /> Videochiamate
+                    <Video size={16} className="shrink-0" /> VideoCall
                   </button>
                   <button
                     type="button"
