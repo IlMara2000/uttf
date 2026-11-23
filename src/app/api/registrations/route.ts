@@ -353,13 +353,37 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const client = await requireRegistrationStaff(request);
-    const p = (await readJson(request)) as { id?: string; status?: string };
-    if (
-      !p ||
-      !uuid.test(p.id || "") ||
-      !["received", "reviewed", "declined"].includes(p.status || "")
-    )
+    const p = (await readJson(request)) as {
+      id?: string;
+      ids?: unknown;
+      status?: string;
+    };
+    if (!p || !["received", "reviewed", "declined"].includes(p.status || ""))
       return fail("Richiesta non valida.");
+    // Chiusura in blocco delle cartelle selezionate nell'archivio iscrizioni.
+    // `updated` riporta quante righe sono state davvero cambiate: le `pending`
+    // (invii interrotti) e gli id inesistenti restano fuori.
+    if (Array.isArray(p.ids)) {
+      const ids = [...new Set<string>(p.ids)];
+      if (
+        !ids.length ||
+        ids.length > 100 ||
+        ids.some((value) => !uuid.test(value))
+      )
+        return fail("Riferimenti non validi.");
+      const { data, error } = await client
+        .from("activity_registrations")
+        .update({ status: p.status })
+        .in("id", ids)
+        .neq("status", "pending")
+        .select("id");
+      if (error) throw error;
+      return NextResponse.json(
+        { success: true, updated: data?.length ?? 0 },
+        { headers },
+      );
+    }
+    if (!uuid.test(p.id || "")) return fail("Richiesta non valida.");
     const { data, error } = await client
       .from("activity_registrations")
       .update({ status: p.status })

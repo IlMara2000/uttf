@@ -167,7 +167,8 @@ avviso allo staff dopo 12 mesi dalla richiesta.
       `stale` su ogni riga.
 - [x] La dashboard iscrizioni mostra un banner con il numero di cartelle da
       chiudere, la segnalazione su ogni scheda e il filtro «Solo da chiudere»
-      (applicato lato server, quindi vale su tutte le pagine).
+      (applicato lato server, quindi vale su tutte le pagine) e la chiusura in
+      blocco delle cartelle selezionate, con conferma che riporta quante sono.
 - [x] Se il conteggio del banner fallisce, l'archivio segnala l'errore invece
       di mostrare 0.
 

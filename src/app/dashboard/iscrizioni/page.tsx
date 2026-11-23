@@ -47,6 +47,8 @@ export default function RegistrationsArchive() {
   const [loading, setLoading] = useState(true);
   const [access, setAccess] = useState(false);
   const [working, setWorking] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [notice, setNotice] = useState("");
   async function request(path: string, init: RequestInit = {}) {
     const {
       data: { session },
@@ -84,6 +86,7 @@ export default function RegistrationsArchive() {
       setEntries(data.registrations);
       setTotal(data.total);
       setWaiting(data.waitingTooLong ?? 0);
+      setSelected(new Set());
     } catch (e) {
       setEntries([]);
       setError(e instanceof Error ? e.message : "Archivio non disponibile.");
@@ -197,6 +200,42 @@ export default function RegistrationsArchive() {
       setWorking(false);
     }
   }
+  async function closeSelected(status: "reviewed" | "declined") {
+    const ids = [...selected];
+    if (!ids.length) return;
+    const label = status === "reviewed" ? "verificate" : "non accolte";
+    const count = `${ids.length} ${ids.length === 1 ? "richiesta" : "richieste"}`;
+    if (
+      !window.confirm(
+        `Confermi di chiudere ${count} come ${label}?${status === "declined" ? " Le richieste non accolte vengono cancellate dopo 12 mesi." : ""}`,
+      )
+    )
+      return;
+    setWorking(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await (
+        await request("/api/registrations", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids, status }),
+        })
+      ).json();
+      await load();
+      const updated = result.updated ?? ids.length;
+      setNotice(
+        updated === ids.length
+          ? `${count} chiuse come ${label}.`
+          : `${updated} richieste chiuse come ${label} su ${ids.length} selezionate:`
+              + " le altre erano già state gestite o non sono più disponibili.",
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Errore aggiornamento.");
+    } finally {
+      setWorking(false);
+    }
+  }
   return (
     <main className="min-h-screen text-white p-5 md:p-10">
       <div className="max-w-6xl mx-auto">
@@ -297,6 +336,44 @@ export default function RegistrationsArchive() {
             non scadono. <span className="underline">Mostra solo queste</span>
           </button>
         )}
+        {notice && (
+          <p role="status" className="text-emerald-300 mb-5">
+            {notice}
+          </p>
+        )}
+        {access && onlyWaiting && entries.length > 0 && (
+          <div className="flex flex-wrap items-center gap-3 mb-5">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={entries.every((e) => selected.has(e.id))}
+                onChange={(e) =>
+                  setSelected(
+                    e.target.checked
+                      ? new Set(entries.map((entry) => entry.id))
+                      : new Set(),
+                  )
+                }
+              />
+              Seleziona tutte ({entries.length})
+            </label>
+            <button
+              disabled={working || selected.size === 0}
+              className="border border-zinc-600 p-2 text-sm disabled:opacity-40"
+              onClick={() => void closeSelected("reviewed")}
+            >
+              Segna verificate ({selected.size})
+            </button>
+            <button
+              disabled={working || selected.size === 0}
+              className="border border-zinc-600 p-2 text-sm disabled:opacity-40"
+              onClick={() => void closeSelected("declined")}
+            >
+              Segna non accolte ({selected.size})
+            </button>
+          </div>
+        )}
         {loading ? (
           <p role="status">Caricamento…</p>
         ) : access && entries.length === 0 ? (
@@ -308,30 +385,52 @@ export default function RegistrationsArchive() {
         ) : null}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {access && entries.map((e) => (
-            <button
+            <div
               key={e.id}
-              disabled={working}
-              className="text-left border border-zinc-700 rounded-xl bg-zinc-900 p-6 hover:border-[#ff914d] transition-colors"
-              onClick={() => void open(e.id)}
+              className="relative border border-zinc-700 rounded-xl bg-zinc-900 hover:border-[#ff914d] transition-colors"
             >
-              <Folder size={36} className="text-[#ff914d] mb-5" />
-              <h2 className="font-bold text-lg break-words">
-                {e.participant_name}
-              </h2>
-              <p className="text-zinc-400 mt-2">{e.activity_title}</p>
-              <p className="text-xs text-zinc-500 mt-3">
-                {new Date(e.created_at).toLocaleString("it-IT")}
-              </p>
-              <p className="text-xs mt-4">
-                {statusLabels[e.status] ?? "In attesa di verifica"}{" "}
-                · {e.id.slice(0, 8)}
-              </p>
-              {e.stale && (
-                <p className="text-xs mt-1 text-amber-300">
-                  In attesa da oltre 12 mesi: verifica o chiudi la richiesta
-                </p>
+              {onlyWaiting && (
+                <label className="absolute right-4 top-4 flex items-center gap-2 text-xs text-zinc-400">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={selected.has(e.id)}
+                    onChange={(ev) =>
+                      setSelected((prev) => {
+                        const next = new Set(prev);
+                        if (ev.target.checked) next.add(e.id);
+                        else next.delete(e.id);
+                        return next;
+                      })
+                    }
+                  />
+                  Seleziona
+                </label>
               )}
-            </button>
+              <button
+                disabled={working}
+                className="text-left w-full p-6"
+                onClick={() => void open(e.id)}
+              >
+                <Folder size={36} className="text-[#ff914d] mb-5" />
+                <h2 className="font-bold text-lg break-words pr-24">
+                  {e.participant_name}
+                </h2>
+                <p className="text-zinc-400 mt-2">{e.activity_title}</p>
+                <p className="text-xs text-zinc-500 mt-3">
+                  {new Date(e.created_at).toLocaleString("it-IT")}
+                </p>
+                <p className="text-xs mt-4">
+                  {statusLabels[e.status] ?? "In attesa di verifica"}{" "}
+                  · {e.id.slice(0, 8)}
+                </p>
+                {e.stale && (
+                  <p className="text-xs mt-1 text-amber-300">
+                    In attesa da oltre 12 mesi: verifica o chiudi la richiesta
+                  </p>
+                )}
+              </button>
+            </div>
           ))}
         </div>
         {access && (

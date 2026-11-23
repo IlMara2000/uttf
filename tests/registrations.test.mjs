@@ -253,6 +253,13 @@ function intake({ uploadFails = false, staff = false, list = [], countError = fa
           return { error: null };
         }
         if (op === "update") {
+          if (!identifier) {
+            const matched = [...rows.values()].filter((row) =>
+              filters.every((filter) => filter(row)),
+            );
+            for (const row of matched) Object.assign(row, values);
+            return { data: matched.map((row) => ({ id: row.id })), error: null };
+          }
           rows.set(identifier, { ...rows.get(identifier), ...values });
           return { data: rows.get(identifier), error: null };
         }
@@ -351,6 +358,61 @@ test("Staff closes a request as declined and can reopen it, unknown statuses are
   assert.equal(rows.get(payload.id).status, "received");
   assert.equal((await patch("archived")).status, 400);
   assert.equal(rows.get(payload.id).status, "received");
+});
+const bulkId = (n) => `10000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const bulkPatch = (api, body) =>
+  api.PATCH(
+    new Request("https://local/api/registrations", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  );
+test("Bulk close updates only the selected requests and reports the count", async () => {
+  const { api, rows } = intake({ staff: true });
+  for (const n of [1, 2, 3]) rows.set(bulkId(n), { id: bulkId(n), status: "received" });
+  rows.set(bulkId(4), { id: bulkId(4), status: "pending" });
+
+  const response = await bulkPatch(api, {
+    ids: [bulkId(1), bulkId(2), bulkId(4)],
+    status: "declined",
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { success: true, updated: 2 });
+  assert.equal(rows.get(bulkId(1)).status, "declined");
+  assert.equal(rows.get(bulkId(2)).status, "declined");
+  assert.equal(rows.get(bulkId(3)).status, "received");
+  assert.equal(rows.get(bulkId(4)).status, "pending");
+
+  const duplicate = await bulkPatch(api, {
+    ids: [bulkId(3), bulkId(3)],
+    status: "reviewed",
+  });
+  assert.deepEqual(await duplicate.json(), { success: true, updated: 1 });
+  assert.equal(rows.get(bulkId(3)).status, "reviewed");
+});
+test("Bulk close rejects empty, oversized and invalid selections", async () => {
+  const { api, rows } = intake({ staff: true });
+  rows.set(bulkId(1), { id: bulkId(1), status: "received" });
+  const oversized = Array.from({ length: 101 }, (_, i) => bulkId(i));
+
+  assert.equal(
+    (await bulkPatch(api, { ids: [], status: "reviewed" })).status,
+    400,
+  );
+  assert.equal(
+    (await bulkPatch(api, { ids: oversized, status: "reviewed" })).status,
+    400,
+  );
+  assert.equal(
+    (await bulkPatch(api, { ids: ["non-un-uuid"], status: "reviewed" })).status,
+    400,
+  );
+  assert.equal(
+    (await bulkPatch(api, { ids: [bulkId(1)], status: "archived" })).status,
+    400,
+  );
+  assert.equal(rows.get(bulkId(1)).status, "received");
 });
 test("waiting=1 narrows the archive to requests waiting over 12 months", async () => {
   const daysAgo = (days) =>
