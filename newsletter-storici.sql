@@ -6,6 +6,10 @@
 -- Regola generale del file: si lavora solo su righe con consent_at is null,
 -- quindi ogni blocco è ripetibile e non tocca gli iscritti nuovi (che hanno
 -- consent_at valorizzato dal form).
+--
+-- Stato: pratica chiusa il 23 novembre 2026 con il blocco A. I blocchi sulla
+-- riconferma via email sono stati rimossi perché quel percorso non è stato
+-- seguito.
 
 -- ---------------------------------------------------------------------------
 -- 1. Fotografia: chi sono, prima di decidere
@@ -42,33 +46,3 @@ commit;
 select count(*) as iscritti_senza_prova
 from public.newsletter_subscribers
 where consent_at is null;
-
--- ---------------------------------------------------------------------------
--- B. REGISTRAZIONE DI UNA RICONFERMA (solo se scegli l'email di riconferma)
---    Da eseguire dopo che la persona ha risposto "SÌ" dalla propria casella.
---    Metti la data e l'ora reali della risposta, non quelle dell'invio.
---    consent_ip_hash resta null: la prova è la risposta stessa, conservata
---    nella casella dell'associazione.
--- ---------------------------------------------------------------------------
-begin;
-
-update public.newsletter_subscribers
-set consent_at = timestamptz '2026-11-25 09:12:00+01',
-    consent_version = 'privacy 2.1 (riconferma via email)'
-where lower(email) = lower('nome@example.com')
-  and consent_at is null
-returning id, email, consent_at, consent_version;
-
-commit;
-
--- ---------------------------------------------------------------------------
--- C. CHIUSURA DELLA RICONFERMA (dopo la scadenza, 24 dicembre 2026)
---    Cancella chi non ha risposto entro il termine dichiarato nell'email.
--- ---------------------------------------------------------------------------
-begin;
-
-delete from public.newsletter_subscribers
-where consent_at is null
-returning id, email, created_at;
-
-commit;

@@ -71,7 +71,11 @@ Eseguita da me il 23 novembre 2026 con la stessa via usata per la migrazione
 Questa sezione resta come traccia di cosa è stato fatto e come eventualmente
 ripeterlo.
 
-## B. Riconferma — passi
+## B. Riconferma — passi (percorso non seguito)
+
+Il 23 novembre 2026 è stata eseguita l'opzione A, quindi i blocchi B e C sono
+stati tolti da `newsletter-storici.sql`. Questa sezione resta come traccia del
+percorso alternativo, con le query scritte per esteso.
 
 1. Invio dalla casella ufficiale dell'associazione, un destinatario per
    messaggio (niente CC: gli indirizzi non devono vedersi tra loro).
@@ -97,11 +101,21 @@ ripeterlo.
    >
    > Under The Tower Factory
 
-3. Ogni risposta "SÌ": `newsletter-storici.sql`, blocco **B**, con l'indirizzo
-   della persona e la data/ora reali della risposta. `consent_version` diventa
+3. Ogni risposta "SÌ": aggiorna la riga con l'indirizzo della persona e la
+   data/ora reali della risposta. `consent_version` diventa
    `privacy 2.1 (riconferma via email)`; `consent_ip_hash` resta `null`, perché
    la prova è la risposta conservata in casella.
-4. Il 24 dicembre: blocco **C** per cancellare chi non ha risposto.
+
+   ```sql
+   update public.newsletter_subscribers
+   set consent_at = timestamptz '2026-11-25 09:12:00+01',
+       consent_version = 'privacy 2.1 (riconferma via email)'
+   where lower(email) = lower('nome@example.com')
+     and consent_at is null;
+   ```
+
+4. Il 24 dicembre: `delete from public.newsletter_subscribers where
+   consent_at is null;` cancella chi non ha risposto.
 5. Archivia le risposte: sono la prova. Se un giorno arriva un reclamo, la
    risposta con data è ciò che si mostra.
 
