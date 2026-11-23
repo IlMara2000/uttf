@@ -154,9 +154,10 @@ test("Generated document is a multi-page PDF and response archive includes the s
   assert.ok(txt.includes(c.privacy));
 });
 const { readJson } = load("src/lib/request-json.ts");
-function intake({ uploadFails = false, staff = false } = {}) {
+function intake({ uploadFails = false, staff = false, list = [], countError = false } = {}) {
   const rows = new Map(),
-    stored = new Map();
+    stored = new Map(),
+    archive = structuredClone(list);
   const c = {
     ...defaultConfig(),
     open: true,
@@ -171,15 +172,45 @@ function intake({ uploadFails = false, staff = false } = {}) {
       let op = "select",
         values,
         identifier;
+      let head = false,
+        countMode = false,
+        sliceFrom,
+        sliceTo;
+      const filters = [];
       const chain = {
-        select() {
+        select(_columns, options = {}) {
+          head = options.head === true;
+          countMode = options.count === "exact";
           return this;
         },
         eq(k, v) {
           if (k === "id") identifier = v;
+          filters.push((row) => row[k] === v);
           return this;
         },
-        neq() {
+        neq(k, v) {
+          filters.push((row) => row[k] !== v);
+          return this;
+        },
+        in(k, values) {
+          filters.push((row) => values.includes(row[k]));
+          return this;
+        },
+        lt(k, v) {
+          filters.push((row) => row[k] < v);
+          return this;
+        },
+        ilike(k, pattern) {
+          const needle = String(pattern).replace(/%/g, "").toLowerCase();
+          filters.push((row) => String(row[k] ?? "").toLowerCase().includes(needle));
+          return this;
+        },
+        order() {
+          return this;
+        },
+        range(from, to) {
+          sliceFrom = from;
+          sliceTo = to;
           return this;
         },
         insert(v) {
@@ -225,7 +256,18 @@ function intake({ uploadFails = false, staff = false } = {}) {
           rows.set(identifier, { ...rows.get(identifier), ...values });
           return { data: rows.get(identifier), error: null };
         }
-        return { data: rows.get(identifier) || null, error: null };
+        if (countMode && head) {
+          if (countError) return { data: null, count: null, error: new Error("count failed") };
+          const matched = archive.filter((row) => filters.every((filter) => filter(row)));
+          return { data: null, count: matched.length, error: null };
+        }
+        if (identifier) return { data: rows.get(identifier) || null, error: null };
+        const matched = archive.filter((row) => filters.every((filter) => filter(row)));
+        return {
+          data: sliceTo === undefined ? matched : matched.slice(sliceFrom, sliceTo + 1),
+          count: matched.length,
+          error: null,
+        };
       }
       return chain;
     },
@@ -309,6 +351,54 @@ test("Staff closes a request as declined and can reopen it, unknown statuses are
   assert.equal(rows.get(payload.id).status, "received");
   assert.equal((await patch("archived")).status, 400);
   assert.equal(rows.get(payload.id).status, "received");
+});
+test("waiting=1 narrows the archive to requests waiting over 12 months", async () => {
+  const daysAgo = (days) =>
+    new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const list = [
+    { id: "r-old", created_at: daysAgo(400), activity_title: "Test", participant_name: "Uno", status: "received", lab_slug: "test" },
+    { id: "r-declined", created_at: daysAgo(400), activity_title: "Test", participant_name: "Due", status: "declined", lab_slug: "test" },
+    { id: "r-new", created_at: daysAgo(10), activity_title: "Test", participant_name: "Tre", status: "received", lab_slug: "test" },
+    { id: "r-reviewed", created_at: daysAgo(400), activity_title: "Test", participant_name: "Quattro", status: "reviewed", lab_slug: "test" },
+  ];
+  const { api } = intake({ staff: true, list });
+
+  const waiting = await (
+    await api.GET(new Request("https://local/api/registrations?waiting=1"))
+  ).json();
+  assert.deepEqual(waiting.registrations.map((row) => row.id), ["r-old"]);
+  assert.equal(waiting.registrations[0].stale, true);
+  assert.equal(waiting.total, 1);
+  assert.equal(waiting.waitingTooLong, 1);
+
+  const all = await (
+    await api.GET(new Request("https://local/api/registrations"))
+  ).json();
+  assert.equal(all.registrations.length, 4);
+  assert.equal(all.total, 4);
+  assert.equal(all.waitingTooLong, 1);
+  assert.deepEqual(
+    all.registrations.filter((row) => row.stale).map((row) => row.id),
+    ["r-old"],
+  );
+});
+test("Archive fails instead of reporting zero when the waiting count errors", async () => {
+  const { api } = intake({
+    staff: true,
+    countError: true,
+    list: [
+      {
+        id: "r-old",
+        created_at: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000).toISOString(),
+        activity_title: "Test",
+        participant_name: "Uno",
+        status: "received",
+        lab_slug: "test",
+      },
+    ],
+  });
+  const response = await api.GET(new Request("https://local/api/registrations"));
+  assert.equal(response.status, 500);
 });
 test("Minors cannot submit without signed attachment and malformed files are rejected", async () => {
   const { api, rows } = intake();

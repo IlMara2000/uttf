@@ -282,13 +282,20 @@ export default function RegistrationsArchive() {
           </p>
         )}
         {access && waiting > 0 && (
-          <p className="border border-amber-400 text-amber-200 p-3 mb-5">
+          <button
+            type="button"
+            className="w-full text-left border border-amber-400 text-amber-200 p-3 mb-5"
+            onClick={() => {
+              setOnlyWaiting(true);
+              setPage(0);
+            }}
+          >
             {waiting === 1
               ? "Una richiesta è in attesa di verifica da oltre 12 mesi."
               : `${waiting} richieste sono in attesa di verifica da oltre 12 mesi.`}{" "}
             Verificale o segnale come non accolte: finché restano aperte, i dati
-            non scadono.
-          </p>
+            non scadono. <span className="underline">Mostra solo queste</span>
+          </button>
         )}
         {loading ? (
           <p role="status">Caricamento…</p>
