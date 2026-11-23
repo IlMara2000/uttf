@@ -17,3 +17,8 @@ export function waitingTooLong(createdAt: string, now: Date = new Date()): boole
   if (!Number.isFinite(created)) return false;
   return now.getTime() - created > WAITING_WARNING_DAYS * DAY_MS;
 }
+
+/** Limite oltre il quale una richiesta `received` è da chiudere. */
+export function waitingCutoff(now: Date = new Date()): string {
+  return new Date(now.getTime() - WAITING_WARNING_DAYS * DAY_MS).toISOString();
+}

@@ -38,6 +38,7 @@ export default function RegistrationsArchive() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
+  const [onlyWaiting, setOnlyWaiting] = useState(false);
   const [labs, setLabs] = useState<{ slug: string; title: string }[]>([]);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
@@ -77,6 +78,7 @@ export default function RegistrationsArchive() {
         page: String(page),
         search,
         activity: filter,
+        waiting: onlyWaiting ? "1" : "",
       });
       const data = await (await request(`/api/registrations?${params}`)).json();
       setEntries(data.registrations);
@@ -88,7 +90,7 @@ export default function RegistrationsArchive() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filter]);
+  }, [page, search, filter, onlyWaiting]);
   useEffect(() => {
     let alive = true;
     let generation = 0;
@@ -223,7 +225,7 @@ export default function RegistrationsArchive() {
           </Link>
         )}
         {access && (
-          <div className="grid sm:grid-cols-3 gap-3 mb-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <label className="text-sm">
               Cerca partecipante
               <input
@@ -253,6 +255,18 @@ export default function RegistrationsArchive() {
                 ))}
               </select>
             </label>
+            <label className="flex items-center gap-2 self-end text-sm">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={onlyWaiting}
+                onChange={(e) => {
+                  setOnlyWaiting(e.target.checked);
+                  setPage(0);
+                }}
+              />
+              Solo da chiudere
+            </label>
             <button
               className="border border-zinc-700 p-3 self-end"
               onClick={() => void load()}
@@ -279,7 +293,11 @@ export default function RegistrationsArchive() {
         {loading ? (
           <p role="status">Caricamento…</p>
         ) : access && entries.length === 0 ? (
-          <p>Nessuna iscrizione trovata.</p>
+          <p>
+            {onlyWaiting
+              ? "Nessuna richiesta da chiudere: tutte le cartelle in attesa sono state verificate."
+              : "Nessuna iscrizione trovata."}
+          </p>
         ) : null}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {access && entries.map((e) => (

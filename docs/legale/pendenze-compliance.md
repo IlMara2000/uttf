@@ -166,7 +166,10 @@ avviso allo staff dopo 12 mesi dalla richiesta.
       `GET /api/registrations` restituisce `waitingTooLong` (conteggio) e
       `stale` su ogni riga.
 - [x] La dashboard iscrizioni mostra un banner con il numero di cartelle da
-      chiudere e la segnalazione su ogni scheda.
+      chiudere, la segnalazione su ogni scheda e il filtro «Solo da chiudere»
+      (applicato lato server, quindi vale su tutte le pagine).
+- [x] Se il conteggio del banner fallisce, l'archivio segnala l'errore invece
+      di mostrare 0.
 
 Perché non la cancellazione automatica a 24 mesi: avrebbe distrutto documenti
 (e relative autorizzazioni firmate) di richieste che lo staff non aveva ancora

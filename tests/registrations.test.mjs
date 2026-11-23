@@ -105,7 +105,7 @@ test("Optional media consent, pickup and custom required questions", () => {
   );
 });
 test("Requests waiting for review are flagged only after 12 months", () => {
-  const { waitingTooLong } = load("src/lib/registrations/waiting.ts");
+  const { waitingTooLong, waitingCutoff } = load("src/lib/registrations/waiting.ts");
   const now = new Date("2026-06-15T12:00:00.000Z");
   const daysAgo = (days) =>
     new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -113,6 +113,7 @@ test("Requests waiting for review are flagged only after 12 months", () => {
   assert.equal(waitingTooLong(daysAgo(365), now), false);
   assert.equal(waitingTooLong(daysAgo(366), now), true);
   assert.equal(waitingTooLong("non-una-data", now), false);
+  assert.equal(waitingCutoff(now), daysAgo(365));
 });
 test("A form cannot open without concrete activity information", () => {
   const c = defaultConfig();
