@@ -163,6 +163,18 @@ function seed() {
         files: [{ path: 'activity-registrations/received.pdf' }],
       },
       {
+        id: 'reg-declined',
+        status: 'declined',
+        created_at: timestampDaysAgo(400),
+        files: [{ path: 'activity-registrations/declined.pdf' }],
+      },
+      {
+        id: 'reg-declined-recent',
+        status: 'declined',
+        created_at: timestampDaysAgo(100),
+        files: [{ path: 'activity-registrations/declined-recent.pdf' }],
+      },
+      {
         id: 'reg-accepted',
         status: 'reviewed',
         created_at: timestampDaysAgo(400),
@@ -194,7 +206,7 @@ test('Retention in dry-run counts expired rows without deleting or touching stor
   assert.equal(client.tables.newsletter_subscribers.length, 3);
   assert.equal(client.tables.booking_reservations.length, 3);
   assert.equal(client.tables.reviews.length, 3);
-  assert.equal(client.tables.activity_registrations.length, 4);
+  assert.equal(client.tables.activity_registrations.length, 6);
   assert.deepEqual(client.removed, []);
 });
 
@@ -222,7 +234,12 @@ test('Retention deletes only rows past the thresholds and keeps booking slots', 
   assert.deepEqual(client.tables.newsletter_subscribers.map(row => row.id), ['news-edge', 'news-recent']);
   assert.deepEqual(client.tables.booking_reservations.map(row => row.id), ['res-edge', 'res-recent']);
   assert.deepEqual(client.tables.reviews.map(row => row.id), ['review-edge', 'review-recent']);
-  assert.deepEqual(client.tables.activity_registrations.map(row => row.id), ['reg-recent', 'reg-accepted']);
+  assert.deepEqual(client.tables.activity_registrations.map(row => row.id), [
+    'reg-recent',
+    'reg-received',
+    'reg-declined-recent',
+    'reg-accepted',
+  ]);
   assert.equal(client.tables.booking_slots.length, 3);
 });
 
@@ -264,6 +281,6 @@ test('Retention removes registration attachments before deleting their rows', as
   assert.deepEqual(client.removed, [
     'activity-registrations/old-a.pdf',
     'activity-registrations/old-b.pdf',
-    'activity-registrations/received.pdf',
+    'activity-registrations/declined.pdf',
   ]);
 });

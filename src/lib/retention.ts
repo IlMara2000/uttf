@@ -20,7 +20,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const NEWSLETTER_RETENTION_DAYS = 730; // 24 mesi
 const BOOKING_RETENTION_DAYS = 365; // 12 mesi dall'appuntamento
 const REVIEW_RETENTION_DAYS = 1826; // 5 anni dalla pubblicazione
-const REGISTRATION_RETENTION_DAYS = 365; // 12 mesi per le richieste mai verificate
+const REGISTRATION_RETENTION_DAYS = 365; // 12 mesi per le richieste non accolte
 
 export type RetentionReport = {
   mode: 'dry-run' | 'delete';
@@ -128,16 +128,20 @@ async function purgeBookings(
 
 /**
  * Richieste di iscrizione alle attività: oltre i 12 mesi si cancellano riga e
- * allegati nel bucket privato.
+ * allegati nel bucket privato, ma solo per le richieste chiuse come non accolte.
  *
- * Attenzione: gli stati non distinguono accolte e rifiutate, misurano solo la
- * verifica della cartella. `pending` è un invio interrotto prima del
- * caricamento (non compare nell'archivio), `received` è un invio completato che
- * lo staff non ha ancora verificato, `reviewed` è una cartella con i documenti
- * verificati ed è l'unico segno che la partecipazione è stata confermata. Per
- * questo `received` oltre 12 mesi vale come richiesta non accolta: chi partecipa
- * va segnato `reviewed`, altrimenti la cartella scade come le altre. Le richieste
- * verificate restano per gli obblighi amministrativi e assicurativi.
+ * Gli stati distinguono la valutazione dello staff, non solo la verifica della
+ * cartella: `pending` è un invio interrotto prima del caricamento (non compare
+ * nell'archivio), `received` è un invio completato che lo staff non ha ancora
+ * verificato, `reviewed` è una cartella con i documenti verificati, `declined`
+ * è una richiesta valutata e non accolta (o ritirata dal richiedente).
+ *
+ * Il termine di 12 mesi pubblicato in /privacy §07 vale per le richieste non
+ * accolte: la retention cancella `declined` e gli invii interrotti, non
+ * `received`. Una richiesta in attesa di verifica non è un rifiuto e non va
+ * cancellata come tale: resta finché lo staff non la chiude come `reviewed` o
+ * `declined`. Le richieste verificate restano per gli obblighi amministrativi e
+ * assicurativi.
  */
 async function purgeRegistrations(
   client: SupabaseClient,
@@ -148,7 +152,7 @@ async function purgeRegistrations(
   const { data, error } = await client
     .from('activity_registrations')
     .select('id, files')
-    .in('status', ['pending', 'received'])
+    .in('status', ['pending', 'declined'])
     .lt('created_at', cutoff);
 
   if (error) return { records: 0, files: 0, error: `activity_registrations: ${error.message}` };

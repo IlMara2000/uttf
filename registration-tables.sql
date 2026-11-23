@@ -8,7 +8,7 @@ create table public.activity_registrations (
  lab_slug text not null references public.labs(slug),
  activity_title text not null,
  participant_name text not null,
- status text not null default 'pending' check(status in ('pending','received','reviewed')),
+ status text not null default 'pending' check(status in ('pending','received','reviewed','declined')),
  submission_hash text not null,
  snapshot jsonb not null,
  files jsonb not null default '[]'::jsonb

@@ -335,7 +335,7 @@ export async function PATCH(request: Request) {
     if (
       !p ||
       !uuid.test(p.id || "") ||
-      !["received", "reviewed"].includes(p.status || "")
+      !["received", "reviewed", "declined"].includes(p.status || "")
     )
       return fail("Richiesta non valida.");
     const { data, error } = await client

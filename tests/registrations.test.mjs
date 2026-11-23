@@ -280,6 +280,24 @@ test("Submission archives text and PDF once, and retries are idempotent", async 
   assert.equal(rows.size, 1);
   assert.equal(stored.size, 2);
 });
+test("Staff closes a request as declined and can reopen it, unknown statuses are rejected", async () => {
+  const { api, rows } = intake({ staff: true });
+  assert.equal((await api.POST(post(payload))).status, 200);
+  const patch = (status) =>
+    api.PATCH(
+      new Request("https://local/api/registrations", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: payload.id, status }),
+      }),
+    );
+  assert.equal((await patch("declined")).status, 200);
+  assert.equal(rows.get(payload.id).status, "declined");
+  assert.equal((await patch("received")).status, 200);
+  assert.equal(rows.get(payload.id).status, "received");
+  assert.equal((await patch("archived")).status, 400);
+  assert.equal(rows.get(payload.id).status, "received");
+});
 test("Minors cannot submit without signed attachment and malformed files are rejected", async () => {
   const { api, rows } = intake();
   assert.equal(

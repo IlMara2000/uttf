@@ -142,10 +142,28 @@ la cancellazione è effettiva e il job è idempotente.
 
 Il cron gira ogni giorno alle 04:00 UTC. Da qui in avanti cancella davvero
 iscritti oltre 24 mesi, prenotazioni oltre 12 mesi, recensioni oltre 5 anni e
-richieste di iscrizione mai verificate (`pending` e `received`) oltre 12 mesi.
-`reviewed` non significa "accolta" ma "documenti verificati": è l'unico stato
-che conserva la cartella, quindi chi partecipa va segnato così, altrimenti la
-cartella viene cancellata come una richiesta non accolta.
+richieste di iscrizione non accolte (`declined`) o mai completate (`pending`)
+oltre 12 mesi.
+
+`received` (invio completato, in attesa di verifica) non viene più trattato
+come un rifiuto: la cartella resta finché lo staff non la chiude come `reviewed`
+o `declined`. `reviewed` non significa "accolta" ma "documenti verificati": è
+lo stato che conserva la cartella per gli obblighi amministrativi.
+
+- [x] Stato `declined` («non accolta») aggiunto il 23 novembre 2026: vincolo
+      `activity_registrations_status_check`, PATCH dell'API e pulsante in
+      dashboard. Retrocompatibile: le righe esistenti restano `received` o
+      `reviewed`.
+
+### Termine per le richieste in attesa
+
+Una richiesta `received` oggi non scade da sola: senza un intervento dello
+staff resta in archivio. È il comportamento richiesto (non è un rifiuto), ma
+va chiuso il cerchio sul principio di limitazione della conservazione. Opzioni:
+
+- [ ] avviso in dashboard dopo 6-12 mesi, con chiusura manuale come `reviewed`
+      o `declined` (nessun cambio di informativa);
+- [ ] cancellazione automatica dopo 24 mesi, con informativa portata alla 2.3.
 
 ---
 

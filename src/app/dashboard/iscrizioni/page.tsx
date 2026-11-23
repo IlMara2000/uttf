@@ -27,6 +27,11 @@ type Detail = Entry & {
   snapshot: { responses: RegistrationAnswers; config: RegistrationConfig };
   files: { name: string }[];
 };
+const statusLabels: Record<string, string> = {
+  received: "In attesa di verifica",
+  reviewed: "Documenti verificati",
+  declined: "Non accolta",
+};
 export default function RegistrationsArchive() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
@@ -170,11 +175,10 @@ export default function RegistrationsArchive() {
       setWorking(false);
     }
   }
-  async function review() {
+  async function setStatus(status: "received" | "reviewed" | "declined") {
     if (!detail) return;
     setWorking(true);
     try {
-      const status = detail.status === "reviewed" ? "received" : "reviewed";
       await request("/api/registrations", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -205,8 +209,9 @@ export default function RegistrationsArchive() {
         <p className="text-zinc-400 mt-3 mb-8">
           Una cartella per ogni iscrizione. Risposte, documento generato e
           autorizzazione firmata, quando richiesta. Verifica gli allegati prima
-          di confermare la partecipazione. Una cartella non segnata come
-          verificata viene cancellata dopo 12 mesi dalla richiesta.
+          di confermare la partecipazione. Le richieste segnate come non accolte
+          vengono cancellate dopo 12 mesi dalla richiesta; quelle in attesa
+          restano in archivio finché non le verifichi o le chiudi.
         </p>
         {!access && !loading && (
           <Link href="/login" className="underline">
@@ -280,9 +285,7 @@ export default function RegistrationsArchive() {
                 {new Date(e.created_at).toLocaleString("it-IT")}
               </p>
               <p className="text-xs mt-4">
-                {e.status === "reviewed"
-                  ? "Documenti verificati"
-                  : "Da verificare"}{" "}
+                {statusLabels[e.status] ?? "In attesa di verifica"}{" "}
                 · {e.id.slice(0, 8)}
               </p>
             </button>
@@ -342,11 +345,28 @@ export default function RegistrationsArchive() {
                   <button
                     disabled={working}
                     className="border border-zinc-600 p-3"
-                    onClick={() => void review()}
+                    onClick={() =>
+                      void setStatus(
+                        detail.status === "reviewed" ? "received" : "reviewed",
+                      )
+                    }
                   >
                     {detail.status === "reviewed"
                       ? "Segna da verificare"
                       : "Segna documenti verificati"}
+                  </button>
+                  <button
+                    disabled={working}
+                    className="border border-zinc-600 p-3"
+                    onClick={() =>
+                      void setStatus(
+                        detail.status === "declined" ? "received" : "declined",
+                      )
+                    }
+                  >
+                    {detail.status === "declined"
+                      ? "Ripristina richiesta"
+                      : "Segna come non accolta"}
                   </button>
                 </div>
                 {error && (
