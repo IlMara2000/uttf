@@ -87,6 +87,8 @@ export default function RegistrationsArchive() {
       setTotal(data.total);
       setWaiting(data.waitingTooLong ?? 0);
       setSelected(new Set());
+      // Un esito vecchio non deve restare accanto a un elenco ricaricato.
+      setNotice("");
     } catch (e) {
       setEntries([]);
       setError(e instanceof Error ? e.message : "Archivio non disponibile.");

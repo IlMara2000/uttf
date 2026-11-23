@@ -33,3 +33,9 @@ newsletter-backup-*.json
 .venv/
 .venv-pmd3/
 __pycache__/
+
+# Screenshot di verifica a video, non versionati.
+.verifica/
+
+# Credenziali locali dell account staff di test: mai versionate.
+.secrets/
