@@ -36,7 +36,7 @@ Campi vuoti in `src/lib/legal-entity.ts`, quindi assenti da `/privacy` e
 - [ ] numero di iscrizione al RUNTS
 - [ ] nome e cognome del legale rappresentante
 
-Quando li hai, passali qui: li inserisco, porto l'informativa alla versione 2.2
+Quando li hai, passali qui: li inserisco, porto l'informativa alla versione 2.3
 con la data del giorno e rifaccio la build.
 
 ---

@@ -157,8 +157,14 @@ function seed() {
         files: [{ path: 'activity-registrations/recent.pdf' }],
       },
       {
+        id: 'reg-received',
+        status: 'received',
+        created_at: timestampDaysAgo(400),
+        files: [{ path: 'activity-registrations/received.pdf' }],
+      },
+      {
         id: 'reg-accepted',
-        status: 'accepted',
+        status: 'reviewed',
         created_at: timestampDaysAgo(400),
         files: [{ path: 'activity-registrations/accepted.pdf' }],
       },
@@ -170,8 +176,8 @@ const expired = {
   newsletterSubscribers: 1,
   bookingReservations: 1,
   reviews: 1,
-  activityRegistrations: 1,
-  registrationFiles: 2,
+  activityRegistrations: 2,
+  registrationFiles: 3,
   bookingRateLimits: 0,
   registrationRateLimits: 0,
 };
@@ -188,7 +194,7 @@ test('Retention in dry-run counts expired rows without deleting or touching stor
   assert.equal(client.tables.newsletter_subscribers.length, 3);
   assert.equal(client.tables.booking_reservations.length, 3);
   assert.equal(client.tables.reviews.length, 3);
-  assert.equal(client.tables.activity_registrations.length, 3);
+  assert.equal(client.tables.activity_registrations.length, 4);
   assert.deepEqual(client.removed, []);
 });
 
@@ -258,5 +264,6 @@ test('Retention removes registration attachments before deleting their rows', as
   assert.deepEqual(client.removed, [
     'activity-registrations/old-a.pdf',
     'activity-registrations/old-b.pdf',
+    'activity-registrations/received.pdf',
   ]);
 });

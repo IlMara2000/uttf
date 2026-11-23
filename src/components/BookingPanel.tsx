@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, X } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { DEFAULT_BOOKING_CATEGORY, formatDay, formatRange, hhmm, validateBookingForm, type BookingSlot } from "@/lib/bookings/model";
@@ -292,8 +293,11 @@ export default function BookingPanel({
                   onChange={(event) => setForm({ ...form, privacy: event.target.checked })}
                 />
                 <span>
-                  Ok, ho letto l&rsquo;informativa privacy. I dati servono solo per gestire la prenotazione e
-                  restano allo staff.
+                  Ok, ho letto l&rsquo;
+                  <Link href="/privacy" target="_blank">
+                    informativa privacy
+                  </Link>
+                  . I dati servono solo per gestire la prenotazione e restano allo staff.
                 </span>
               </label>
               {error && <p role="alert">{error}</p>}

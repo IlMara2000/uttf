@@ -61,7 +61,7 @@ const purposes = [
 ];
 
 const retention = [
-  ["Richieste di iscrizione non accolte o ritirate", "Fino a 12 mesi dalla chiusura dell'attività"],
+  ["Richieste di iscrizione non accolte o ritirate", "Fino a 12 mesi dalla richiesta"],
   ["Iscrizioni accolte, autorizzazioni e deleghe al ritiro", "Per la durata dell'attività e per il tempo necessario agli obblighi amministrativi e assicurativi applicabili (di regola 5 anni per la documentazione contabile)"],
   ["Prenotazioni e relativi contatti", "12 mesi dall'appuntamento, salvo obblighi di legge"],
   ["Recensioni pubblicate", "Fino alla revoca del consenso o alla richiesta di rimozione, e comunque non oltre 5 anni dalla pubblicazione"],

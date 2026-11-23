@@ -16,11 +16,11 @@ const technical = [
     duration: "Durata della sessione e rinnovo del token; chiusura al logout",
   },
   {
-    name: "Memoria locale anti-abuso",
+    name: "Memoria locale: blocco temporaneo dei rinnovi di sessione",
     owner: "Prima parte — localStorage del browser",
     purpose:
-      "Registra sul dispositivo un breve intervallo dopo un invio o un tentativo di accesso, per impedire invii ripetuti e tentativi automatici. Non identifica la persona e non viene trasmessa ad altri.",
-    duration: "Pochi minuti, cancellabile svuotando i dati del sito",
+      "Registra sul dispositivo fino a quando sono sospesi i tentativi di rinnovo della sessione dello staff, per evitare richieste ripetute che esaurirebbero il limite del fornitore. Non identifica la persona e non viene trasmessa ad altri.",
+    duration: "Al massimo 5 minuti, cancellabile svuotando i dati del sito",
   },
 ];
 

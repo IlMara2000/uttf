@@ -22,9 +22,9 @@ export const LEGAL_ENTITY = {
   runts: "",
   legalRep: "",
   siteUrl: "https://uttf.vercel.app",
-  privacyVersion: "2.1",
-  privacyUpdated: "21 novembre 2026",
-  cookieUpdated: "21 novembre 2026",
+  privacyVersion: "2.2",
+  privacyUpdated: "23 novembre 2026",
+  cookieUpdated: "23 novembre 2026",
   termsUpdated: "19 novembre 2026",
   accessibilityUpdated: "19 novembre 2026",
 };

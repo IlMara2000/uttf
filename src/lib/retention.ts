@@ -127,9 +127,10 @@ async function purgeBookings(
 }
 
 /**
- * Richieste di iscrizione alle attività non accolte (status `pending`): oltre i
- * 12 mesi si cancellano riga e allegati nel bucket privato. Le richieste già
- * gestite restano per gli obblighi amministrativi e assicurativi.
+ * Richieste di iscrizione alle attività non accolte: oltre i 12 mesi si
+ * cancellano riga e allegati nel bucket privato. Contano `pending` (mai inviate)
+ * e `received` (inviate e mai esaminate); le richieste esaminate (`reviewed`)
+ * restano per gli obblighi amministrativi e assicurativi.
  */
 async function purgeRegistrations(
   client: SupabaseClient,
@@ -140,7 +141,7 @@ async function purgeRegistrations(
   const { data, error } = await client
     .from('activity_registrations')
     .select('id, files')
-    .eq('status', 'pending')
+    .in('status', ['pending', 'received'])
     .lt('created_at', cutoff);
 
   if (error) return { records: 0, files: 0, error: `activity_registrations: ${error.message}` };
