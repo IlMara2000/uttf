@@ -64,7 +64,7 @@ export default function CalendarWidget() {
     
     if (tasksError) console.error("Tasks fetch error:", tasksError);
     if (activitiesError) console.error("Activities fetch error:", activitiesError);
-    if (googleError) console.error("Google events fetch error:", googleError);
+    if (googleError && (googleError.message || googleError.code)) console.error("Google events fetch error:", googleError.message || googleError.code);
     if (profilesError) console.error("Profiles fetch error:", profilesError);
 
     // Uniamo i due set di dati aggiungendo un flag "eventType" per distinguerli
