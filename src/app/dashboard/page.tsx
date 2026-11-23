@@ -25,6 +25,7 @@ import {
   Search,
   Mail,
   Phone,
+  ShieldCheck,
   Video,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -47,6 +48,8 @@ type NewsletterSubscriber = {
   name: string;
   email: string;
   phone: string | null;
+  consent_at: string | null;
+  consent_version: string | null;
 };
 
 type DashboardOverview = {
@@ -237,12 +240,14 @@ export default function Dashboard() {
   }, [activeView, fetchReviews, fetchSubscribers]);
 
   const exportCSV = () => {
-    const headers = ['Data', 'Nome', 'Email', 'Telefono'];
+    const headers = ['Data', 'Nome', 'Email', 'Telefono', 'Consenso il', 'Versione consenso'];
     const rows = subscribers.map((subscriber) => [
       new Date(subscriber.created_at).toLocaleDateString('it-IT'),
       subscriber.name,
       subscriber.email,
       subscriber.phone || '',
+      subscriber.consent_at ? new Date(subscriber.consent_at).toLocaleDateString('it-IT') : '',
+      subscriber.consent_version || '',
     ]);
     const csvContent = [headers, ...rows]
       .map((row) => row.map(escapeCsvCell).join(';'))
@@ -894,7 +899,7 @@ export default function Dashboard() {
                     filteredSubscribers.map((subscriber, index) => (
                       <div
                         key={`${subscriber.email}-${subscriber.created_at}-${index}`}
-                        className="flex flex-col gap-3 rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 sm:grid sm:min-w-0 sm:grid-cols-2 sm:items-start sm:gap-x-4 sm:gap-y-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,1fr)_auto] lg:items-center"
+                        className="flex flex-col gap-3 rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 sm:grid sm:min-w-0 sm:grid-cols-2 sm:items-start sm:gap-x-4 sm:gap-y-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_auto] lg:items-center"
                       >
                         <div className="min-w-0">
                           <span className="text-sm font-bold uppercase block truncate">{subscriber.name}</span>
@@ -909,6 +914,22 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2 min-w-0">
                           <Phone size={14} className="text-zinc-600 shrink-0" />
                           <span className="text-xs text-[#FF914D] truncate">{subscriber.phone || '--'}</span>
+                        </div>
+                        <div className="flex min-w-0 items-start gap-2">
+                          <ShieldCheck
+                            size={14}
+                            className={subscriber.consent_at ? 'mt-0.5 shrink-0 text-emerald-500' : 'mt-0.5 shrink-0 text-zinc-600'}
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-xs text-zinc-300">
+                              {subscriber.consent_at
+                                ? `Consenso del ${formatDate(subscriber.consent_at)}`
+                                : 'Consenso non registrato'}
+                            </span>
+                            <span className="block truncate text-[10px] uppercase tracking-wide text-zinc-500">
+                              {subscriber.consent_version || 'versione assente'}
+                            </span>
+                          </span>
                         </div>
                         <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-600">
                           #{index + 1}

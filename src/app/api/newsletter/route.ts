@@ -18,6 +18,8 @@ type NewsletterSubscriber = {
   name: string;
   email: string;
   phone: string | null;
+  consent_at: string | null;
+  consent_version: string | null;
 };
 
 let adminSupabase: SupabaseClient | null = null;
@@ -181,7 +183,7 @@ export async function GET(request: Request) {
     const summary = new URL(request.url).searchParams.get('summary') === '1';
     let query = getAdminSupabase()
       .from('newsletter_subscribers')
-      .select('created_at, name, email, phone', { count: summary ? 'exact' : undefined })
+      .select('created_at, name, email, phone, consent_at, consent_version', { count: summary ? 'exact' : undefined })
       .order('created_at', { ascending: false });
 
     if (summary) query = query.limit(3);
