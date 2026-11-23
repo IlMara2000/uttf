@@ -205,7 +205,8 @@ export default function RegistrationsArchive() {
         <p className="text-zinc-400 mt-3 mb-8">
           Una cartella per ogni iscrizione. Risposte, documento generato e
           autorizzazione firmata, quando richiesta. Verifica gli allegati prima
-          di confermare la partecipazione.
+          di confermare la partecipazione. Una cartella non segnata come
+          verificata viene cancellata dopo 12 mesi dalla richiesta.
         </p>
         {!access && !loading && (
           <Link href="/login" className="underline">

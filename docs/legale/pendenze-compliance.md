@@ -142,7 +142,10 @@ la cancellazione è effettiva e il job è idempotente.
 
 Il cron gira ogni giorno alle 04:00 UTC. Da qui in avanti cancella davvero
 iscritti oltre 24 mesi, prenotazioni oltre 12 mesi, recensioni oltre 5 anni e
-richieste non accolte oltre 12 mesi.
+richieste di iscrizione mai verificate (`pending` e `received`) oltre 12 mesi.
+`reviewed` non significa "accolta" ma "documenti verificati": è l'unico stato
+che conserva la cartella, quindi chi partecipa va segnato così, altrimenti la
+cartella viene cancellata come una richiesta non accolta.
 
 ---
 

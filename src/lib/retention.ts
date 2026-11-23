@@ -20,7 +20,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const NEWSLETTER_RETENTION_DAYS = 730; // 24 mesi
 const BOOKING_RETENTION_DAYS = 365; // 12 mesi dall'appuntamento
 const REVIEW_RETENTION_DAYS = 1826; // 5 anni dalla pubblicazione
-const REGISTRATION_RETENTION_DAYS = 365; // 12 mesi per le richieste non accolte
+const REGISTRATION_RETENTION_DAYS = 365; // 12 mesi per le richieste mai verificate
 
 export type RetentionReport = {
   mode: 'dry-run' | 'delete';
@@ -127,10 +127,17 @@ async function purgeBookings(
 }
 
 /**
- * Richieste di iscrizione alle attività non accolte: oltre i 12 mesi si
- * cancellano riga e allegati nel bucket privato. Contano `pending` (mai inviate)
- * e `received` (inviate e mai esaminate); le richieste esaminate (`reviewed`)
- * restano per gli obblighi amministrativi e assicurativi.
+ * Richieste di iscrizione alle attività: oltre i 12 mesi si cancellano riga e
+ * allegati nel bucket privato.
+ *
+ * Attenzione: gli stati non distinguono accolte e rifiutate, misurano solo la
+ * verifica della cartella. `pending` è un invio interrotto prima del
+ * caricamento (non compare nell'archivio), `received` è un invio completato che
+ * lo staff non ha ancora verificato, `reviewed` è una cartella con i documenti
+ * verificati ed è l'unico segno che la partecipazione è stata confermata. Per
+ * questo `received` oltre 12 mesi vale come richiesta non accolta: chi partecipa
+ * va segnato `reviewed`, altrimenti la cartella scade come le altre. Le richieste
+ * verificate restano per gli obblighi amministrativi e assicurativi.
  */
 async function purgeRegistrations(
   client: SupabaseClient,
