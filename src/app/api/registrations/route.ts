@@ -14,6 +14,10 @@ import {
 } from "@/lib/registrations/model";
 import { authorizationPdf } from "@/lib/registrations/document";
 import { notoSansBytes } from "@/lib/registrations/font";
+import {
+  WAITING_WARNING_DAYS,
+  waitingTooLong,
+} from "@/lib/registrations/waiting";
 import { zipSync, strToU8 } from "fflate";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "private, no-store" };
@@ -319,8 +323,25 @@ export async function GET(request: Request) {
       q = q.ilike("participant_name", `%${search.replace(/[\\%_]/g, "\\$&")}%`);
     const { data, count, error } = await q;
     if (error) throw error;
+    // Cartelle ancora in attesa dopo 12 mesi: la retention non le tocca, quindi
+    // va segnalato allo staff che vanno chiuse come verificate o non accolte.
+    const cutoff = new Date(
+      Date.now() - WAITING_WARNING_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const { count: waiting } = await client
+      .from("activity_registrations")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "received")
+      .lt("created_at", cutoff);
     return NextResponse.json(
-      { registrations: data, total: count },
+      {
+        registrations: (data ?? []).map((row) => ({
+          ...row,
+          stale: row.status === "received" && waitingTooLong(row.created_at),
+        })),
+        total: count,
+        waitingTooLong: waiting ?? 0,
+      },
       { headers },
     );
   } catch (e) {

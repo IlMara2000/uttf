@@ -155,15 +155,29 @@ lo stato che conserva la cartella per gli obblighi amministrativi.
       dashboard. Retrocompatibile: le righe esistenti restano `received` o
       `reviewed`.
 
-### Termine per le richieste in attesa
+### Termine per le richieste in attesa: chiuso con avviso e chiusura manuale
 
-Una richiesta `received` oggi non scade da sola: senza un intervento dello
-staff resta in archivio. È il comportamento richiesto (non è un rifiuto), ma
-va chiuso il cerchio sul principio di limitazione della conservazione. Opzioni:
+Una richiesta `received` non scade da sola, perché non è un rifiuto. Per non
+lasciare dati in archivio senza limite, la soluzione adottata è **la più
+prudente**: nessuna cancellazione automatica di cartelle ancora aperte, ma un
+avviso allo staff dopo 12 mesi dalla richiesta.
 
-- [ ] avviso in dashboard dopo 6-12 mesi, con chiusura manuale come `reviewed`
-      o `declined` (nessun cambio di informativa);
-- [ ] cancellazione automatica dopo 24 mesi, con informativa portata alla 2.3.
+- [x] `src/lib/registrations/waiting.ts` calcola la soglia (365 giorni);
+      `GET /api/registrations` restituisce `waitingTooLong` (conteggio) e
+      `stale` su ogni riga.
+- [x] La dashboard iscrizioni mostra un banner con il numero di cartelle da
+      chiudere e la segnalazione su ogni scheda.
+
+Perché non la cancellazione automatica a 24 mesi: avrebbe distrutto documenti
+(e relative autorizzazioni firmate) di richieste che lo staff non aveva ancora
+esaminato, e avrebbe richiesto una nuova versione dell'informativa per un
+termine mai pubblicato. L'avviso invece rende visibile il caso e lascia la
+chiusura a chi conosce la richiesta; nessun termine pubblicato cambia, quindi
+l'informativa resta 2.2.
+
+- [ ] Verificare nei primi mesi che l'avviso venga effettivamente gestito: se le
+      cartelle si accumulano, si passa alla cancellazione automatica con
+      informativa 2.3.
 
 ---
 

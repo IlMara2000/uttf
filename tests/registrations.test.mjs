@@ -104,6 +104,16 @@ test("Optional media consent, pickup and custom required questions", () => {
     ),
   );
 });
+test("Requests waiting for review are flagged only after 12 months", () => {
+  const { waitingTooLong } = load("src/lib/registrations/waiting.ts");
+  const now = new Date("2026-06-15T12:00:00.000Z");
+  const daysAgo = (days) =>
+    new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
+  assert.equal(waitingTooLong(daysAgo(364), now), false);
+  assert.equal(waitingTooLong(daysAgo(365), now), false);
+  assert.equal(waitingTooLong(daysAgo(366), now), true);
+  assert.equal(waitingTooLong("non-una-data", now), false);
+});
 test("A form cannot open without concrete activity information", () => {
   const c = defaultConfig();
   assert.equal(configError(c), null);
@@ -241,6 +251,7 @@ function intake({ uploadFails = false, staff = false } = {}) {
     },
     "@/lib/request-json": { readJson },
     "@/lib/registrations/model": model,
+    "@/lib/registrations/waiting": load("src/lib/registrations/waiting.ts"),
     "@/lib/registrations/document": {
       authorizationPdf: async () => new Uint8Array([1, 2, 3]),
     },

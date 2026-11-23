@@ -22,6 +22,7 @@ type Entry = {
   participant_name: string;
   status: string;
   lab_slug: string;
+  stale?: boolean;
 };
 type Detail = Entry & {
   snapshot: { responses: RegistrationAnswers; config: RegistrationConfig };
@@ -40,6 +41,7 @@ export default function RegistrationsArchive() {
   const [labs, setLabs] = useState<{ slug: string; title: string }[]>([]);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
+  const [waiting, setWaiting] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [access, setAccess] = useState(false);
@@ -79,6 +81,7 @@ export default function RegistrationsArchive() {
       const data = await (await request(`/api/registrations?${params}`)).json();
       setEntries(data.registrations);
       setTotal(data.total);
+      setWaiting(data.waitingTooLong ?? 0);
     } catch (e) {
       setEntries([]);
       setError(e instanceof Error ? e.message : "Archivio non disponibile.");
@@ -211,7 +214,8 @@ export default function RegistrationsArchive() {
           autorizzazione firmata, quando richiesta. Verifica gli allegati prima
           di confermare la partecipazione. Le richieste segnate come non accolte
           vengono cancellate dopo 12 mesi dalla richiesta; quelle in attesa
-          restano in archivio finché non le verifichi o le chiudi.
+          restano in archivio finché non le verifichi o le chiudi, e dopo 12
+          mesi dalla richiesta vengono segnalate qui.
         </p>
         {!access && !loading && (
           <Link href="/login" className="underline">
@@ -263,6 +267,15 @@ export default function RegistrationsArchive() {
             {error}
           </p>
         )}
+        {access && waiting > 0 && (
+          <p className="border border-amber-400 text-amber-200 p-3 mb-5">
+            {waiting === 1
+              ? "Una richiesta è in attesa di verifica da oltre 12 mesi."
+              : `${waiting} richieste sono in attesa di verifica da oltre 12 mesi.`}{" "}
+            Verificale o segnale come non accolte: finché restano aperte, i dati
+            non scadono.
+          </p>
+        )}
         {loading ? (
           <p role="status">Caricamento…</p>
         ) : access && entries.length === 0 ? (
@@ -288,6 +301,11 @@ export default function RegistrationsArchive() {
                 {statusLabels[e.status] ?? "In attesa di verifica"}{" "}
                 · {e.id.slice(0, 8)}
               </p>
+              {e.stale && (
+                <p className="text-xs mt-1 text-amber-300">
+                  In attesa da oltre 12 mesi: verifica o chiudi la richiesta
+                </p>
+              )}
             </button>
           ))}
         </div>
