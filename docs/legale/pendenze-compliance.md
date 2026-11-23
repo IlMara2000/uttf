@@ -98,6 +98,9 @@ prova del consenso, come previsto.
 
 - [x] verifica che le tre colonne esistano
 - [ ] decidi sugli iscritti storici: riconferma via email o cancellazione
+      → operazione pronta in `docs/legale/newsletter-iscritti-storici.md` e in
+      `newsletter-storici.sql`; consigliata la cancellazione delle 3 righe,
+      perché con tre contatti la riconferma costa più di quanto renda
 
 Nota: applicata a mano, quindi non compare in
 `supabase_migrations.schema_migrations`. Non è un problema: il file

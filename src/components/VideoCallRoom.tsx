@@ -26,6 +26,10 @@ type Peer = {
 
 type ChatMsg = { id: string; from: string; name: string; text: string; ts: number };
 
+type SignalPayload =
+  | { type: 'offer' | 'answer'; from: string; to: string; name?: string; sdp: RTCSessionDescriptionInit }
+  | { type: 'ice'; from: string; to: string; name?: string; candidate: RTCIceCandidateInit };
+
 type Props = {
   roomId: string;
   userId: string;
@@ -81,7 +85,7 @@ export default function VideoCallRoom({ roomId, userId, userEmail }: Props) {
   const nameRef = useRef(displayName);
   useEffect(() => { nameRef.current = displayName; }, [displayName]);
 
-  const sendSignal = useCallback((payload: any) => {
+  const sendSignal = useCallback((payload: SignalPayload) => {
     channelRef.current?.send({ type: 'broadcast', event: 'signal', payload });
   }, []);
 
@@ -122,7 +126,7 @@ export default function VideoCallRoom({ roomId, userId, userEmail }: Props) {
     return pc;
   }, [userId, handleRemoteStream, sendSignal]);
 
-  const handleSignal = useCallback(async (payload: any) => {
+  const handleSignal = useCallback(async (payload: SignalPayload) => {
     if (payload.to !== userId) return;
     const from = payload.from;
     const peerName = payload.name || 'Utente';

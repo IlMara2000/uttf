@@ -14,7 +14,6 @@ function VideochiamateInner() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string | null } | null>(null);
   const [roomIdInput, setRoomIdInput] = useState('');
-  const [activeRoom, setActiveRoom] = useState<string | null>(roomParam);
 
   useEffect(() => {
     let alive = true;
@@ -38,10 +37,6 @@ function VideochiamateInner() {
     return () => { alive = false; };
   }, [router, roomParam]);
 
-  useEffect(() => {
-    setActiveRoom(roomParam);
-  }, [roomParam]);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
@@ -50,9 +45,9 @@ function VideochiamateInner() {
     );
   }
 
-  if (activeRoom) {
+  if (roomParam) {
     return (
-      <VideoCallRoom roomId={activeRoom} userId={user!.id} userEmail={user!.email} />
+      <VideoCallRoom roomId={roomParam} userId={user!.id} userEmail={user!.email} />
     );
   }
 
