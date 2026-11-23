@@ -256,7 +256,12 @@ export default function NotesManager() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4 border-t border-white/5">
                   {activeNote.attachments?.map((url: string, i: number) => (
                     <div key={i} className="relative group rounded-xl overflow-hidden border border-white/10 bg-zinc-900">
-                      <div className="flex h-32 items-center justify-center text-zinc-500"><FileText size={28} /></div>
+                      <div className="flex h-32 flex-col items-center justify-center gap-1 text-zinc-500">
+                        <FileText size={28} />
+                        {url.match(/\.(webm|mp4|ogg|mov)$/i) && (
+                          <span className="text-[9px] font-mono uppercase">video</span>
+                        )}
+                      </div>
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                         <button type="button" onClick={() => void downloadAttachment(url)} aria-label="Scarica allegato" className="p-2 bg-white/10 rounded-full hover:bg-white/20">
                           <FileText size={18} />

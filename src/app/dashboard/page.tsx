@@ -25,6 +25,7 @@ import {
   Search,
   Mail,
   Phone,
+  Video,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -450,6 +451,13 @@ export default function Dashboard() {
       icon: <Star size={18} />,
       action: () => setActiveView('reviews'),
     },
+    {
+      key: 'video',
+      title: 'Videochiamate',
+      subtitle: 'Chiama lo staff in browser',
+      icon: <Video size={18} />,
+      action: () => router.push('/videochiamate'),
+    },
   ];
   const activeSection = managementSections.find((section) => section.key === activeView) ?? managementSections[0];
 
@@ -629,6 +637,13 @@ export default function Dashboard() {
                   >
                     <RefreshCw size={16} className={dashboardRefreshing ? 'shrink-0 animate-spin' : 'shrink-0'} />
                     Aggiorna
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/videochiamate')}
+                    className={BTN_SECONDARY}
+                  >
+                    <Video size={16} className="shrink-0" /> Videochiamate
                   </button>
                   <button
                     type="button"

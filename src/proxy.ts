@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { sessionFromCookies, TOKEN_EXPIRY_MARGIN_MS } from './lib/auth-cookie'
 
-const protectedPaths = ['/dashboard', '/admin', '/drive']
+const protectedPaths = ['/dashboard', '/admin', '/drive', '/videochiamate']
 
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL('/login', request.url)
@@ -90,5 +90,5 @@ export async function proxy(request: NextRequest) {
 
 // Applichiamo il proxy solo alle rotte che ci interessano
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/drive', '/drive/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/drive', '/drive/:path*', '/videochiamate', '/videochiamate/:path*'],
 }
