@@ -66,6 +66,9 @@ function RegistrationsArchive() {
   const [waiting, setWaiting] = useState(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  // Falso finché un caricamento non è concluso: lo stato vuoto non deve
+  // comparire mentre le righe stanno ancora arrivando.
+  const [ready, setReady] = useState(false);
   const [access, setAccess] = useState(false);
   const [working, setWorking] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -95,6 +98,7 @@ function RegistrationsArchive() {
   }
   const load = useCallback(async () => {
     setLoading(true);
+    setReady(false);
     setError("");
     try {
       const params = new URLSearchParams({
@@ -116,6 +120,7 @@ function RegistrationsArchive() {
       setError(e instanceof Error ? e.message : "Archivio non disponibile.");
     } finally {
       setLoading(false);
+      setReady(true);
     }
   }, [page, search, filter, statusFilter, onlyWaiting]);
   // L'URL riflette i filtri con replaceState: nessuna navigazione, nessuna
@@ -146,6 +151,7 @@ function RegistrationsArchive() {
       const current = ++generation;
       setAccess(false);
       setEntries([]);
+      setReady(false);
       setDetail(null);
       if (!session) {
         setLoading(false);
@@ -438,7 +444,7 @@ function RegistrationsArchive() {
         )}
         {loading ? (
           <p role="status">Caricamento…</p>
-        ) : access && entries.length === 0 ? (
+        ) : access && ready && entries.length === 0 ? (
           <p>
             {onlyWaiting
               ? "Nessuna richiesta da chiudere: tutte le cartelle in attesa sono state verificate."

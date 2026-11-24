@@ -706,15 +706,75 @@ test("Archive and verification updates reject nonstaff access", async () => {
   );
 });
 
+test("Staff downloads a single attachment with download headers and its own bytes", async () => {
+  const { api, stored } = intake({ staff: true });
+  assert.equal((await api.POST(post(payload))).status, 200);
+  const res = await api.GET(
+    new Request(`https://local/api/registrations?id=${payload.id}&file=risposte.txt`),
+  );
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get("content-type"), "application/octet-stream");
+  assert.equal(
+    res.headers.get("content-disposition"),
+    'attachment; filename="risposte.txt"',
+  );
+  assert.equal(res.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(res.headers.get("cache-control"), "private, no-store");
+  const body = new Uint8Array(await res.arrayBuffer());
+  const storedBytes = new Uint8Array(
+    await new Blob([stored.get(`${payload.id}/risposte.txt`)]).arrayBuffer(),
+  );
+  assert.deepEqual(body, storedBytes);
+  assert.match(new TextDecoder().decode(body), /Nome: Alex\n\nCognome: Prova/);
+});
+
 test("Staff downloads a named ZIP folder and arbitrary file names are rejected", async () => {
-  const {api} = intake({staff:true});
-  assert.equal((await api.POST(post(payload))).status,200);
-  const zip = await api.GET(new Request(`https://local/api/registrations?id=${payload.id}&zip=1`));
-  assert.equal(zip.status,200);
-  const files=require('fflate').unzipSync(new Uint8Array(await zip.arrayBuffer()));
-  assert.ok(Object.keys(files).some(name=>name.startsWith('Alex_Prova_')&&name.endsWith('/risposte.txt')));
-  assert.ok(Object.keys(files).some(name=>name.endsWith('/autorizzazione-generata.pdf')));
-  assert.equal((await api.GET(new Request(`https://local/api/registrations?id=${payload.id}&file=../../private.pdf`))).status,404);
+  const { api, stored } = intake({ staff: true });
+  assert.equal((await api.POST(post(payload))).status, 200);
+  const zip = await api.GET(
+    new Request(`https://local/api/registrations?id=${payload.id}&zip=1`),
+  );
+  assert.equal(zip.status, 200);
+  assert.equal(zip.headers.get("content-type"), "application/zip");
+  assert.equal(
+    zip.headers.get("content-disposition"),
+    'attachment; filename="Alex_Prova_10000000.zip"',
+  );
+  assert.equal(zip.headers.get("cache-control"), "private, no-store");
+  const files = require("fflate").unzipSync(
+    new Uint8Array(await zip.arrayBuffer()),
+  );
+  const folder = `Alex_Prova_${payload.id.slice(0, 8)}`;
+  assert.deepEqual(Object.keys(files).sort(), [
+    `${folder}/LEGGIMI.txt`,
+    `${folder}/autorizzazione-generata.pdf`,
+    `${folder}/risposte.txt`,
+  ]);
+  assert.match(
+    new TextDecoder().decode(files[`${folder}/risposte.txt`]),
+    /Nome: Alex\n\nCognome: Prova/,
+  );
+  assert.deepEqual(
+    Array.from(files[`${folder}/autorizzazione-generata.pdf`]),
+    Array.from(stored.get(`${payload.id}/autorizzazione-generata.pdf`)),
+  );
+  assert.match(
+    new TextDecoder().decode(files[`${folder}/LEGGIMI.txt`]),
+    /Documenti riservati allo staff autorizzato/,
+  );
+  for (const name of ["../../private.pdf", "assente.txt"]) {
+    assert.equal(
+      (
+        await api.GET(
+          new Request(
+            `https://local/api/registrations?id=${payload.id}&file=${encodeURIComponent(name)}`,
+          ),
+        )
+      ).status,
+      404,
+      name,
+    );
+  }
 });
 
 test("Seed flags accept --flag=value and --flag value", () => {
