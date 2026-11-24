@@ -70,12 +70,26 @@ function serverClient(): SupabaseClient {
 /**
  * POST dallo stesso sito: il recorder manda `Origin` same-origin, e da fuori
  * un form multipart non deve poter scrivere nella registrazione di qualcuno.
+ *
+ * Si confronta l'host, non `new URL(request.url)`: dietro un proxy (o in dev
+ * con `-H 127.0.0.1`) quell'URL può portare l'host interno del server, e una
+ * richiesta legittima da `127.0.0.1:3000` finirebbe 403 «Origine non valida».
  */
 export function assertSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin) {
+  if (!origin) return;
+
+  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const expected =
+    forwardedHost || request.headers.get('host') || new URL(request.url).host;
+
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
     throw new RecordingError('Origine non valida.', 403);
   }
+  if (originHost !== expected) throw new RecordingError('Origine non valida.', 403);
 }
 
 /** Token dal cookie di @supabase/ssr: così il recorder resta senza header custom. */
