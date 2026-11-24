@@ -17,30 +17,100 @@
  * `--production`, il flag che conferma che quel progetto remoto è quello di
  * prova e non l'ambiente con i dati veri.
  *
- * Uso (la chiave service_role resta in locale, mai nel repository):
+ * Uso (la chiave service_role resta in locale, mai nel repository). I flag con
+ * valore accettano `--email=x` e `--email x`; un valore mancante, un flag
+ * sconosciuto o un flag ripetuto fermano lo script prima di ogni connessione.
  *
  *   node --env-file=.env.local scripts/seed-archive-test.mjs --production \
- *     --email staff.test@example.test --password 'una-password-di-prova'
+ *     --email=staff.test@example.test --password 'una-password-di-prova'
  *
  *   node --env-file=.env.local scripts/seed-archive-test.mjs --production --clean
  *
  * `--clean` chiude la prova: elimina le cinque cartelle, i loro allegati dal
  * bucket, la riga in `authorized_users` e l'account Auth dell'email indicata,
- * poi verifica che non resti nulla. Va lanciato a verifica finita.
+ * poi verifica che non resti nulla, oggetti nel bucket compresi. Va lanciato a
+ * verifica finita.
  */
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 const BUCKET = "registration-files";
+const DEFAULT_EMAIL = "staff.test@example.test";
 
-const args = process.argv.slice(2);
-const has = (name) => args.includes(`--${name}`);
-const flag = (name) => {
-  const i = args.indexOf(`--${name}`);
-  return i === -1 ? undefined : args[i + 1];
-};
-const clean = has("clean");
-const confirmedRemote = has("production");
+// I flag con valore accettano sia `--email=x` sia `--email x`: la forma con `=`
+// prima veniva ignorata e lo script ricadeva sull'email di default, che
+// `--clean` poi cancellava.
+const FLAGS = new Map([
+  ["production", true],
+  ["clean", true],
+  ["email", false],
+  ["password", false],
+]);
+
+function parseArgs(argv) {
+  const values = {};
+  const problems = [];
+  for (let i = 0; i < argv.length; i++) {
+    const token = argv[i];
+    if (!token.startsWith("--")) {
+      problems.push(`argomento inatteso «${token}»`);
+      continue;
+    }
+    const eq = token.indexOf("=");
+    const name = eq === -1 ? token.slice(2) : token.slice(2, eq);
+    const boolean = FLAGS.get(name);
+    if (boolean === undefined) {
+      problems.push(
+        `flag sconosciuto «--${name}» (ammessi: ${[...FLAGS.keys()]
+          .map((f) => `--${f}`)
+          .join(", ")})`,
+      );
+      continue;
+    }
+    if (name in values) {
+      problems.push(`flag ripetuto «--${name}»`);
+      continue;
+    }
+    if (boolean) {
+      if (eq !== -1) {
+        problems.push(`«--${name}» non vuole un valore (ricevuto «${token.slice(eq + 1)}»)`);
+        continue;
+      }
+      values[name] = true;
+      continue;
+    }
+    let value;
+    if (eq !== -1) {
+      value = token.slice(eq + 1);
+    } else {
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith("--")) {
+        problems.push(`«--${name}» vuole un valore: --${name}=valore oppure --${name} valore`);
+        continue;
+      }
+      value = next;
+      i++;
+    }
+    if (!value.trim()) {
+      problems.push(`«--${name}» ha un valore vuoto`);
+      continue;
+    }
+    values[name] = value;
+  }
+  const email = values.email?.trim().toLowerCase();
+  if (email !== undefined && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    problems.push(`«--email» non è un indirizzo valido: «${email}»`);
+  }
+  return { values: { ...values, email }, problems };
+}
+
+const { values, problems } = parseArgs(process.argv.slice(2));
+if (problems.length) {
+  console.error(["Argomenti non validi:", ...problems.map((p) => `- ${p}`)].join("\n"));
+  process.exit(1);
+}
+const clean = values.clean === true;
+const confirmedRemote = values.production === true;
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 if (!url) {
@@ -77,8 +147,8 @@ const client = createClient(url, key, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const email = (flag("email") || "staff.test@example.test").toLowerCase();
-const password = flag("password");
+const email = values.email ?? DEFAULT_EMAIL;
+const password = values.password;
 
 const DAY = 24 * 60 * 60 * 1000;
 const daysAgo = (days) => new Date(Date.now() - days * DAY).toISOString();
@@ -197,6 +267,7 @@ function reportTarget() {
   console.log(
     `Progetto Supabase: ${host}${local ? " (locale)" : " (remoto, confermato con --production)"}`,
   );
+  console.log(`Email di prova: ${email}`);
 }
 
 async function findUser() {
@@ -213,15 +284,19 @@ async function findUser() {
   return null;
 }
 
+async function listObjects(row) {
+  const { data, error } = await client.storage
+    .from(BUCKET)
+    .list(row.id, { limit: 100 });
+  if (error) throw error;
+  return (data ?? []).map((o) => `${row.id}/${o.name}`);
+}
+
 async function remove() {
   reportTarget();
   let stored = 0;
   for (const row of rows) {
-    const { data: objects, error: listError } = await client.storage
-      .from(BUCKET)
-      .list(row.id, { limit: 100 });
-    if (listError) throw listError;
-    const paths = (objects ?? []).map((o) => `${row.id}/${o.name}`);
+    const paths = await listObjects(row);
     if (!paths.length) continue;
     const { error } = await client.storage.from(BUCKET).remove(paths);
     if (error) throw error;
@@ -267,11 +342,18 @@ async function remove() {
     throw new Error(`${email} è ancora in authorized_users: chiusura incompleta.`);
   if (await findUser())
     throw new Error(`l'account Auth ${email} esiste ancora: chiusura incompleta.`);
+  const leftObjects = [];
+  for (const row of rows) leftObjects.push(...(await listObjects(row)));
+  if (leftObjects.length)
+    throw new Error(
+      `restano ${leftObjects.length} oggetti di prova nel bucket ${BUCKET} (${leftObjects.join(", ")}): chiusura incompleta.`,
+    );
 
   console.log(
     `Cartelle di prova rimosse: ${deleted?.length ?? 0} su ${rows.length}.`,
   );
   console.log(`Allegati rimossi da ${BUCKET}: ${stored}.`);
+  console.log(`Bucket ${BUCKET}: nessun oggetto di prova rimasto.`);
   console.log(
     `Accesso staff rimosso${user ? " e account Auth eliminato" : " (account Auth assente)"}: ${email}.`,
   );
