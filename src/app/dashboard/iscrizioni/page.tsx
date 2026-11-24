@@ -1,6 +1,7 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Folder, Download, ChevronLeft, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getStaffRole } from "@/lib/staff-access";
@@ -33,15 +34,34 @@ const statusLabels: Record<string, string> = {
   reviewed: "Documenti verificati",
   declined: "Non accolta",
 };
-export default function RegistrationsArchive() {
+export default function RegistrationsArchivePage() {
+  return (
+    <Suspense
+      fallback={<p className="p-5 md:p-10 text-zinc-400">Caricamento…</p>}
+    >
+      <RegistrationsArchive />
+    </Suspense>
+  );
+}
+function RegistrationsArchive() {
+  // I filtri vivono anche nell'URL: ricaricando il link la vista resta quella.
+  const params = useSearchParams();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [detail, setDetail] = useState<Detail | null>(null);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [onlyWaiting, setOnlyWaiting] = useState(false);
+  const [search, setSearch] = useState(() => params.get("search") ?? "");
+  const [filter, setFilter] = useState(() => params.get("activity") ?? "");
+  const [statusFilter, setStatusFilter] = useState(() => {
+    const value = params.get("status") ?? "";
+    return ["received", "reviewed", "declined"].includes(value) ? value : "";
+  });
+  const [onlyWaiting, setOnlyWaiting] = useState(
+    () => params.get("waiting") === "1",
+  );
   const [labs, setLabs] = useState<{ slug: string; title: string }[]>([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(() => {
+    const value = Number(params.get("page"));
+    return Number.isInteger(value) && value > 0 ? value : 0;
+  });
   const [total, setTotal] = useState(0);
   const [waiting, setWaiting] = useState(0);
   const [error, setError] = useState("");
@@ -98,6 +118,25 @@ export default function RegistrationsArchive() {
       setLoading(false);
     }
   }, [page, search, filter, statusFilter, onlyWaiting]);
+  // L'URL riflette i filtri con replaceState: nessuna navigazione, nessuna
+  // voce di cronologia, e ricaricando il link non si perde la vista.
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (search) next.set("search", search);
+    if (filter) next.set("activity", filter);
+    if (onlyWaiting) next.set("waiting", "1");
+    else if (statusFilter) next.set("status", statusFilter);
+    if (page > 0) next.set("page", String(page));
+    const query = next.toString();
+    const timer = setTimeout(() => {
+      window.history.replaceState(
+        null,
+        "",
+        query ? `?${query}` : window.location.pathname,
+      );
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, filter, statusFilter, onlyWaiting, page]);
   useEffect(() => {
     let alive = true;
     let generation = 0;
