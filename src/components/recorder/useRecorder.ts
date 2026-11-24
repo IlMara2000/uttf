@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { mediaRecorderMimeType, totalPausedMs } from './audioTime';
+import { withWebmDuration } from './webmDuration';
 import {
   deleteSession,
   listChunks,
@@ -251,19 +252,24 @@ export function useRecorder(options: UseRecorderOptions = {}): UseRecorderApi {
     [uploader],
   );
 
-  const buildPlayback = useCallback(async (sessionId: string): Promise<string | null> => {
-    try {
-      const chunks = await listChunks(sessionId);
-      if (chunks.length === 0) return null;
-      const blob = new Blob(chunks.map((c) => c.blob), { type: mimeRef.current || 'audio/webm' });
-      if (playbackUrlRef.current) URL.revokeObjectURL(playbackUrlRef.current);
-      const url = URL.createObjectURL(blob);
-      playbackUrlRef.current = url;
-      return url;
-    } catch {
-      return null;
-    }
-  }, []);
+  const buildPlayback = useCallback(
+    async (sessionId: string, durationMs: number): Promise<string | null> => {
+      try {
+        const chunks = await listChunks(sessionId);
+        if (chunks.length === 0) return null;
+        const raw = new Blob(chunks.map((c) => c.blob), { type: mimeRef.current || 'audio/webm' });
+        // MediaRecorder non scrive `Duration`: senza, l'<audio> mostra Infinity.
+        const blob = await withWebmDuration(raw, durationMs);
+        if (playbackUrlRef.current) URL.revokeObjectURL(playbackUrlRef.current);
+        const url = URL.createObjectURL(blob);
+        playbackUrlRef.current = url;
+        return url;
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
 
   const start = useCallback(
     async (startOptions: StartOptions = {}) => {
@@ -462,7 +468,7 @@ export function useRecorder(options: UseRecorderOptions = {}): UseRecorderApi {
       setStatus('error');
     }
 
-    const url = await buildPlayback(id);
+    const url = await buildPlayback(id, finalRecorded);
     if (url) setPlaybackUrl(url);
 
     recorderRef.current = null;
@@ -519,7 +525,7 @@ export function useRecorder(options: UseRecorderOptions = {}): UseRecorderApi {
       await persistSession({ recordedMs: pending.recordedMs, status: 'closed' });
       await saveSession({ ...pending, status: 'closed', updatedAt: Date.now() });
 
-      const url = await buildPlayback(pending.id);
+      const url = await buildPlayback(pending.id, pending.recordedMs);
       if (url) setPlaybackUrl(url);
       setPendingSession(null);
       setStatus('done');
