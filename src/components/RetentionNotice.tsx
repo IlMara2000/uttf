@@ -11,6 +11,7 @@ type Status = {
   errors: string[];
   pruned: number;
   alerts: string[];
+  stale: boolean;
 };
 
 /**
@@ -45,14 +46,24 @@ export default function RetentionNotice() {
     };
   }, []);
 
-  if (!status || status.outcome !== 'error') return null;
+  if (!status) return null;
+  const isStale = status.stale === true;
+  const isError = status.outcome === 'error';
+  if (!isError && !isStale) return null;
 
   const when = status.executedAt
     ? new Date(status.executedAt).toLocaleString('it-IT', {
         dateStyle: 'short',
         timeStyle: 'short',
       })
-    : 'orario non registrato';
+    : 'mai registrato';
+
+  const title = isError
+    ? 'Conservazione dati non riuscita'
+    : 'Nessun giro recente di conservazione dati';
+  const detail = isStale
+    ? `Ultimo giro: ${when}${status.mode ? ` (${status.mode})` : ''}. Il giro automatico delle 03:00 UTC potrebbe non essere partito.`
+    : `Ultimo giro: ${when}${status.mode ? ` (${status.mode})` : ''}. I dati scaduti potrebbero non essere stati cancellati.`;
 
   return (
     <div
@@ -61,13 +72,9 @@ export default function RetentionNotice() {
     >
       <p className="flex items-center gap-2 font-bold">
         <AlertTriangle size={16} aria-hidden />
-        Conservazione dati non riuscita
+        {title}
       </p>
-      <p className="mt-1 text-red-200">
-        Ultimo giro: {when}
-        {status.mode ? ` (${status.mode})` : ''}. I dati scaduti potrebbero non
-        essere stati cancellati.
-      </p>
+      <p className="mt-1 text-red-200">{detail}</p>
       {status.errors.length > 0 && (
         <p className="mt-1 text-red-200">Errori: {status.errors.join(' · ')}</p>
       )}

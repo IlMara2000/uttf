@@ -813,18 +813,23 @@ test('Retention status exposes a failed last run to the staff banner', async () 
   assert.deepEqual(body.errors, ['reviews: timeout']);
   assert.equal(body.pruned, 3);
   assert.equal(body.alerts.join(','), 'webhook');
+  assert.equal(body.stale, false);
 });
 
 test('Retention status hides the banner when there is no usable trace', async () => {
   const missing = statusRoute({ downloadError: { message: 'not found' } });
   const missingRes = await missing.GET(new Request('https://local/x'));
   assert.equal(missingRes.status, 200);
-  assert.equal((await missingRes.json()).outcome, null);
+  const missingBody = await missingRes.json();
+  assert.equal(missingBody.outcome, null);
+  assert.equal(missingBody.stale, true);
 
   const unknown = statusRoute({ latest: JSON.stringify({ qualcosa: 'altro' }) });
   const unknownRes = await unknown.GET(new Request('https://local/x'));
   assert.equal(unknownRes.status, 200);
-  assert.equal((await unknownRes.json()).outcome, null);
+  const unknownBody = await unknownRes.json();
+  assert.equal(unknownBody.outcome, null);
+  assert.equal(unknownBody.stale, true);
 
   const corrupt = statusRoute({ latest: '{non json' });
   const corruptRes = await corrupt.GET(new Request('https://local/x'));
@@ -835,4 +840,27 @@ test('Retention status is reserved to staff', async () => {
   const api = statusRoute({ denied: true });
   const res = await api.GET(new Request('https://local/x'));
   assert.equal(res.status, 403);
+});
+
+test('Retention status marks a run older than 36 hours as stale', async () => {
+  const old = new Date(Date.now() - 37 * 60 * 60 * 1000).toISOString();
+  const api = statusRoute({
+    latest: JSON.stringify({ outcome: 'ok', executedAt: old, mode: 'delete' }),
+  });
+  const res = await api.GET(new Request('https://local/x'));
+  const body = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(body.outcome, 'ok');
+  assert.equal(body.stale, true);
+});
+
+test('Retention status is not stale within 36 hours', async () => {
+  const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const api = statusRoute({
+    latest: JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete' }),
+  });
+  const res = await api.GET(new Request('https://local/x'));
+  const body = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(body.stale, false);
 });
