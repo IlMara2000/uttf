@@ -12,62 +12,81 @@
  *   node --env-file=.env.local scripts/backfill-recording-duration.mjs --dry-run
  *   node --env-file=.env.local scripts/backfill-recording-duration.mjs
  *   node --env-file=.env.local scripts/backfill-recording-duration.mjs --id <uuid>
+ *
+ * Richiede Node ≥ 22.18: importa i `.ts` del progetto direttamente, senza
+ * passare da un bundler (Node toglie i tipi a runtime).
  */
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { build } from 'esbuild';
+import { patchWebmDuration } from '../src/lib/recordings/webm.ts';
+import { extensionForMime, isUuid } from '../src/lib/recordings/model.ts';
 
 const BUCKET = 'factory-assets';
+const PAGE_SIZE = 500;
+/** Riga restituita da PostgREST: solo i campi che servono. */
+const COLUMNS = 'id,status,recorded_ms,mime_type';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!url || !key) {
-  console.error('Servono NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (usa --env-file=.env.local).');
+const USAGE = `Uso: node --env-file=.env.local scripts/backfill-recording-duration.mjs [--dry-run] [--id <uuid>]`;
+
+function fail(message) {
+  console.error(message);
+  console.error(USAGE);
   process.exit(1);
 }
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
-const idFilter = args.includes('--id') ? args[args.indexOf('--id') + 1] : null;
+let idFilter = null;
+
+for (let i = 0; i < args.length; i += 1) {
+  const arg = args[i];
+  if (arg === '--dry-run') continue;
+  if (arg === '--help' || arg === '-h') {
+    console.log(USAGE);
+    process.exit(0);
+  }
+  if (arg === '--id') {
+    const value = args[i + 1];
+    // Senza questo controllo un `--id` a fine comando diventerebbe "nessun
+    // filtro", cioè patch di tutte le sessioni: l'opposto dell'intenzione.
+    if (!value || value.startsWith('--')) fail('--id richiede un uuid.');
+    if (!isUuid(value)) fail(`--id non è un uuid: ${value}`);
+    idFilter = value;
+    i += 1;
+    continue;
+  }
+  fail(`Argomento sconosciuto: ${arg}`);
+}
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!url || !key) {
+  fail('Servono NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (usa --env-file=.env.local).');
+}
 
 const auth = { apikey: key, Authorization: `Bearer ${key}` };
 
-/** Il patcher è TypeScript: si compila al volo, così una sola copia del codice. */
-async function loadPatcher() {
-  const dir = await mkdtemp(path.join(tmpdir(), 'uttf-webm-'));
-  const outfile = path.join(dir, 'webm.mjs');
-  await build({
-    entryPoints: [fileURLToPath(new URL('../src/lib/recordings/webm.ts', import.meta.url))],
-    bundle: true,
-    format: 'esm',
-    platform: 'node',
-    outfile,
-    logLevel: 'silent',
-  });
-  const mod = await import(pathToFileURL(outfile).href);
-  return { patchWebmDuration: mod.patchWebmDuration, cleanup: () => rm(dir, { recursive: true, force: true }) };
+/** Tutte le sessioni, a pagine: PostgREST si ferma a `db-max-rows` e senza offset si perderebbero righe in silenzio. */
+async function listRecordings() {
+  const rows = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const params = new URLSearchParams({
+      select: COLUMNS,
+      order: 'created_at.asc',
+      limit: String(PAGE_SIZE),
+      offset: String(offset),
+    });
+    if (idFilter) params.set('id', `eq.${idFilter}`);
+
+    const response = await fetch(`${url}/rest/v1/meeting_recordings?${params}`, { headers: auth });
+    if (!response.ok) throw new Error(`Elenco sessioni non leggibile (HTTP ${response.status}).`);
+    const page = await response.json();
+    if (!Array.isArray(page)) throw new Error('Risposta inattesa da PostgREST.');
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+  }
 }
 
-function extensionForMime(mimeType) {
-  const mime = (mimeType ?? '').toLowerCase();
-  if (mime.includes('mp4')) return 'mp4';
-  if (mime.includes('ogg')) return 'ogg';
-  return 'webm';
-}
-
-const { patchWebmDuration, cleanup } = await loadPatcher();
-
-try {
-  const query = idFilter ? `id=eq.${idFilter}` : '';
-  const response = await fetch(
-    `${url}/rest/v1/meeting_recordings?select=id,status,recorded_ms,mime_type${query ? `&${query}` : ''}&order=created_at.asc`,
-    { headers: auth },
-  );
-  if (!response.ok) throw new Error(`Elenco sessioni non leggibile (HTTP ${response.status}).`);
-  const rows = await response.json();
-  if (!Array.isArray(rows)) throw new Error('Risposta inattesa da PostgREST.');
+async function main() {
+  const rows = await listRecordings();
   console.log(`sessioni: ${rows.length}${dryRun ? ' (dry run)' : ''}`);
 
   let patched = 0;
@@ -117,6 +136,11 @@ try {
 
   console.log(`totale: ${patched} ${dryRun ? 'da patchare' : 'patchati'}, ${skipped} saltati, ${failed} non patchabili`);
   if (failed > 0) process.exitCode = 2;
-} finally {
-  await cleanup?.();
+}
+
+try {
+  await main();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
 }
