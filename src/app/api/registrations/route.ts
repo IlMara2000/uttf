@@ -315,9 +315,32 @@ export async function GET(request: Request) {
       .range(page * 30, page * 30 + 29);
     const slug = params.get("activity");
     if (slug) q = q.eq("lab_slug", slug);
+    // Filtro per stato applicato alla query, così vale su tutte le pagine e non
+    // solo su quella visibile.
+    const status = params.get("status");
+    if (status) {
+      if (!["received", "reviewed", "declined"].includes(status))
+        return fail("Stato non valido.");
+      q = q.eq("status", status);
+    }
     const search = params.get("search")?.slice(0, 100);
-    if (search)
-      q = q.ilike("participant_name", `%${search.replace(/[\\%_]/g, "\\$&")}%`);
+    if (search) {
+      const ref = search.trim().toLowerCase();
+      if (/^[0-9a-f]{6,8}$/.test(ref)) {
+        // L'archivio mostra i primi 8 caratteri dell'uuid come riferimento.
+        // Si confronta l'id per intervallo invece di cercare nel testo: niente
+        // cast nella query e nessun rischio di confondere il ref con un nome.
+        const prefix = ref.padEnd(8, "0");
+        q = q
+          .gte("id", `${prefix}-0000-0000-0000-000000000000`)
+          .lte("id", `${prefix}-ffff-ffff-ffff-ffffffffffff`);
+      } else {
+        q = q.ilike(
+          "participant_name",
+          `%${search.replace(/[\\%_]/g, "\\$&")}%`,
+        );
+      }
+    }
     // Cartelle ancora in attesa dopo 12 mesi: la retention non le tocca, quindi
     // va segnalato allo staff che vanno chiuse come verificate o non accolte.
     // Il limite si applica alla lista, così il filtro «Solo da chiudere»

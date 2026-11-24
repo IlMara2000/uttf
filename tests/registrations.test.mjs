@@ -205,6 +205,14 @@ function intake({ uploadFails = false, staff = false, list = [], countError = fa
           filters.push((row) => row[k] < v);
           return this;
         },
+        gte(k, v) {
+          filters.push((row) => row[k] >= v);
+          return this;
+        },
+        lte(k, v) {
+          filters.push((row) => row[k] <= v);
+          return this;
+        },
         ilike(k, pattern) {
           const needle = String(pattern).replace(/%/g, "").toLowerCase();
           filters.push((row) => String(row[k] ?? "").toLowerCase().includes(needle));
@@ -449,6 +457,71 @@ test("waiting=1 narrows the archive to requests waiting over 12 months", async (
     ["r-old"],
   );
 });
+test("status narrows the archive server-side and rejects unknown states", async () => {
+  const list = [
+    { id: "r-old", created_at: "2025-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Uno", status: "received", lab_slug: "test" },
+    { id: "r-declined", created_at: "2025-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Due", status: "declined", lab_slug: "test" },
+    { id: "r-reviewed", created_at: "2025-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Tre", status: "reviewed", lab_slug: "test" },
+  ];
+  const { api } = intake({ staff: true, list });
+
+  const declined = await (
+    await api.GET(new Request("https://local/api/registrations?status=declined"))
+  ).json();
+  assert.deepEqual(declined.registrations.map((row) => row.id), ["r-declined"]);
+  assert.equal(declined.total, 1);
+
+  const reviewed = await (
+    await api.GET(new Request("https://local/api/registrations?status=reviewed"))
+  ).json();
+  assert.deepEqual(reviewed.registrations.map((row) => row.id), ["r-reviewed"]);
+
+  // Lo stato sconosciuto è un errore, non un filtro ignorato.
+  assert.equal(
+    (await api.GET(new Request("https://local/api/registrations?status=archived")))
+      .status,
+    400,
+  );
+
+  // Filtro per stato e «solo da chiudere» si sommano.
+  const combined = await (
+    await api.GET(
+      new Request("https://local/api/registrations?status=received&waiting=1"),
+    )
+  ).json();
+  assert.deepEqual(combined.registrations.map((row) => row.id), ["r-old"]);
+});
+
+test("search accepts the short folder reference as well as the participant name", async () => {
+  const rows = [
+    { id: "7e570000-0000-4000-8000-000000000001", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Uno", status: "received", lab_slug: "test" },
+    { id: "7e570000-0000-4000-8000-000000000002", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Due", status: "reviewed", lab_slug: "test" },
+    { id: "9f3a1000-0000-4000-8000-000000000003", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Tre", status: "declined", lab_slug: "test" },
+  ];
+  const { api } = intake({ staff: true, list: rows });
+  const ids = async (query) =>
+    (
+      await (
+        await api.GET(new Request(`https://local/api/registrations?${query}`))
+      ).json()
+    ).registrations.map((row) => row.id);
+
+  // Riferimento breve come lo mostra l'archivio (8 caratteri), anche maiuscolo.
+  assert.deepEqual(await ids("search=7e570000"), [
+    "7e570000-0000-4000-8000-000000000001",
+    "7e570000-0000-4000-8000-000000000002",
+  ]);
+  assert.deepEqual((await ids("search=7E570000")).length, 2);
+  // Prefisso più corto: il resto è riempito con zeri.
+  assert.deepEqual((await ids("search=7e5700")).length, 2);
+  // Il nome continua a funzionare.
+  assert.deepEqual(await ids("search=Tre"), [
+    "9f3a1000-0000-4000-8000-000000000003",
+  ]);
+  // Riferimento inesistente: elenco vuoto, non errore.
+  assert.deepEqual(await ids("search=ffffffff"), []);
+});
+
 test("Archive fails instead of reporting zero when the waiting count errors", async () => {
   const { api } = intake({
     staff: true,

@@ -38,6 +38,7 @@ export default function RegistrationsArchive() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [onlyWaiting, setOnlyWaiting] = useState(false);
   const [labs, setLabs] = useState<{ slug: string; title: string }[]>([]);
   const [page, setPage] = useState(0);
@@ -80,6 +81,7 @@ export default function RegistrationsArchive() {
         page: String(page),
         search,
         activity: filter,
+        status: onlyWaiting ? "" : statusFilter,
         waiting: onlyWaiting ? "1" : "",
       });
       const data = await (await request(`/api/registrations?${params}`)).json();
@@ -95,7 +97,7 @@ export default function RegistrationsArchive() {
     } finally {
       setLoading(false);
     }
-  }, [page, search, filter, onlyWaiting]);
+  }, [page, search, filter, statusFilter, onlyWaiting]);
   useEffect(() => {
     let alive = true;
     let generation = 0;
@@ -266,9 +268,9 @@ export default function RegistrationsArchive() {
           </Link>
         )}
         {access && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
             <label className="text-sm">
-              Cerca partecipante
+              Cerca nome o riferimento
               <input
                 className="block w-full bg-zinc-900 border border-zinc-700 p-3 mt-2"
                 value={search}
@@ -296,6 +298,23 @@ export default function RegistrationsArchive() {
                 ))}
               </select>
             </label>
+            <label className="text-sm">
+              Stato
+              <select
+                className="block w-full bg-zinc-900 border border-zinc-700 p-3 mt-2 disabled:opacity-40"
+                value={statusFilter}
+                disabled={onlyWaiting}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(0);
+                }}
+              >
+                <option value="">Tutti gli stati</option>
+                <option value="received">In attesa di verifica</option>
+                <option value="reviewed">Documenti verificati</option>
+                <option value="declined">Non accolta</option>
+              </select>
+            </label>
             <label className="flex items-center gap-2 self-end text-sm">
               <input
                 type="checkbox"
@@ -303,6 +322,7 @@ export default function RegistrationsArchive() {
                 checked={onlyWaiting}
                 onChange={(e) => {
                   setOnlyWaiting(e.target.checked);
+                  if (e.target.checked) setStatusFilter("");
                   setPage(0);
                 }}
               />
@@ -328,6 +348,7 @@ export default function RegistrationsArchive() {
             className="w-full text-left border border-amber-400 text-amber-200 p-3 mb-5"
             onClick={() => {
               setOnlyWaiting(true);
+              setStatusFilter("");
               setPage(0);
             }}
           >
