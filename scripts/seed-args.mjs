@@ -1,5 +1,5 @@
 /**
- * Lettura dei flag di `scripts/seed-archive-test.mjs`.
+ * Lettura dei flag e regola di destinazione di `scripts/seed-archive-test.mjs`.
  *
  * Sta in un modulo a parte senza effetti collaterali, così i test possono
  * importarlo senza avviare lo script (che controlla l'ambiente e apre una
@@ -8,6 +8,42 @@
  * ricadendo sull'email di default che `--clean` avrebbe poi cancellato.
  */
 export const DEFAULT_EMAIL = "staff.test@example.test";
+
+// Host su cui lo script può scrivere senza chiedere conferma: solo locale.
+export const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1", "0.0.0.0"];
+
+/**
+ * Nessuna scrittura su un host remoto senza `--production`.
+ *
+ * Ritorna `{ host, local, refusal }`: `refusal` è il messaggio da stampare
+ * quando la scrittura non è ammessa, altrimenti `null`. La regola sta qui, e
+ * non nello script, perché è quella che i test devono poter verificare.
+ */
+export function checkSeedTarget(url, { production = false } = {}) {
+  let host;
+  try {
+    // `new URL` tiene le parentesi dell'IPv6: `http://[::1]:54321` -> `[::1]`.
+    host = new URL(url).hostname.replace(/^\[|\]$/g, "");
+  } catch {
+    return {
+      host: "",
+      local: false,
+      refusal: `NEXT_PUBLIC_SUPABASE_URL non è un URL valido: ${url}`,
+    };
+  }
+  const local = LOCAL_HOSTS.includes(host);
+  if (local || production) return { host, local, refusal: null };
+  return {
+    host,
+    local,
+    refusal: [
+      `Target remoto: ${host}.`,
+      "Lo script crea account, carica allegati ed elimina cartelle: su un progetto remoto sono scritture reali.",
+      "Se è il progetto di prova, rilancia aggiungendo --production.",
+      "Se è l'ambiente di produzione, non usarlo per i dati di prova.",
+    ].join("\n"),
+  };
+}
 
 // nome del flag -> true se booleano, false se vuole un valore
 export const FLAGS = new Map([

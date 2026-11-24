@@ -33,7 +33,7 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { DEFAULT_EMAIL, parseArgs } from "./seed-args.mjs";
+import { checkSeedTarget, DEFAULT_EMAIL, parseArgs } from "./seed-args.mjs";
 
 const BUCKET = "registration-files";
 
@@ -53,25 +53,14 @@ if (!url) {
   console.error("Serve NEXT_PUBLIC_SUPABASE_URL (usa --env-file=.env.local).");
   process.exit(1);
 }
-let host = "";
-try {
-  host = new URL(url).hostname;
-} catch {
-  console.error(`NEXT_PUBLIC_SUPABASE_URL non è un URL valido: ${url}`);
-  process.exit(1);
-}
-const local = ["localhost", "127.0.0.1", "::1", "0.0.0.0"].includes(host);
-// Il flag va chiesto prima di qualunque altra cosa: nessuna connessione parte
-// verso un progetto remoto se non è stato dichiarato esplicitamente.
-if (!local && !confirmedRemote) {
-  console.error(
-    [
-      `Target remoto: ${host}.`,
-      "Lo script crea account, carica allegati ed elimina cartelle: su un progetto remoto sono scritture reali.",
-      "Se è il progetto di prova, rilancia aggiungendo --production.",
-      "Se è l'ambiente di produzione, non usarlo per i dati di prova.",
-    ].join("\n"),
-  );
+// La regola sta in seed-args.mjs (testata da tests/registrations.test.mjs) e
+// scatta prima di qualunque connessione: nessuna scrittura verso un host
+// remoto se `--production` non è stato dichiarato esplicitamente.
+const { host, local, refusal } = checkSeedTarget(url, {
+  production: confirmedRemote,
+});
+if (refusal) {
+  console.error(refusal);
   process.exit(1);
 }
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

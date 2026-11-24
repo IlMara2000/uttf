@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { DEFAULT_EMAIL, parseArgs } from "../scripts/seed-args.mjs";
+import {
+  checkSeedTarget,
+  DEFAULT_EMAIL,
+  parseArgs,
+} from "../scripts/seed-args.mjs";
 import ts from "typescript";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
@@ -579,5 +583,36 @@ test("Unknown, repeated and malformed seed flags are rejected", () => {
   assert.match(
     parseArgs(["--emial=prova.archivio@example.test"]).problems[0],
     /flag sconosciuto «--emial»/,
+  );
+});
+
+test("Seed writes to a remote host only with --production, never blocks localhost", () => {
+  const remote = checkSeedTarget("https://prova.supabase.co", parseArgs([]).values);
+  assert.equal(remote.host, "prova.supabase.co");
+  assert.equal(remote.local, false);
+  assert.match(remote.refusal, /Target remoto: prova\.supabase\.co/);
+  assert.match(remote.refusal, /--production/);
+
+  const confirmed = checkSeedTarget(
+    "https://prova.supabase.co",
+    parseArgs(["--production"]).values,
+  );
+  assert.equal(confirmed.local, false);
+  assert.equal(confirmed.refusal, null);
+
+  for (const url of [
+    "http://localhost:54321",
+    "http://127.0.0.1:54321",
+    "http://[::1]:54321",
+    "http://0.0.0.0:54321",
+  ]) {
+    const local = checkSeedTarget(url, parseArgs([]).values);
+    assert.equal(local.local, true, url);
+    assert.equal(local.refusal, null, url);
+  }
+
+  assert.match(
+    checkSeedTarget("non-un-url", parseArgs(["--production"]).values).refusal,
+    /non è un URL valido/,
   );
 });
