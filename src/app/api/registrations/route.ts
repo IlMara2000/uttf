@@ -323,22 +323,23 @@ export async function GET(request: Request) {
         return fail("Stato non valido.");
       q = q.eq("status", status);
     }
-    const search = params.get("search")?.slice(0, 100);
+    const search = params.get("search")?.slice(0, 100).trim();
     if (search) {
-      const ref = search.trim().toLowerCase();
-      if (/^[0-9a-f]{6,8}$/.test(ref)) {
+      const needle = search.toLowerCase();
+      const name = `%${needle.replace(/[\\%_]/g, "\\$&")}%`;
+      const ref = /^[0-9a-f]{6,8}$/.test(needle) ? needle : "";
+      if (ref) {
         // L'archivio mostra i primi 8 caratteri dell'uuid come riferimento.
-        // Si confronta l'id per intervallo invece di cercare nel testo: niente
-        // cast nella query e nessun rischio di confondere il ref con un nome.
+        // Il testo può però essere anche un nome che sembra un ref: si cerca in
+        // entrambi i campi, confrontando l'id per intervallo (niente cast). Il
+        // valore del nome va tra virgolette perché dentro or() virgole e
+        // parentesi sono riservate.
         const prefix = ref.padEnd(8, "0");
-        q = q
-          .gte("id", `${prefix}-0000-0000-0000-000000000000`)
-          .lte("id", `${prefix}-ffff-ffff-ffff-ffffffffffff`);
-      } else {
-        q = q.ilike(
-          "participant_name",
-          `%${search.replace(/[\\%_]/g, "\\$&")}%`,
+        q = q.or(
+          `participant_name.ilike."${name}",and(id.gte.${prefix}-0000-0000-0000-000000000000,id.lte.${prefix}-ffff-ffff-ffff-ffffffffffff)`,
         );
+      } else {
+        q = q.ilike("participant_name", name);
       }
     }
     // Cartelle ancora in attesa dopo 12 mesi: la retention non le tocca, quindi

@@ -159,6 +159,66 @@ test("Generated document is a multi-page PDF and response archive includes the s
   assert.ok(txt.includes(c.privacy));
 });
 const { readJson } = load("src/lib/request-json.ts");
+// Valori dentro or(): le virgolette proteggono virgole e parentesi, come in
+// PostgREST.
+const unquote = (value) =>
+  value.startsWith('"') && value.endsWith('"')
+    ? value.slice(1, -1).replace(/\\([\\"])/g, "$1")
+    : value;
+const splitTopLevel = (text) => {
+  const parts = [];
+  let quoted = false,
+    depth = 0,
+    current = "";
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === "\\") {
+        current += ch + (text[++i] ?? "");
+        continue;
+      }
+      if (ch === '"') quoted = false;
+      current += ch;
+      continue;
+    }
+    if (ch === '"') quoted = true;
+    else if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    else if (ch === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+  parts.push(current);
+  return parts;
+};
+const orPredicate = (text) => {
+  const filter = text.trim();
+  const group = /^(and|or)\((.*)\)$/s.exec(filter);
+  if (group) {
+    const items = splitTopLevel(group[2]).map(orPredicate);
+    return group[1] === "and"
+      ? (row) => items.every((item) => item(row))
+      : (row) => items.some((item) => item(row));
+  }
+  const parsed = /^([A-Za-z0-9_]+)\.([a-z]+)\.(.*)$/s.exec(filter);
+  if (!parsed) throw new Error(`filtro or non previsto nei test: ${filter}`);
+  const [, column, op, raw] = parsed;
+  const value = unquote(raw);
+  if (op === "ilike") {
+    const needle = value.replace(/%/g, "").toLowerCase();
+    return (row) =>
+      String(row[column] ?? "").toLowerCase().includes(needle);
+  }
+  if (op === "eq") return (row) => String(row[column] ?? "") === value;
+  if (op === "neq") return (row) => String(row[column] ?? "") !== value;
+  if (op === "gte") return (row) => row[column] >= value;
+  if (op === "lte") return (row) => row[column] <= value;
+  if (op === "lt") return (row) => row[column] < value;
+  throw new Error(`operatore or non previsto nei test: ${op}`);
+};
 function intake({ uploadFails = false, staff = false, list = [], countError = false } = {}) {
   const rows = new Map(),
     stored = new Map(),
@@ -211,6 +271,11 @@ function intake({ uploadFails = false, staff = false, list = [], countError = fa
         },
         lte(k, v) {
           filters.push((row) => row[k] <= v);
+          return this;
+        },
+        or(expression) {
+          const items = splitTopLevel(expression).map(orPredicate);
+          filters.push((row) => items.some((item) => item(row)));
           return this;
         },
         ilike(k, pattern) {
@@ -497,6 +562,9 @@ test("search accepts the short folder reference as well as the participant name"
     { id: "7e570000-0000-4000-8000-000000000001", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Uno", status: "received", lab_slug: "test" },
     { id: "7e570000-0000-4000-8000-000000000002", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Due", status: "reviewed", lab_slug: "test" },
     { id: "9f3a1000-0000-4000-8000-000000000003", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Tre", status: "declined", lab_slug: "test" },
+    // Nome di persona composto da soli caratteri esadecimali: non deve essere
+    // scambiato per un riferimento.
+    { id: "0d0c0a00-0000-4000-8000-000000000004", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Decade", status: "received", lab_slug: "test" },
   ];
   const { api } = intake({ staff: true, list: rows });
   const ids = async (query) =>
@@ -518,8 +586,49 @@ test("search accepts the short folder reference as well as the participant name"
   assert.deepEqual(await ids("search=Tre"), [
     "9f3a1000-0000-4000-8000-000000000003",
   ]);
+  // Anche quando il nome sembra un riferimento (6-8 caratteri esadecimali).
+  assert.deepEqual(await ids("search=decade"), [
+    "0d0c0a00-0000-4000-8000-000000000004",
+  ]);
+  // Spazi iniziali e finali ignorati in entrambi i rami.
+  assert.deepEqual(await ids(`search=${encodeURIComponent("  Tre  ")}`), [
+    "9f3a1000-0000-4000-8000-000000000003",
+  ]);
+  assert.equal(
+    (await ids(`search=${encodeURIComponent("  7e5700  ")}`)).length,
+    2,
+  );
   // Riferimento inesistente: elenco vuoto, non errore.
   assert.deepEqual(await ids("search=ffffffff"), []);
+});
+
+test("a name that looks like a reference is still found, ignoring surrounding spaces", async () => {
+  const list = [
+    { id: "0d0c0a00-0000-4000-8000-000000000001", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Decade", status: "received", lab_slug: "test" },
+    { id: "11111111-0000-4000-8000-000000000002", created_at: "2026-01-01T00:00:00.000Z", activity_title: "Test", participant_name: "Ada", status: "received", lab_slug: "test" },
+  ];
+  const { api } = intake({ staff: true, list });
+  const find = async (search) =>
+    (
+      await (
+        await api.GET(
+          new Request(
+            `https://local/api/registrations?search=${encodeURIComponent(search)}`,
+          ),
+        )
+      ).json()
+    ).registrations.map((row) => row.id);
+
+  // «Decade» sono solo caratteri esadecimali: prima veniva cercato come id.
+  assert.deepEqual(await find("Decade"), [
+    "0d0c0a00-0000-4000-8000-000000000001",
+  ]);
+  assert.deepEqual(await find("  decade  "), [
+    "0d0c0a00-0000-4000-8000-000000000001",
+  ]);
+  assert.deepEqual(await find("  Ada "), [
+    "11111111-0000-4000-8000-000000000002",
+  ]);
 });
 
 test("Archive fails instead of reporting zero when the waiting count errors", async () => {
