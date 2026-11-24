@@ -8,6 +8,9 @@
  * nell'`Info` già presente nell'header, con il tempo misurato dal client
  * (pause escluse). Se il file non è un WebM riconoscibile si restituisce
  * l'originale: meglio un player con Infinity che un blob rotto.
+ *
+ * Stessa funzione in due posti: nel browser sul blob servito al player, e
+ * nello stop lato server sul file che finisce su Storage.
  */
 
 const ID_EBML = 0x1a45dfa3;

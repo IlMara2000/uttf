@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { mediaRecorderMimeType, totalPausedMs } from './audioTime';
-import { withWebmDuration } from './webmDuration';
+import { withWebmDuration } from '@/lib/recordings/webm';
 import {
   deleteSession,
   listChunks,

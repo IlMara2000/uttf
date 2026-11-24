@@ -7,6 +7,7 @@ import {
   isUuid,
   sanitizePauses,
 } from '@/lib/recordings/model';
+import { patchWebmDuration } from '@/lib/recordings/webm';
 import {
   BUCKET,
   RecordingError,
@@ -111,17 +112,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       throw new RecordingError(`${detail} Ricarica l'audio e richiama stop.`, 409);
     }
 
-    // 2. Un file unico: input del trascrittore e allegato della nota.
+    // 2. Un file unico: input del trascrittore e allegato della nota. Il WebM
+    // esce da MediaRecorder senza `Duration` nell'header, quindi ogni player
+    // legge `Infinity`: la durata (pause escluse) la scriviamo qui, con la
+    // stessa patch che il client applica al blob del player.
     const audio = audioPath(id, recording.mime_type);
+    const patched = patchWebmDuration(new Uint8Array(buffer), recordedMs);
+    const file = patched ? Buffer.from(patched) : buffer;
     const { error: audioError } = await client.storage
       .from(BUCKET)
-      .upload(audio, buffer, { contentType: recording.mime_type, upsert: true });
+      .upload(audio, file, { contentType: recording.mime_type, upsert: true });
     if (audioError) throw new RecordingError("Salvataggio dell'audio non riuscito.", 502);
 
     // 3. Trascrizione, frasi datate sull'orologio di parete, nota.
     const startedAtMs = Date.parse(recording.started_at);
     try {
-      const stt = await transcribe(buffer, recording.mime_type, {
+      const stt = await transcribe(file, recording.mime_type, {
         title: recording.title,
         location: recording.location,
       });
