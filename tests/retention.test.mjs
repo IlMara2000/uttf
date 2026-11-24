@@ -497,6 +497,7 @@ function retentionRoute({
 } = {}) {
   const client = traceClient({ bucketError, uploadError, runs, listError, removeError });
   const sentAlerts = [];
+  const runOptions = [];
   const api = load(
     'src/app/api/maintenance/retention/route.ts',
     {
@@ -504,7 +505,12 @@ function retentionRoute({
         NextResponse: { json: (body, init) => Response.json(body, init) },
       },
       '@supabase/supabase-js': { createClient: () => client },
-      '@/lib/retention': { runRetention: async () => report },
+      '@/lib/retention': {
+        runRetention: async (_client, options) => {
+          runOptions.push(options);
+          return report;
+        },
+      },
       '@/lib/retention-trace': load('src/lib/retention-trace.ts'),
       '@/lib/retention-alert': {
         alertRetentionFailure: async (failedReport, failures) => {
@@ -515,7 +521,7 @@ function retentionRoute({
     },
     { process, Buffer, URL },
   );
-  return { api, client, sentAlerts };
+  return { api, client, sentAlerts, runOptions };
 }
 
 const cronCall = (token = 'cron-token') =>
@@ -540,6 +546,22 @@ test('Retention endpoint stores the run trace and answers 200 on success', async
     assert.equal(snapshot.pruned, 0);
     assert.equal(snapshot.alerts.length, 0);
     assert.deepEqual(snapshot.errors, []);
+  });
+});
+
+test('Retention endpoint honours RETENTION_ENABLED and forces a dry run with ?dry=1', async () => {
+  await withEnv({ ...jobEnv, RETENTION_ENABLED: 'true' }, async () => {
+    const { api, runOptions } = retentionRoute();
+
+    await api.GET(cronCall());
+    await api.GET(
+      new Request('https://local/api/maintenance/retention?dry=1', {
+        headers: { authorization: 'Bearer cron-token' },
+      }),
+    );
+
+    assert.equal(runOptions[0].enabled, true);
+    assert.equal(runOptions[1].enabled, false);
   });
 });
 
