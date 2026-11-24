@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { runRetention } from '@/lib/retention';
+import { saveRetentionTrace } from '@/lib/retention-trace';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,12 @@ export const maxDuration = 60;
  *
  * Senza `RETENTION_ENABLED=true` risponde con i soli conteggi: nessuna
  * cancellazione finché non lo si abilita esplicitamente.
+ *
+ * Ogni esecuzione lascia una traccia durevole nel bucket `retention-runs`
+ * (vedi `@/lib/retention-trace`): i log di Vercel durano troppo poco perché il
+ * job notturno sia verificabile a posteriori. Se una fase o la scrittura della
+ * traccia fallisce la risposta è 500, così l'invocazione risulta fallita anche
+ * a chi guarda solo lo stato dei cron.
  */
 
 function tokensMatch(provided: string, expected: string) {
@@ -67,17 +74,24 @@ async function handle(request: Request) {
   const report = await runRetention(client, {
     enabled: process.env.RETENTION_ENABLED === 'true',
   });
+  const trace = await saveRetentionTrace(client, report);
+  const failures = [...report.errors];
+  if (trace.error) failures.push(trace.error);
+  const outcome = failures.length > 0 ? 'error' : 'ok';
 
   console.info(
-    `[retention] ${report.mode}: ${JSON.stringify(report.deleted)}${
-      report.errors.length > 0 ? ` errori: ${report.errors.join('; ')}` : ''
-    }`,
+    `[retention] ${report.mode} ${outcome}: ${JSON.stringify(report.deleted)}${
+      failures.length > 0 ? ` errori: ${failures.join('; ')}` : ''
+    }${trace.path ? ` traccia: ${trace.path}` : ''}`,
   );
 
-  return NextResponse.json(report, {
-    status: report.errors.length > 0 ? 207 : 200,
-    headers: { 'Cache-Control': 'no-store' },
-  });
+  return NextResponse.json(
+    { ...report, errors: failures, outcome, trace: trace.path },
+    {
+      status: failures.length > 0 ? 500 : 200,
+      headers: { 'Cache-Control': 'no-store' },
+    },
+  );
 }
 
 export const GET = handle;
