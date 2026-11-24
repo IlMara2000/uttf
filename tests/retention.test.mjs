@@ -39,16 +39,10 @@ function fakeClient(seed = {}) {
 
   function from(table) {
     const filters = [];
-    const state = { op: 'select', head: false, returning: false };
+    const state = { op: 'select', returning: false };
     const chain = {
-      select(columns, options = {}) {
-        if (state.op === 'delete') {
-          state.returning = true;
-          state.returningColumns = columns;
-        } else {
-          state.op = 'select';
-          state.head = options.head === true;
-        }
+      select() {
+        if (state.op === 'delete') state.returning = true;
         return chain;
       },
       delete() {
@@ -82,7 +76,6 @@ function fakeClient(seed = {}) {
       calls.push({
         table,
         op: state.op,
-        head: state.head,
         filters: filters.map(filter =>
           'values' in filter ? { column: filter.column, values: filter.values } : { column: filter.column, value: filter.value },
         ),
@@ -253,6 +246,12 @@ test('Retention deletes only rows past the thresholds and keeps booking slots', 
     'reg-accepted',
   ]);
   assert.equal(client.tables.booking_slots.length, 3);
+  // La traccia conserva gli ID cancellati per l'audit.
+  assert.deepEqual(plain(report.ids.newsletterSubscribers), ['news-old']);
+  assert.deepEqual(plain(report.ids.bookingReservations), ['res-old']);
+  assert.deepEqual(plain(report.ids.reviews), ['review-old']);
+  assert.deepEqual(plain(report.ids.activityRegistrations).sort(), ['reg-old', 'reg-declined'].sort());
+  assert.equal(report.ids.registrationFiles.length, 3);
 });
 
 test('Retention dry-run lists the eligible record ids without deleting anything', async () => {
@@ -274,19 +273,6 @@ test('Retention dry-run lists the eligible record ids without deleting anything'
   );
   assert.equal(client.calls.filter(call => call.op === 'delete' || call.op === 'remove').length, 0);
 });
-
-test('Retention delete reports the ids of the records it removed', async () => {
-  const client = fakeClient(seed());
-  const report = await runRetention(client, { enabled: true, now: NOW });
-
-  assert.equal(report.mode, 'delete');
-  assert.deepEqual(plain(report.ids.newsletterSubscribers), ['news-old']);
-  assert.deepEqual(plain(report.ids.bookingReservations), ['res-old']);
-  assert.deepEqual(plain(report.ids.reviews), ['review-old']);
-  assert.deepEqual(plain(report.ids.activityRegistrations).sort(), ['reg-old', 'reg-declined'].sort());
-  assert.equal(report.ids.registrationFiles.length, 3);
-});
-
 
 test('Retention deletes activity registrations in chunks of 100 ids', async () => {
   const client = fakeClient({

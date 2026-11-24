@@ -76,7 +76,19 @@ function chunks<T>(items: T[], size: number): T[][] {
   return out;
 }
 
-/** Conteggio (dry-run) o cancellazione delle righe più vecchie della soglia, con raccolta degli ID. */
+/** Righe restituite da PostgREST → elenco degli ID (o chiavi) presenti. */
+function idList(data: unknown, column: string): string[] {
+  return ((data ?? []) as Record<string, unknown>[])
+    .map((row) => row[column])
+    .filter((value): value is string => typeof value === 'string');
+}
+
+/**
+ * Conteggio (dry-run) o cancellazione delle righe più vecchie della soglia, con
+ * gli ID toccati. `count: 'exact'` serve anche in dry-run: il corpo della
+ * risposta è limitato alle righe massime dell'API (1000 di default), il
+ * conteggio no.
+ */
 async function purgeOlderThan(
   client: SupabaseClient,
   table: string,
@@ -85,22 +97,12 @@ async function purgeOlderThan(
   enabled: boolean,
   idColumn = 'id',
 ): Promise<StepResult> {
-  if (!enabled) {
-    const { data, error } = await client.from(table).select(idColumn).lt(column, cutoff);
-    if (error) return { count: 0, error: `${table}: ${error.message}`, ids: [] };
-    const rows = (data ?? []) as unknown as Record<string, unknown>[];
-    const ids = rows.map((row) => row[idColumn]).filter((value): value is string => typeof value === 'string');
-    return { count: ids.length, error: null, ids };
-  }
+  const { data, count, error } = enabled
+    ? await client.from(table).delete({ count: 'exact' }).lt(column, cutoff).select(idColumn)
+    : await client.from(table).select(idColumn, { count: 'exact' }).lt(column, cutoff);
 
-  const { data, count, error } = await client
-    .from(table)
-    .delete({ count: 'exact' })
-    .lt(column, cutoff)
-    .select(idColumn);
-  if (error) return { count: 0, error: `${table}: ${error.message}`, ids: [] };
-  const rows = (data ?? []) as unknown as Record<string, unknown>[];
-  const ids = rows.map((row) => row[idColumn]).filter((value): value is string => typeof value === 'string');
+  if (error) return { count: 0, error: error.message, ids: [] };
+  const ids = idList(data, idColumn);
   return { count: count ?? ids.length, error: null, ids };
 }
 
@@ -124,17 +126,17 @@ async function purgeBookings(
 
   if (error) return { count: 0, error: `booking_slots: ${error.message}`, ids: [] };
 
-  const slotIds = (slots ?? []).map((row: Record<string, unknown>) => row.id as string);
+  const slotIds = idList(slots, 'id');
   if (slotIds.length === 0) return { count: 0, error: null, ids: [] };
 
   if (!enabled) {
-    const { data, error: countError } = await client
+    const { data, count, error: countError } = await client
       .from('booking_reservations')
-      .select('id')
+      .select('id', { count: 'exact' })
       .in('slot_id', slotIds);
     if (countError) return { count: 0, error: `booking_reservations: ${countError.message}`, ids: [] };
-    const ids = (data ?? []).map((row: Record<string, unknown>) => row.id as string);
-    return { count: ids.length, error: null, ids };
+    const ids = idList(data, 'id');
+    return { count: count ?? ids.length, error: null, ids };
   }
 
   let deleted = 0;
@@ -146,7 +148,7 @@ async function purgeBookings(
       .in('slot_id', group)
       .select('id');
     if (deleteError) return { count: deleted, error: `booking_reservations: ${deleteError.message}`, ids };
-    const chunkIds = (data ?? []).map((row: Record<string, unknown>) => row.id as string);
+    const chunkIds = idList(data, 'id');
     ids.push(...chunkIds);
     deleted += count ?? chunkIds.length;
   }
@@ -229,7 +231,7 @@ async function purgeRegistrations(
         filePaths,
       };
     }
-    const chunkIds = (deletedRows ?? []).map((row: Record<string, unknown>) => row.id as string);
+    const chunkIds = idList(deletedRows, 'id');
     deletedIds.push(...chunkIds);
     records += count ?? chunkIds.length;
   }
@@ -265,10 +267,10 @@ export async function runRetention(
     registrationRateLimits: [],
   };
 
-  const steps: { key: keyof RetentionReport['deleted']; idKey: keyof RetentionReport['ids']; run: () => Promise<StepResult> }[] = [
+  // `deleted` e `ids` hanno le stesse chiavi: una sola `key` per entrambi.
+  const steps: { key: keyof RetentionReport['deleted']; run: () => Promise<StepResult> }[] = [
     {
       key: 'newsletterSubscribers',
-      idKey: 'newsletterSubscribers',
       run: () =>
         purgeOlderThan(
           client,
@@ -278,10 +280,9 @@ export async function runRetention(
           enabled,
         ),
     },
-    { key: 'bookingReservations', idKey: 'bookingReservations', run: () => purgeBookings(client, enabled, now) },
+    { key: 'bookingReservations', run: () => purgeBookings(client, enabled, now) },
     {
       key: 'reviews',
-      idKey: 'reviews',
       run: () =>
         purgeOlderThan(
           client,
@@ -293,13 +294,11 @@ export async function runRetention(
     },
     {
       key: 'bookingRateLimits',
-      idKey: 'bookingRateLimits',
       run: () =>
         purgeOlderThan(client, 'booking_rate_limits', 'expires_at', now.toISOString(), enabled, 'key'),
     },
     {
       key: 'registrationRateLimits',
-      idKey: 'registrationRateLimits',
       run: () =>
         purgeOlderThan(
           client,
@@ -316,7 +315,7 @@ export async function runRetention(
     try {
       const result = await step.run();
       deleted[step.key] = result.count;
-      ids[step.idKey] = result.ids;
+      ids[step.key] = result.ids;
       if (result.error) errors.push(`${step.key}: ${result.error}`);
     } catch (error) {
       errors.push(`${step.key}: ${error instanceof Error ? error.message : 'errore sconosciuto'}`);

@@ -18,7 +18,8 @@ export const maxDuration = 60;
  * Accetta sia GET sia POST per non dipendere dal metodo del scheduler.
  *
  * Senza `RETENTION_ENABLED=true` risponde con i soli conteggi: nessuna
- * cancellazione finché non lo si abilita esplicitamente.
+ * cancellazione finché non lo si abilita esplicitamente. `?dry=1` forza lo
+ * stesso giro in sola lettura anche a job abilitato, elencando gli ID idonei.
  *
  * Ogni esecuzione lascia una traccia durevole nel bucket `retention-runs`
  * (vedi `@/lib/retention-trace`): i log di Vercel durano troppo poco perché il
@@ -72,10 +73,7 @@ async function handle(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const requestUrl = new URL(request.url);
-  const forceDry =
-    requestUrl.searchParams.get('dry') === '1' ||
-    requestUrl.searchParams.get('dry') === 'true';
+  const forceDry = new URL(request.url).searchParams.get('dry') === '1';
   const report = await runRetention(client, {
     enabled: !forceDry && process.env.RETENTION_ENABLED === 'true',
   });
