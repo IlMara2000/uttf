@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { DEFAULT_EMAIL, parseArgs } from "../scripts/seed-args.mjs";
 import ts from "typescript";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
@@ -528,4 +529,55 @@ test("Staff downloads a named ZIP folder and arbitrary file names are rejected",
   assert.ok(Object.keys(files).some(name=>name.startsWith('Alex_Prova_')&&name.endsWith('/risposte.txt')));
   assert.ok(Object.keys(files).some(name=>name.endsWith('/autorizzazione-generata.pdf')));
   assert.equal((await api.GET(new Request(`https://local/api/registrations?id=${payload.id}&file=../../private.pdf`))).status,404);
+});
+
+test("Seed flags accept --flag=value and --flag value", () => {
+  const attached = parseArgs([
+    "--production",
+    "--clean",
+    "--email=prova.archivio@example.test",
+    "--password=una-password-di-prova",
+  ]);
+  assert.deepEqual(attached.problems, []);
+  assert.equal(attached.values.email, "prova.archivio@example.test");
+  assert.equal(attached.values.password, "una-password-di-prova");
+  assert.equal(attached.values.production, true);
+  assert.equal(attached.values.clean, true);
+
+  const spaced = parseArgs(["--email", "Prova.Archivio@Example.Test"]);
+  assert.deepEqual(spaced.problems, []);
+  assert.equal(spaced.values.email, "prova.archivio@example.test");
+
+  const absent = parseArgs([]);
+  assert.deepEqual(absent.problems, []);
+  assert.equal(absent.values.email, undefined);
+  assert.equal(DEFAULT_EMAIL, "staff.test@example.test");
+});
+
+test("Seed flags without a value fail instead of falling back to the default email", () => {
+  for (const argv of [["--email"], ["--email", "--clean"], ["--email="]]) {
+    const parsed = parseArgs(argv);
+    assert.equal(parsed.values.email, undefined, argv.join(" "));
+    assert.equal(parsed.problems.length, 1, argv.join(" "));
+    assert.match(parsed.problems[0], /--email/);
+  }
+  assert.match(parseArgs(["--password"]).problems[0], /--password/);
+});
+
+test("Unknown, repeated and malformed seed flags are rejected", () => {
+  const rejected = [
+    ["--emial=prova.archivio@example.test"],
+    ["--clean=1"],
+    ["--email=non-un-indirizzo"],
+    ["--email=a@b.test", "--email=c@d.test"],
+    ["posizionale"],
+  ];
+  for (const argv of rejected) {
+    const parsed = parseArgs(argv);
+    assert.equal(parsed.problems.length, 1, argv.join(" "));
+  }
+  assert.match(
+    parseArgs(["--emial=prova.archivio@example.test"]).problems[0],
+    /flag sconosciuto «--emial»/,
+  );
 });
