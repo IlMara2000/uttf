@@ -373,7 +373,24 @@ test('Retention trace writes one immutable object per run plus latest.json', asy
   assert.equal(snapshot.mode, 'delete');
   assert.equal(snapshot.executedAt, report.executedAt);
   assert.deepEqual(snapshot.deleted, report.deleted);
+  assert.equal(snapshot.pruned, 0);
+  assert.equal(snapshot.alerts.length, 0);
   assert.match(snapshot.recordedAt, /^\d{4}-\d{2}-\d{2}T/);
+});
+
+test('Retention trace records pruned rows and alerted channels', async () => {
+  const client = traceClient();
+
+  const { error } = await saveRetentionTrace(client, emptyReport(), {
+    pruned: 7,
+    alerts: ['webhook'],
+  });
+
+  assert.equal(error, null);
+  const snapshot = JSON.parse(client.uploads[0].body);
+  assert.equal(snapshot.pruned, 7);
+  assert.equal(snapshot.alerts.join(','), 'webhook');
+  assert.equal(JSON.parse(client.uploads[1].body).pruned, 7);
 });
 
 test('Retention trace tolerates an existing bucket and marks failures as outcome error', async () => {
@@ -481,7 +498,11 @@ test('Retention endpoint stores the run trace and answers 200 on success', async
     assert.equal(body.trace, 'runs/2026-11-25T03-04-05-678Z.json');
     assert.deepEqual(body.errors, []);
     assert.deepEqual(client.uploads.map(entry => entry.path), [body.trace, 'latest.json']);
-    assert.equal(JSON.parse(client.uploads[0].body).outcome, 'ok');
+    const snapshot = JSON.parse(client.uploads[0].body);
+    assert.equal(snapshot.outcome, 'ok');
+    assert.equal(snapshot.pruned, 0);
+    assert.equal(snapshot.alerts.length, 0);
+    assert.deepEqual(snapshot.errors, []);
   });
 });
 
@@ -717,4 +738,101 @@ test('Retention endpoint prunes old traces and fails when pruning breaks', async
     assert.equal(res.status, 500);
     assert.match(body.errors.join(' | '), /elenco tracce: timeout/);
   });
+});
+
+test('A failing run writes pruned rows and alert channels into the trace', async () => {
+  await withEnv(jobEnv, async () => {
+    const report = emptyReport({ errors: ['reviews: timeout'] });
+    const { api, client, sentAlerts } = retentionRoute({
+      report,
+      runs: ['2026-01-01T03-00-00-000Z.json'],
+      alert: { sent: ['webhook'], error: null },
+    });
+
+    const res = await api.GET(cronCall());
+    const body = await res.json();
+
+    assert.equal(res.status, 500);
+    assert.equal(body.pruned, 1);
+    assert.deepEqual(body.alerts, ['webhook']);
+    assert.equal(sentAlerts.length, 1);
+    const snapshot = JSON.parse(client.uploads[0].body);
+    assert.equal(snapshot.outcome, 'error');
+    assert.equal(snapshot.pruned, 1);
+    assert.equal(snapshot.alerts.join(','), 'webhook');
+    assert.deepEqual(snapshot.errors, ['reviews: timeout']);
+  });
+});
+
+function statusRoute({ latest = null, downloadError = null, denied = false } = {}) {
+  return load(
+    'src/app/api/maintenance/retention/status/route.ts',
+    {
+      'next/server': {
+        NextResponse: { json: (body, init) => Response.json(body, init) },
+      },
+      '@/lib/registrations/server': {
+        requireRegistrationStaff: async () => {
+          if (denied) throw new Response('Accesso staff richiesto.', { status: 403 });
+          return {
+            storage: {
+              from: () => ({
+                download: async () =>
+                  downloadError
+                    ? { data: null, error: downloadError }
+                    : { data: { text: async () => latest }, error: null },
+              }),
+            },
+          };
+        },
+      },
+      '@/lib/retention-trace': { RETENTION_TRACE_BUCKET: 'retention-runs' },
+    },
+    { process, Buffer, Response },
+  );
+}
+
+test('Retention status exposes a failed last run to the staff banner', async () => {
+  const trace = {
+    outcome: 'error',
+    executedAt: '2026-11-25T03:04:05.678Z',
+    mode: 'delete',
+    errors: ['reviews: timeout', 42, {}],
+    pruned: 3,
+    alerts: ['webhook', null],
+  };
+  const api = statusRoute({ latest: JSON.stringify(trace) });
+
+  const res = await api.GET(new Request('https://local/api/maintenance/retention/status'));
+  const body = await res.json();
+
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('cache-control'), 'private, no-store');
+  assert.equal(body.outcome, 'error');
+  assert.equal(body.executedAt, '2026-11-25T03:04:05.678Z');
+  assert.deepEqual(body.errors, ['reviews: timeout']);
+  assert.equal(body.pruned, 3);
+  assert.equal(body.alerts.join(','), 'webhook');
+});
+
+test('Retention status hides the banner when there is no usable trace', async () => {
+  const missing = statusRoute({ downloadError: { message: 'not found' } });
+  const missingRes = await missing.GET(new Request('https://local/x'));
+  assert.equal(missingRes.status, 200);
+  assert.equal((await missingRes.json()).outcome, null);
+
+  const unknown = statusRoute({ latest: JSON.stringify({ qualcosa: 'altro' }) });
+  const unknownRes = await unknown.GET(new Request('https://local/x'));
+  assert.equal(unknownRes.status, 200);
+  assert.equal((await unknownRes.json()).outcome, null);
+
+  const corrupt = statusRoute({ latest: '{non json' });
+  const corruptRes = await corrupt.GET(new Request('https://local/x'));
+  assert.equal(corruptRes.status, 500);
+});
+
+test('Retention status is reserved to staff', async () => {
+  const api = statusRoute({ denied: true });
+  const res = await api.GET(new Request('https://local/x'));
+  assert.equal(res.status, 403);
 });

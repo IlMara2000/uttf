@@ -75,22 +75,29 @@ async function handle(request: Request) {
   const report = await runRetention(client, {
     enabled: process.env.RETENTION_ENABLED === 'true',
   });
-  const trace = await saveRetentionTrace(client, report);
   const failures = [...report.errors];
-  if (trace.error) failures.push(trace.error);
 
+  // La potatura precede la scrittura della traccia: così il conteggio delle
+  // righe rimosse finisce dentro la traccia stessa, e la traccia di oggi non
+  // può essere potata da se stessa.
   const pruned = await pruneRetentionTraces(client);
   if (pruned.error) failures.push(pruned.error);
 
-  // L'avviso parte con l'elenco completo: guasti del giro, scrittura della
-  // traccia e potatura. Un guasto del recapito si aggiunge agli errori, non li
-  // sostituisce.
+  // L'avviso parte con l'elenco completo: guasti del giro e della potatura. Un
+  // guasto del recapito si aggiunge agli errori, non li sostituisce.
   let alerts: string[] = [];
   if (failures.length > 0) {
     const alert = await alertRetentionFailure(report, failures);
     alerts = alert.sent;
     if (alert.error) failures.push(alert.error);
   }
+
+  const trace = await saveRetentionTrace(
+    client,
+    { ...report, errors: failures },
+    { pruned: pruned.removed, alerts },
+  );
+  if (trace.error) failures.push(trace.error);
 
   const outcome = failures.length > 0 ? 'error' : 'ok';
 

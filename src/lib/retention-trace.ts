@@ -18,6 +18,10 @@ export type RetentionTrace = RetentionReport & {
   outcome: 'ok' | 'error';
   source: string;
   recordedAt: string;
+  /** Tracce più vecchie di 90 giorni rimosse in questo giro. */
+  pruned: number;
+  /** Canali che hanno accettato l'avviso di guasto (`webhook`), se ce n'erano. */
+  alerts: string[];
 };
 
 export type RetentionTraceResult = {
@@ -84,13 +88,20 @@ export async function pruneRetentionTraces(
 export async function saveRetentionTrace(
   client: SupabaseClient,
   report: RetentionReport,
-  options: { source?: string; recordedAt?: Date } = {},
+  options: {
+    source?: string;
+    recordedAt?: Date;
+    pruned?: number;
+    alerts?: string[];
+  } = {},
 ): Promise<RetentionTraceResult> {
   const trace: RetentionTrace = {
     ...report,
     outcome: report.errors.length > 0 ? 'error' : 'ok',
     source: options.source ?? 'cron',
     recordedAt: (options.recordedAt ?? new Date()).toISOString(),
+    pruned: options.pruned ?? 0,
+    alerts: options.alerts ?? [],
   };
 
   const created = await client.storage.createBucket(RETENTION_TRACE_BUCKET, {
