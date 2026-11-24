@@ -72,8 +72,12 @@ async function handle(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  const requestUrl = new URL(request.url);
+  const forceDry =
+    requestUrl.searchParams.get('dry') === '1' ||
+    requestUrl.searchParams.get('dry') === 'true';
   const report = await runRetention(client, {
-    enabled: process.env.RETENTION_ENABLED === 'true',
+    enabled: !forceDry && process.env.RETENTION_ENABLED === 'true',
   });
   const failures = [...report.errors];
 

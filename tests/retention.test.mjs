@@ -39,11 +39,16 @@ function fakeClient(seed = {}) {
 
   function from(table) {
     const filters = [];
-    const state = { op: 'select', head: false };
+    const state = { op: 'select', head: false, returning: false };
     const chain = {
-      select(_columns, options = {}) {
-        state.op = 'select';
-        state.head = options.head === true;
+      select(columns, options = {}) {
+        if (state.op === 'delete') {
+          state.returning = true;
+          state.returningColumns = columns;
+        } else {
+          state.op = 'select';
+          state.head = options.head === true;
+        }
         return chain;
       },
       delete() {
@@ -84,7 +89,11 @@ function fakeClient(seed = {}) {
       });
       if (state.op === 'delete') {
         tables[table] = rows.filter(row => !matched.includes(row));
-        return { data: null, count: matched.length, error: null };
+        return {
+          data: state.returning ? matched : null,
+          count: matched.length,
+          error: null,
+        };
       }
       return { data: matched, count: matched.length, error: null };
     }
@@ -246,6 +255,38 @@ test('Retention deletes only rows past the thresholds and keeps booking slots', 
   assert.equal(client.tables.booking_slots.length, 3);
 });
 
+test('Retention dry-run lists the eligible record ids without deleting anything', async () => {
+  const client = fakeClient(seed());
+  const report = await runRetention(client, { now: NOW });
+
+  assert.equal(report.mode, 'dry-run');
+  assert.deepEqual(plain(report.ids.newsletterSubscribers), ['news-old']);
+  assert.deepEqual(plain(report.ids.bookingReservations), ['res-old']);
+  assert.deepEqual(plain(report.ids.reviews), ['review-old']);
+  assert.deepEqual(plain(report.ids.activityRegistrations).sort(), ['reg-old', 'reg-declined'].sort());
+  assert.deepEqual(
+    plain(report.ids.registrationFiles).sort(),
+    [
+      'activity-registrations/old-a.pdf',
+      'activity-registrations/old-b.pdf',
+      'activity-registrations/declined.pdf',
+    ].sort(),
+  );
+  assert.equal(client.calls.filter(call => call.op === 'delete' || call.op === 'remove').length, 0);
+});
+
+test('Retention delete reports the ids of the records it removed', async () => {
+  const client = fakeClient(seed());
+  const report = await runRetention(client, { enabled: true, now: NOW });
+
+  assert.equal(report.mode, 'delete');
+  assert.deepEqual(plain(report.ids.newsletterSubscribers), ['news-old']);
+  assert.deepEqual(plain(report.ids.bookingReservations), ['res-old']);
+  assert.deepEqual(plain(report.ids.reviews), ['review-old']);
+  assert.deepEqual(plain(report.ids.activityRegistrations).sort(), ['reg-old', 'reg-declined'].sort());
+  assert.equal(report.ids.registrationFiles.length, 3);
+});
+
 
 test('Retention deletes activity registrations in chunks of 100 ids', async () => {
   const client = fakeClient({
@@ -304,6 +345,15 @@ function emptyReport(overrides = {}) {
       registrationRateLimits: 0,
     },
     errors: [],
+    ids: {
+      newsletterSubscribers: [],
+      bookingReservations: [],
+      reviews: [],
+      activityRegistrations: [],
+      registrationFiles: [],
+      bookingRateLimits: [],
+      registrationRateLimits: [],
+    },
     ...overrides,
   };
 }
@@ -373,6 +423,7 @@ test('Retention trace writes one immutable object per run plus latest.json', asy
   assert.equal(snapshot.mode, 'delete');
   assert.equal(snapshot.executedAt, report.executedAt);
   assert.deepEqual(snapshot.deleted, report.deleted);
+  assert.deepEqual(snapshot.ids, report.ids);
   assert.equal(snapshot.pruned, 0);
   assert.equal(snapshot.alerts.length, 0);
   assert.match(snapshot.recordedAt, /^\d{4}-\d{2}-\d{2}T/);
@@ -476,7 +527,7 @@ function retentionRoute({
         },
       },
     },
-    { process, Buffer },
+    { process, Buffer, URL },
   );
   return { api, client, sentAlerts };
 }

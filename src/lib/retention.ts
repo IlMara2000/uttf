@@ -34,10 +34,24 @@ export type RetentionReport = {
     bookingRateLimits: number;
     registrationRateLimits: number;
   };
+  /**
+   * Identificativi delle righe rimosse (o idonee, in dry-run) per categoria.
+   * Per gli allegati si tratta dei percorsi nel bucket `registration-files`.
+   * Serve all'audit: la traccia conserva gli ID anche dopo la cancellazione.
+   */
+  ids: {
+    newsletterSubscribers: string[];
+    bookingReservations: string[];
+    reviews: string[];
+    activityRegistrations: string[];
+    registrationFiles: string[];
+    bookingRateLimits: string[];
+    registrationRateLimits: string[];
+  };
   errors: string[];
 };
 
-type StepResult = { count: number; error: string | null };
+type StepResult = { count: number; error: string | null; ids: string[] };
 
 export type RetentionOptions = {
   /** true = cancella davvero; false/assente = solo conteggio. */
@@ -62,24 +76,32 @@ function chunks<T>(items: T[], size: number): T[][] {
   return out;
 }
 
-/** Conteggio (dry-run) o cancellazione delle righe più vecchie della soglia. */
+/** Conteggio (dry-run) o cancellazione delle righe più vecchie della soglia, con raccolta degli ID. */
 async function purgeOlderThan(
   client: SupabaseClient,
   table: string,
   column: string,
   cutoff: string,
   enabled: boolean,
+  idColumn = 'id',
 ): Promise<StepResult> {
   if (!enabled) {
-    const { count, error } = await client
-      .from(table)
-      .select('*', { count: 'exact', head: true })
-      .lt(column, cutoff);
-    return { count: count ?? 0, error: error?.message ?? null };
+    const { data, error } = await client.from(table).select(idColumn).lt(column, cutoff);
+    if (error) return { count: 0, error: `${table}: ${error.message}`, ids: [] };
+    const rows = (data ?? []) as unknown as Record<string, unknown>[];
+    const ids = rows.map((row) => row[idColumn]).filter((value): value is string => typeof value === 'string');
+    return { count: ids.length, error: null, ids };
   }
 
-  const { count, error } = await client.from(table).delete({ count: 'exact' }).lt(column, cutoff);
-  return { count: count ?? 0, error: error?.message ?? null };
+  const { data, count, error } = await client
+    .from(table)
+    .delete({ count: 'exact' })
+    .lt(column, cutoff)
+    .select(idColumn);
+  if (error) return { count: 0, error: `${table}: ${error.message}`, ids: [] };
+  const rows = (data ?? []) as unknown as Record<string, unknown>[];
+  const ids = rows.map((row) => row[idColumn]).filter((value): value is string => typeof value === 'string');
+  return { count: count ?? ids.length, error: null, ids };
 }
 
 /**
@@ -95,35 +117,41 @@ async function purgeBookings(
   now: Date,
 ): Promise<StepResult> {
   const cutoff = dateDaysAgo(now, BOOKING_RETENTION_DAYS);
-  const { data, error } = await client
+  const { data: slots, error } = await client
     .from('booking_slots')
     .select('id')
     .lt('date', cutoff);
 
-  if (error) return { count: 0, error: `booking_slots: ${error.message}` };
+  if (error) return { count: 0, error: `booking_slots: ${error.message}`, ids: [] };
 
-  const slotIds = (data ?? []).map((row) => row.id as string);
-  if (slotIds.length === 0) return { count: 0, error: null };
+  const slotIds = (slots ?? []).map((row: Record<string, unknown>) => row.id as string);
+  if (slotIds.length === 0) return { count: 0, error: null, ids: [] };
 
   if (!enabled) {
-    const { count, error: countError } = await client
+    const { data, error: countError } = await client
       .from('booking_reservations')
-      .select('*', { count: 'exact', head: true })
+      .select('id')
       .in('slot_id', slotIds);
-    return { count: count ?? 0, error: countError?.message ?? null };
+    if (countError) return { count: 0, error: `booking_reservations: ${countError.message}`, ids: [] };
+    const ids = (data ?? []).map((row: Record<string, unknown>) => row.id as string);
+    return { count: ids.length, error: null, ids };
   }
 
   let deleted = 0;
+  const ids: string[] = [];
   for (const group of chunks(slotIds, 100)) {
-    const { count, error: deleteError } = await client
+    const { data, count, error: deleteError } = await client
       .from('booking_reservations')
       .delete({ count: 'exact' })
-      .in('slot_id', group);
-    if (deleteError) return { count: deleted, error: `booking_reservations: ${deleteError.message}` };
-    deleted += count ?? 0;
+      .in('slot_id', group)
+      .select('id');
+    if (deleteError) return { count: deleted, error: `booking_reservations: ${deleteError.message}`, ids };
+    const chunkIds = (data ?? []).map((row: Record<string, unknown>) => row.id as string);
+    ids.push(...chunkIds);
+    deleted += count ?? chunkIds.length;
   }
 
-  return { count: deleted, error: null };
+  return { count: deleted, error: null, ids };
 }
 
 /**
@@ -147,7 +175,7 @@ async function purgeRegistrations(
   client: SupabaseClient,
   enabled: boolean,
   now: Date,
-): Promise<{ records: number; files: number; error: string | null }> {
+): Promise<{ records: number; files: number; error: string | null; ids: string[]; filePaths: string[] }> {
   const cutoff = isoDaysAgo(now, REGISTRATION_RETENTION_DAYS);
   const { data, error } = await client
     .from('activity_registrations')
@@ -155,50 +183,58 @@ async function purgeRegistrations(
     .in('status', ['pending', 'declined'])
     .lt('created_at', cutoff);
 
-  if (error) return { records: 0, files: 0, error: `activity_registrations: ${error.message}` };
+  if (error) return { records: 0, files: 0, error: `activity_registrations: ${error.message}`, ids: [], filePaths: [] };
 
   const rows = (data ?? []) as { id: string; files?: { path?: string }[] | null }[];
-  if (rows.length === 0) return { records: 0, files: 0, error: null };
+  if (rows.length === 0) return { records: 0, files: 0, error: null, ids: [], filePaths: [] };
 
-  const paths = rows
+  const filePaths = rows
     .flatMap((row) => (Array.isArray(row.files) ? row.files : []))
     .map((file) => file.path)
     .filter((path): path is string => typeof path === 'string' && path.length > 0);
 
-  if (!enabled) return { records: rows.length, files: paths.length, error: null };
+  const ids = rows.map((row) => row.id);
+
+  if (!enabled) return { records: rows.length, files: filePaths.length, error: null, ids, filePaths };
 
   let removedFiles = 0;
-  for (const group of chunks(paths, 100)) {
+  for (const group of chunks(filePaths, 100)) {
     const { data: removed, error: removeError } = await client.storage
       .from('registration-files')
       .remove(group);
-    if (removeError) return { records: 0, files: removedFiles, error: `storage: ${removeError.message}` };
+    if (removeError) return { records: 0, files: removedFiles, error: `storage: ${removeError.message}`, ids: [], filePaths };
     removedFiles += removed?.length ?? 0;
   }
 
   // Come per slot e storage: una sola `.in()` con molti id supererebbe la
   // lunghezza massima dell'URL accettata da PostgREST.
   let records = 0;
+  const deletedIds: string[] = [];
   for (const group of chunks(
     rows.map((row) => row.id),
     100,
   )) {
-    const { count, error: deleteError } = await client
+    const { data: deletedRows, count, error: deleteError } = await client
       .from('activity_registrations')
       .delete({ count: 'exact' })
-      .in('id', group);
+      .in('id', group)
+      .select('id');
 
     if (deleteError) {
       return {
         records,
         files: removedFiles,
         error: `activity_registrations: ${deleteError.message}`,
+        ids: deletedIds,
+        filePaths,
       };
     }
-    records += count ?? 0;
+    const chunkIds = (deletedRows ?? []).map((row: Record<string, unknown>) => row.id as string);
+    deletedIds.push(...chunkIds);
+    records += count ?? chunkIds.length;
   }
 
-  return { records, files: removedFiles, error: null };
+  return { records, files: removedFiles, error: null, ids: deletedIds, filePaths };
 }
 
 export async function runRetention(
@@ -219,9 +255,20 @@ export async function runRetention(
     registrationRateLimits: 0,
   };
 
-  const steps: { key: keyof RetentionReport['deleted']; run: () => Promise<StepResult> }[] = [
+  const ids: RetentionReport['ids'] = {
+    newsletterSubscribers: [],
+    bookingReservations: [],
+    reviews: [],
+    activityRegistrations: [],
+    registrationFiles: [],
+    bookingRateLimits: [],
+    registrationRateLimits: [],
+  };
+
+  const steps: { key: keyof RetentionReport['deleted']; idKey: keyof RetentionReport['ids']; run: () => Promise<StepResult> }[] = [
     {
       key: 'newsletterSubscribers',
+      idKey: 'newsletterSubscribers',
       run: () =>
         purgeOlderThan(
           client,
@@ -231,9 +278,10 @@ export async function runRetention(
           enabled,
         ),
     },
-    { key: 'bookingReservations', run: () => purgeBookings(client, enabled, now) },
+    { key: 'bookingReservations', idKey: 'bookingReservations', run: () => purgeBookings(client, enabled, now) },
     {
       key: 'reviews',
+      idKey: 'reviews',
       run: () =>
         purgeOlderThan(
           client,
@@ -245,11 +293,13 @@ export async function runRetention(
     },
     {
       key: 'bookingRateLimits',
+      idKey: 'bookingRateLimits',
       run: () =>
-        purgeOlderThan(client, 'booking_rate_limits', 'expires_at', now.toISOString(), enabled),
+        purgeOlderThan(client, 'booking_rate_limits', 'expires_at', now.toISOString(), enabled, 'key'),
     },
     {
       key: 'registrationRateLimits',
+      idKey: 'registrationRateLimits',
       run: () =>
         purgeOlderThan(
           client,
@@ -257,6 +307,7 @@ export async function runRetention(
           'expires_at',
           now.toISOString(),
           enabled,
+          'key',
         ),
     },
   ];
@@ -265,6 +316,7 @@ export async function runRetention(
     try {
       const result = await step.run();
       deleted[step.key] = result.count;
+      ids[step.idKey] = result.ids;
       if (result.error) errors.push(`${step.key}: ${result.error}`);
     } catch (error) {
       errors.push(`${step.key}: ${error instanceof Error ? error.message : 'errore sconosciuto'}`);
@@ -275,6 +327,8 @@ export async function runRetention(
     const registrations = await purgeRegistrations(client, enabled, now);
     deleted.activityRegistrations = registrations.records;
     deleted.registrationFiles = registrations.files;
+    ids.activityRegistrations = registrations.ids;
+    ids.registrationFiles = registrations.filePaths;
     if (registrations.error) errors.push(`activityRegistrations: ${registrations.error}`);
   } catch (error) {
     errors.push(
@@ -286,6 +340,7 @@ export async function runRetention(
     mode: enabled ? 'delete' : 'dry-run',
     executedAt: now.toISOString(),
     deleted,
+    ids,
     errors,
   };
 }
