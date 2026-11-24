@@ -12,7 +12,12 @@ const SESSION_CHECK_TIMEOUT_MS = 3000;
 function getSafeNextPath() {
   const requestedPath = new URLSearchParams(window.location.search).get('next');
 
-  if (requestedPath?.startsWith('/') && !requestedPath.startsWith('//') && !/[\s\u0000-\u001f\\]/u.test(requestedPath)) {
+  if (
+    requestedPath?.startsWith('/') &&
+    !requestedPath.startsWith('//') &&
+    !requestedPath.startsWith('/login') &&
+    !/[\s\u0000-\u001f\\]/u.test(requestedPath)
+  ) {
     return requestedPath;
   }
 
@@ -29,6 +34,13 @@ export default function LoginPage() {
   
   const router = useRouter();
 
+  // Il percorso richiesto si legge una volta sola, al mount: prima veniva
+  // riletto al submit, e se l'URL nel frattempo cambiava si tornava in
+  // dashboard pur avendo il `next` nell'indirizzo di partenza.
+  const [nextPath] = useState(() =>
+    typeof window === 'undefined' ? '/dashboard' : getSafeNextPath(),
+  );
+
   // 1. CONTROLLO SESSIONE: Se sei già loggato, vai dritto alla dashboard
   useEffect(() => {
     // Il lock di gotrue a volte non si rilascia (AbortError "Lock broken by
@@ -39,14 +51,14 @@ export default function LoginPage() {
 
     const settle = (session: unknown) => {
       clearTimeout(timer);
-      if (session) router.replace(getSafeNextPath());
+      if (session) router.replace(nextPath);
       else setIsCheckingSession(false);
     };
 
     supabase.auth.getSession().then(({ data }) => settle(data.session), () => settle(null));
 
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, nextPath]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +72,7 @@ export default function LoginPage() {
       // Accesso consentito: la sessione nuova non deve ereditare il cooldown
       // di un refresh fallito prima del login.
       clearRefreshBlock();
-      router.replace(getSafeNextPath());
+      router.replace(nextPath);
     } catch (error) {
       // Il login condivide il budget di richieste dei refresh: a limite esaurito
       // anche la password giusta viene rifiutata, e "credenziali errate"

@@ -8,7 +8,8 @@ const protectedPaths = ['/dashboard', '/admin', '/drive', '/videochiamate', '/ri
 
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL('/login', request.url)
-  loginUrl.searchParams.set('next', request.nextUrl.pathname)
+  // Path e query insieme: `/drive?tab=2` deve tornare a `/drive?tab=2`.
+  loginUrl.searchParams.set('next', `${request.nextUrl.pathname}${request.nextUrl.search}`)
   return NextResponse.redirect(loginUrl)
 }
 
