@@ -31,6 +31,56 @@ function traceName(executedAt: string) {
   return executedAt.replace(/[:.]/g, '-');
 }
 
+/** Nome dell'oggetto → timestamp dell'esecuzione, `NaN` se il nome non torna. */
+function traceTime(name: string) {
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z\.json$/.exec(name);
+  if (!match) return Number.NaN;
+  return Date.parse(`${match[1]}T${match[2]}:${match[3]}:${match[4]}.${match[5]}Z`);
+}
+
+export const RETENTION_TRACE_KEEP_DAYS = 90;
+
+export type RetentionPruneResult = { removed: number; error: string | null };
+
+/**
+ * Pota le tracce più vecchie di `keepDays` (90 di default): il job gira ogni
+ * notte e senza potatura il bucket crescerebbe all'infinito. Restano intatte le
+ * tracce recenti e `latest.json`, che non sta in `runs/`.
+ */
+export async function pruneRetentionTraces(
+  client: SupabaseClient,
+  options: { now?: Date; keepDays?: number } = {},
+): Promise<RetentionPruneResult> {
+  const keepDays = options.keepDays ?? RETENTION_TRACE_KEEP_DAYS;
+  const cutoff = (options.now ?? new Date()).getTime() - keepDays * 24 * 60 * 60 * 1000;
+  const bucket = client.storage.from(RETENTION_TRACE_BUCKET);
+
+  const stale: string[] = [];
+  for (let page = 0; page < 100; page++) {
+    const { data, error } = await bucket.list('runs', {
+      limit: 100,
+      offset: page * 100,
+    });
+    if (error) return { removed: 0, error: `elenco tracce: ${error.message}` };
+    const entries = data ?? [];
+    for (const entry of entries) {
+      const time = traceTime(entry.name);
+      if (Number.isFinite(time) && time < cutoff) stale.push(`runs/${entry.name}`);
+    }
+    if (entries.length < 100) break;
+  }
+
+  let removed = 0;
+  for (let index = 0; index < stale.length; index += 100) {
+    const group = stale.slice(index, index + 100);
+    const { data, error } = await bucket.remove(group);
+    if (error) return { removed, error: `potatura tracce: ${error.message}` };
+    removed += data?.length ?? 0;
+  }
+
+  return { removed, error: null };
+}
+
 export async function saveRetentionTrace(
   client: SupabaseClient,
   report: RetentionReport,

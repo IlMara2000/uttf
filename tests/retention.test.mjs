@@ -309,12 +309,20 @@ function emptyReport(overrides = {}) {
 }
 
 /** Storage finto: bucket, upload di snapshot e latest, con guasti iniettabili. */
-function traceClient({ bucketError = null, uploadError = null } = {}) {
+function traceClient({
+  bucketError = null,
+  uploadError = null,
+  runs = [],
+  listError = null,
+  removeError = null,
+} = {}) {
   const uploads = [];
   const created = [];
+  const removed = [];
   return {
     uploads,
     created,
+    removed,
     storage: {
       async createBucket(name, options) {
         created.push({ name, options });
@@ -326,6 +334,18 @@ function traceClient({ bucketError = null, uploadError = null } = {}) {
             if (uploadError) return { data: null, error: uploadError };
             uploads.push({ bucket: name, path, body, options });
             return { data: { path }, error: null };
+          },
+          async list(prefix) {
+            if (listError) return { data: null, error: listError };
+            return {
+              data: runs.map(entry => ({ name: entry })),
+              error: null,
+            };
+          },
+          async remove(paths) {
+            if (removeError) return { data: null, error: removeError };
+            removed.push(...paths);
+            return { data: paths.map(path => ({ name: path })), error: null };
           },
         };
       },
@@ -412,8 +432,17 @@ const jobEnv = {
   SUPABASE_SERVICE_ROLE_KEY: 'service-role',
 };
 
-function retentionRoute({ report = emptyReport(), bucketError = null, uploadError = null } = {}) {
-  const client = traceClient({ bucketError, uploadError });
+function retentionRoute({
+  report = emptyReport(),
+  bucketError = null,
+  uploadError = null,
+  runs = [],
+  listError = null,
+  removeError = null,
+  alert = { sent: [], error: null },
+} = {}) {
+  const client = traceClient({ bucketError, uploadError, runs, listError, removeError });
+  const sentAlerts = [];
   const api = load(
     'src/app/api/maintenance/retention/route.ts',
     {
@@ -423,10 +452,16 @@ function retentionRoute({ report = emptyReport(), bucketError = null, uploadErro
       '@supabase/supabase-js': { createClient: () => client },
       '@/lib/retention': { runRetention: async () => report },
       '@/lib/retention-trace': load('src/lib/retention-trace.ts'),
+      '@/lib/retention-alert': {
+        alertRetentionFailure: async (failedReport, failures) => {
+          sentAlerts.push({ report: failedReport, failures: [...failures] });
+          return alert;
+        },
+      },
     },
     { process, Buffer },
   );
-  return { api, client };
+  return { api, client, sentAlerts };
 }
 
 const cronCall = (token = 'cron-token') =>
@@ -500,5 +535,186 @@ test('Retention endpoint says it is not configured when both secrets are missing
     const res = await api.GET(cronCall(''));
     assert.equal(res.status, 503);
     assert.match((await res.json()).error, /CRON_SECRET o RETENTION_TOKEN/);
+  });
+});
+
+const { pruneRetentionTraces } = load('src/lib/retention-trace.ts');
+
+test('Retention pruning removes only the runs older than 90 days', async () => {
+  const client = traceClient({
+    runs: [
+      '2026-08-01T03-00-00-000Z.json',
+      '2026-11-20T03-00-00-000Z.json',
+      'latest.json',
+      'nome-inatteso.json',
+    ],
+  });
+
+  const result = await pruneRetentionTraces(client, {
+    now: new Date('2026-11-25T12:00:00.000Z'),
+  });
+
+  assert.equal(result.error, null);
+  assert.equal(result.removed, 1);
+  assert.deepEqual(client.removed, ['runs/2026-08-01T03-00-00-000Z.json']);
+});
+
+test('Retention pruning keeps the recent runs and honours a custom window', async () => {
+  const client = traceClient({
+    runs: ['2026-11-20T03-00-00-000Z.json', '2026-11-24T03-00-00-000Z.json'],
+  });
+
+  const result = await pruneRetentionTraces(client, {
+    now: new Date('2026-11-25T00:00:00.000Z'),
+    keepDays: 1,
+  });
+
+  assert.equal(result.removed, 1);
+  assert.deepEqual(client.removed, ['runs/2026-11-20T03-00-00-000Z.json']);
+});
+
+test('Retention pruning reports listing and removal failures', async () => {
+  const listFails = await pruneRetentionTraces(
+    traceClient({ listError: { message: 'timeout' } }),
+  );
+  assert.equal(listFails.removed, 0);
+  assert.match(listFails.error, /elenco tracce: timeout/);
+
+  const removeFails = await pruneRetentionTraces(
+    traceClient({
+      runs: ['2026-01-01T03-00-00-000Z.json'],
+      removeError: { message: 'negato' },
+    }),
+  );
+  assert.equal(removeFails.removed, 0);
+  assert.match(removeFails.error, /potatura tracce: negato/);
+});
+
+function loadAlert(fetchImpl) {
+  const captured = [];
+  const alertModule = load(
+    'src/lib/retention-alert.ts',
+    {
+      '@sentry/nextjs': {
+        captureMessage: (message, context) => captured.push({ message, context }),
+      },
+    },
+    { fetch: fetchImpl, process },
+  );
+  return { ...alertModule, captured };
+}
+
+test('A failed run reaches Sentry with counts and errors', async () => {
+  const calls = [];
+  const alert = loadAlert(async (...args) => {
+    calls.push(args);
+    return { ok: true, status: 200 };
+  });
+
+  const result = await alert.alertRetentionFailure(emptyReport(), [
+    'newsletterSubscribers: timeout',
+  ]);
+
+  assert.equal(result.error, null);
+  assert.equal(result.sent.length, 0, 'senza webhook nessun canale');
+  assert.equal(calls.length, 0, 'senza webhook configurato non parte nessuna fetch');
+  assert.equal(alert.captured.length, 1);
+  assert.equal(alert.captured[0].context.level, 'error');
+  assert.equal(alert.captured[0].context.tags.job, 'retention');
+  assert.match(alert.captured[0].message, /Retention fallita \(delete\)/);
+  assert.match(alert.captured[0].message, /newsletterSubscribers=0/);
+  assert.match(alert.captured[0].message, /newsletterSubscribers: timeout/);
+});
+
+test('A configured webhook receives the alert and is reported as sent', async () => {
+  const calls = [];
+  const alert = loadAlert(async (url, init) => {
+    calls.push({ url, init });
+    return { ok: true, status: 200 };
+  });
+
+  const result = await withEnv(
+    { RETENTION_ALERT_WEBHOOK_URL: 'https://hooks.example.test/uttf' },
+    () => alert.alertRetentionFailure(emptyReport(), ['reviews: boom']),
+  );
+
+  assert.equal(result.error, null);
+  assert.equal(result.sent.join(','), 'webhook');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://hooks.example.test/uttf');
+  assert.equal(calls[0].init.method, 'POST');
+  const body = JSON.parse(calls[0].init.body);
+  assert.match(body.text, /reviews: boom/);
+  assert.equal(body.content, body.text);
+});
+
+test('A broken webhook is reported without swallowing the failure', async () => {
+  const rejected = loadAlert(async () => ({ ok: false, status: 500 }));
+  const rejectedResult = await withEnv(
+    { RETENTION_ALERT_WEBHOOK_URL: 'https://hooks.example.test/uttf' },
+    () => rejected.alertRetentionFailure(emptyReport(), ['reviews: boom']),
+  );
+  assert.equal(rejectedResult.sent.length, 0);
+  assert.match(rejectedResult.error, /avviso non recapitato: HTTP 500/);
+
+  const broken = loadAlert(async () => {
+    throw new Error('rete giu');
+  });
+  const brokenResult = await withEnv(
+    { RETENTION_ALERT_WEBHOOK_URL: 'https://hooks.example.test/uttf' },
+    () => broken.alertRetentionFailure(emptyReport(), ['reviews: boom']),
+  );
+  assert.match(brokenResult.error, /avviso non recapitato: rete giu/);
+});
+
+test('Retention endpoint alerts once on failure and reports the channels', async () => {
+  await withEnv(jobEnv, async () => {
+    const report = emptyReport({ errors: ['reviews: timeout'] });
+    const { api, sentAlerts } = retentionRoute({
+      report,
+      alert: { sent: ['webhook'], error: null },
+    });
+
+    const res = await api.GET(cronCall());
+    const body = await res.json();
+
+    assert.equal(res.status, 500);
+    assert.equal(sentAlerts.length, 1);
+    assert.deepEqual(sentAlerts[0].failures, ['reviews: timeout']);
+    assert.deepEqual(body.alerts, ['webhook']);
+  });
+});
+
+test('Retention endpoint surfaces a failed alert delivery', async () => {
+  await withEnv(jobEnv, async () => {
+    const report = emptyReport({ errors: ['reviews: timeout'] });
+    const { api } = retentionRoute({
+      report,
+      alert: { sent: [], error: 'avviso non recapitato: HTTP 500' },
+    });
+
+    const res = await api.GET(cronCall());
+    const body = await res.json();
+
+    assert.equal(res.status, 500);
+    assert.deepEqual(body.alerts, []);
+    assert.match(body.errors.join(' | '), /avviso non recapitato/);
+  });
+});
+
+test('Retention endpoint prunes old traces and fails when pruning breaks', async () => {
+  await withEnv(jobEnv, async () => {
+    const cleaned = retentionRoute({ runs: ['2026-01-01T03-00-00-000Z.json'] });
+    const ok = await cleaned.api.GET(cronCall());
+    const okBody = await ok.json();
+    assert.equal(ok.status, 200);
+    assert.equal(okBody.pruned, 1);
+    assert.deepEqual(cleaned.client.removed, ['runs/2026-01-01T03-00-00-000Z.json']);
+
+    const broken = retentionRoute({ listError: { message: 'timeout' } });
+    const res = await broken.api.GET(cronCall());
+    const body = await res.json();
+    assert.equal(res.status, 500);
+    assert.match(body.errors.join(' | '), /elenco tracce: timeout/);
   });
 });

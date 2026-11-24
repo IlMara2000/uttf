@@ -2,7 +2,8 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { runRetention } from '@/lib/retention';
-import { saveRetentionTrace } from '@/lib/retention-trace';
+import { saveRetentionTrace, pruneRetentionTraces } from '@/lib/retention-trace';
+import { alertRetentionFailure } from '@/lib/retention-alert';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,16 +78,39 @@ async function handle(request: Request) {
   const trace = await saveRetentionTrace(client, report);
   const failures = [...report.errors];
   if (trace.error) failures.push(trace.error);
+
+  const pruned = await pruneRetentionTraces(client);
+  if (pruned.error) failures.push(pruned.error);
+
+  // L'avviso parte con l'elenco completo: guasti del giro, scrittura della
+  // traccia e potatura. Un guasto del recapito si aggiunge agli errori, non li
+  // sostituisce.
+  let alerts: string[] = [];
+  if (failures.length > 0) {
+    const alert = await alertRetentionFailure(report, failures);
+    alerts = alert.sent;
+    if (alert.error) failures.push(alert.error);
+  }
+
   const outcome = failures.length > 0 ? 'error' : 'ok';
 
   console.info(
-    `[retention] ${report.mode} ${outcome}: ${JSON.stringify(report.deleted)}${
+    `[retention] ${report.mode} ${outcome}: ${JSON.stringify(report.deleted)} potate: ${pruned.removed}${
       failures.length > 0 ? ` errori: ${failures.join('; ')}` : ''
-    }${trace.path ? ` traccia: ${trace.path}` : ''}`,
+    }${trace.path ? ` traccia: ${trace.path}` : ''}${
+      alerts.length > 0 ? ` avvisi: ${alerts.join(',')}` : ''
+    }`,
   );
 
   return NextResponse.json(
-    { ...report, errors: failures, outcome, trace: trace.path },
+    {
+      ...report,
+      errors: failures,
+      outcome,
+      trace: trace.path,
+      pruned: pruned.removed,
+      alerts,
+    },
     {
       status: failures.length > 0 ? 500 : 200,
       headers: { 'Cache-Control': 'no-store' },
