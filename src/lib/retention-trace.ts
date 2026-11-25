@@ -15,6 +15,15 @@ import type { RetentionReport } from './retention';
  */
 export const RETENTION_TRACE_BUCKET = 'retention-runs';
 
+/**
+ * ID conservati per categoria nella traccia. Con la paginazione ogni riga
+ * idonea arriva nello stesso oggetto: su un arretrato grande il JSON
+ * supererebbe i limiti di upload dello storage e la traccia andrebbe persa.
+ * Oltre il tetto restano il conteggio esatto (`deleted`) e il flag
+ * `idsTruncated`.
+ */
+export const RETENTION_TRACE_MAX_IDS = 1000;
+
 export type RetentionTrace = RetentionReport & {
   /** `error` se una qualsiasi fase ha segnalato un problema (o la traccia non è stata scritta). */
   outcome: 'ok' | 'error';
@@ -25,6 +34,11 @@ export type RetentionTrace = RetentionReport & {
   pruned: number;
   /** Canali che hanno accettato l'avviso di guasto (`webhook`), se ce n'erano. */
   alerts: string[];
+  /**
+   * `true` se almeno una categoria superava `RETENTION_TRACE_MAX_IDS`: `ids` è
+   * un estratto, mentre `deleted` contiene comunque il conteggio esatto.
+   */
+  idsTruncated: boolean;
 };
 
 export type RetentionTraceResult = {
@@ -88,6 +102,17 @@ export async function pruneRetentionTraces(
   return { removed, error: null };
 }
 
+/** Estratto degli ID per categoria, con il flag che dice se ne manca qualcuno. */
+function cappedIds(ids: RetentionReport['ids']) {
+  const capped = {} as RetentionReport['ids'];
+  let truncated = false;
+  for (const key of Object.keys(ids) as (keyof RetentionReport['ids'])[]) {
+    if (ids[key].length > RETENTION_TRACE_MAX_IDS) truncated = true;
+    capped[key] = ids[key].slice(0, RETENTION_TRACE_MAX_IDS);
+  }
+  return { ids: capped, truncated };
+}
+
 export async function saveRetentionTrace(
   client: SupabaseClient,
   report: RetentionReport,
@@ -98,8 +123,11 @@ export async function saveRetentionTrace(
     alerts?: string[];
   } = {},
 ): Promise<RetentionTraceResult> {
+  const { ids, truncated } = cappedIds(report.ids);
   const trace: RetentionTrace = {
     ...report,
+    ids,
+    idsTruncated: truncated,
     outcome: report.errors.length > 0 ? 'error' : 'ok',
     source: options.source ?? 'manual',
     recordedAt: (options.recordedAt ?? new Date()).toISOString(),

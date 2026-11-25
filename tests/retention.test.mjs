@@ -436,7 +436,7 @@ test('Retention removes registration attachments before deleting their rows', as
   ]);
 });
 
-const { saveRetentionTrace } = load('src/lib/retention-trace.ts');
+const { saveRetentionTrace, RETENTION_TRACE_MAX_IDS } = load('src/lib/retention-trace.ts');
 
 function emptyReport(overrides = {}) {
   return {
@@ -536,6 +536,7 @@ test('Retention trace writes one immutable object per run', async () => {
   assert.deepEqual(snapshot.ids, report.ids);
   assert.equal(snapshot.pruned, 0);
   assert.equal(snapshot.alerts.length, 0);
+  assert.equal(snapshot.idsTruncated, false);
   assert.match(snapshot.recordedAt, /^\d{4}-\d{2}-\d{2}T/);
 });
 
@@ -547,6 +548,35 @@ test('Only the scheduler run overwrites latest.json', async () => {
   assert.deepEqual(client.uploads.map(entry => entry.path), [path, 'latest.json']);
   assert.equal(client.uploads[1].options.upsert, true);
   assert.equal(JSON.parse(client.uploads[1].body).source, 'cron');
+});
+
+test('Retention trace caps the ids per category and keeps the exact counts', async () => {
+  const client = traceClient();
+  const overflow = RETENTION_TRACE_MAX_IDS + 500;
+  const ids = Array.from({ length: overflow }, (_, index) => `id-${index}`);
+  const report = emptyReport({
+    deleted: {
+      ...emptyReport().deleted,
+      activityRegistrations: overflow,
+      registrationFiles: overflow,
+    },
+    ids: {
+      ...emptyReport().ids,
+      activityRegistrations: ids,
+      registrationFiles: ids.map(id => `files/${id}.pdf`),
+    },
+  });
+
+  const { error } = await saveRetentionTrace(client, report, { source: 'cron' });
+
+  assert.equal(error, null);
+  const snapshot = JSON.parse(client.uploads[0].body);
+  assert.equal(snapshot.ids.activityRegistrations.length, RETENTION_TRACE_MAX_IDS);
+  assert.equal(snapshot.ids.registrationFiles.length, RETENTION_TRACE_MAX_IDS);
+  assert.equal(snapshot.ids.newsletterSubscribers.length, 0);
+  assert.equal(snapshot.idsTruncated, true);
+  assert.equal(snapshot.deleted.activityRegistrations, overflow);
+  assert.equal(snapshot.deleted.registrationFiles, overflow);
 });
 
 test('Retention trace records pruned rows and alerted channels', async () => {
