@@ -2,7 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { runRetention } from '@/lib/retention';
-import { saveRetentionTrace, pruneRetentionTraces } from '@/lib/retention-trace';
+import { saveRetentionTrace, pruneRetentionTraces, cappedIds } from '@/lib/retention-trace';
 import { alertRetentionFailure } from '@/lib/retention-alert';
 
 export const runtime = 'nodejs';
@@ -120,6 +120,9 @@ async function handle(request: Request) {
   if (trace.error) failures.push(trace.error);
 
   const outcome = failures.length > 0 ? 'error' : 'ok';
+  // Stesso tetto della traccia: la risposta non deve portarsi dietro tutte le
+  // righe idonee dentro un unico body. I conteggi restano esatti.
+  const { ids, truncated } = cappedIds(report.ids);
 
   console.info(
     `[retention] ${report.mode} ${outcome}: ${JSON.stringify(report.deleted)} potate: ${pruned.removed}${
@@ -132,6 +135,8 @@ async function handle(request: Request) {
   return NextResponse.json(
     {
       ...report,
+      ids,
+      idsTruncated: truncated,
       errors: failures,
       outcome,
       source,

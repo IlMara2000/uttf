@@ -102,8 +102,12 @@ export async function pruneRetentionTraces(
   return { removed, error: null };
 }
 
-/** Estratto degli ID per categoria, con il flag che dice se ne manca qualcuno. */
-function cappedIds(ids: RetentionReport['ids']) {
+/**
+ * Estratto degli ID per categoria, con il flag che dice se ne manca qualcuno.
+ * Lo usano sia la traccia sia la risposta dell'endpoint, che altrimenti
+ * porterebbero un arretrato intero dentro un solo corpo JSON.
+ */
+export function cappedIds(ids: RetentionReport['ids']) {
   const capped = {} as RetentionReport['ids'];
   let truncated = false;
   for (const key of Object.keys(ids) as (keyof RetentionReport['ids'])[]) {

@@ -715,6 +715,26 @@ test('Retention endpoint stores the run trace and answers 200 on success', async
   });
 });
 
+test('Retention endpoint caps the ids in its response', async () => {
+  await withEnv(jobEnv, async () => {
+    const overflow = RETENTION_TRACE_MAX_IDS + 500;
+    const ids = Array.from({ length: overflow }, (_, index) => `id-${index}`);
+    const report = emptyReport({
+      deleted: { ...emptyReport().deleted, newsletterSubscribers: overflow },
+      ids: { ...emptyReport().ids, newsletterSubscribers: ids },
+    });
+    const { api } = retentionRoute({ report });
+
+    const res = await api.GET(cronCall());
+    const body = await res.json();
+
+    assert.equal(res.status, 200);
+    assert.equal(body.ids.newsletterSubscribers.length, RETENTION_TRACE_MAX_IDS);
+    assert.equal(body.idsTruncated, true);
+    assert.equal(body.deleted.newsletterSubscribers, overflow);
+  });
+});
+
 test('Retention trace records whether the scheduler or a manual call ran the job', async () => {
   await withEnv(jobEnv, async () => {
     const { api, client } = retentionRoute();
