@@ -290,6 +290,32 @@ test('Retention dry-run lists the eligible record ids without deleting anything'
   assert.equal(client.calls.filter(call => call.op === 'delete' || call.op === 'remove').length, 0);
 });
 
+test('Retention deletes bookings of every expired slot beyond the API page limit', async () => {
+  const total = 1100;
+  const slot = index => `slot-${String(index).padStart(4, '0')}`;
+  const client = fakeClient({
+    booking_slots: Array.from({ length: total }, (_, index) => ({
+      id: slot(index),
+      date: dateDaysAgo(400),
+    })),
+    booking_reservations: Array.from({ length: total }, (_, index) => ({
+      id: `res-${index}`,
+      slot_id: slot(index),
+    })),
+  });
+
+  const report = await runRetention(client, { enabled: true, now: NOW });
+
+  assert.deepEqual(plain(report.errors), []);
+  assert.equal(report.deleted.bookingReservations, total);
+  assert.equal(client.tables.booking_reservations.length, 0, 'nessuna prenotazione resta');
+  assert.equal(client.tables.booking_slots.length, total, 'gli slot restano');
+  const selects = client.calls.filter(
+    call => call.op === 'select' && call.table === 'booking_slots',
+  );
+  assert.equal(selects.length, 2, 'la lettura degli slot pagina finché il count non è raggiunto');
+});
+
 test('Retention deletes activity registrations in chunks of 100 ids', async () => {
   const client = fakeClient({
     activity_registrations: Array.from({ length: 250 }, (_, index) => ({
@@ -462,7 +488,7 @@ function traceClient({
   };
 }
 
-test('Retention trace writes one immutable object per run plus latest.json', async () => {
+test('Retention trace writes one immutable object per run', async () => {
   const client = traceClient();
   const report = emptyReport();
 
@@ -472,9 +498,12 @@ test('Retention trace writes one immutable object per run plus latest.json', asy
   assert.equal(path, 'runs/2026-11-25T03-04-05-678Z.json');
   assert.deepEqual(client.created.map(entry => entry.name), ['retention-runs']);
   assert.equal(client.created[0].options.public, false);
-  assert.deepEqual(client.uploads.map(entry => entry.path), [path, 'latest.json']);
+  assert.deepEqual(
+    client.uploads.map(entry => entry.path),
+    [path],
+    'un test manuale non tocca latest.json',
+  );
   assert.equal(client.uploads[0].options.upsert, false);
-  assert.equal(client.uploads[1].options.upsert, true);
   assert.equal(client.uploads[0].options.contentType, 'application/json');
   const snapshot = JSON.parse(client.uploads[0].body);
   assert.equal(snapshot.outcome, 'ok');
@@ -488,12 +517,23 @@ test('Retention trace writes one immutable object per run plus latest.json', asy
   assert.match(snapshot.recordedAt, /^\d{4}-\d{2}-\d{2}T/);
 });
 
+test('Only the scheduler run overwrites latest.json', async () => {
+  const client = traceClient();
+
+  const { path } = await saveRetentionTrace(client, emptyReport(), { source: 'cron' });
+
+  assert.deepEqual(client.uploads.map(entry => entry.path), [path, 'latest.json']);
+  assert.equal(client.uploads[1].options.upsert, true);
+  assert.equal(JSON.parse(client.uploads[1].body).source, 'cron');
+});
+
 test('Retention trace records pruned rows and alerted channels', async () => {
   const client = traceClient();
 
   const { error } = await saveRetentionTrace(client, emptyReport(), {
     pruned: 7,
     alerts: ['webhook'],
+    source: 'cron',
   });
 
   assert.equal(error, null);
@@ -613,7 +653,8 @@ test('Retention endpoint stores the run trace and answers 200 on success', async
     assert.equal(body.outcome, 'ok');
     assert.equal(body.trace, 'runs/2026-11-25T03-04-05-678Z.json');
     assert.deepEqual(body.errors, []);
-    assert.deepEqual(client.uploads.map(entry => entry.path), [body.trace, 'latest.json']);
+    // La chiamata di test non porta `x-vercel-cron`: nessun latest.json.
+    assert.deepEqual(client.uploads.map(entry => entry.path), [body.trace]);
     const snapshot = JSON.parse(client.uploads[0].body);
     assert.equal(snapshot.outcome, 'ok');
     assert.equal(snapshot.pruned, 0);
@@ -642,7 +683,7 @@ test('Retention trace records whether the scheduler or a manual call ran the job
         headers: { authorization: 'Bearer cron-token', 'x-vercel-cron': '1' },
       }),
     );
-    assert.equal(JSON.parse(client.uploads[4].body).source, 'manual');
+    assert.equal(JSON.parse(client.uploads[3].body).source, 'manual');
   });
 });
 

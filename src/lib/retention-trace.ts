@@ -7,9 +7,11 @@ import type { RetentionReport } from './retention';
  * I log runtime di Vercel durano circa un'ora sul piano Hobby: quando qualcuno
  * guarda, la riga del job notturno è già sparita. Per questo ogni esecuzione
  * lascia un oggetto immutabile `runs/<timestamp>.json` nel bucket privato
- * `retention-runs`, più un `latest.json` sovrascritto che mostra l'ultimo esito
- * senza dover elencare la cartella. Il bucket è privato e si crea da solo al
- * primo giro: nessuna migrazione SQL da ricordare.
+ * `retention-runs`, più un `latest.json` che mostra l'ultimo esito senza dover
+ * elencare la cartella. `latest.json` lo aggiorna solo lo scheduler: un test
+ * manuale lascia la sua traccia immutabile ma non cancella l'evidenza del giro
+ * notturno. Il bucket è privato e si crea da solo al primo giro: nessuna
+ * migrazione SQL da ricordare.
  */
 export const RETENTION_TRACE_BUCKET = 'retention-runs';
 
@@ -125,6 +127,11 @@ export async function saveRetentionTrace(
     upsert: false,
   });
   if (written.error) return { path: null, error: `trace: ${written.error.message}` };
+
+  // Solo il giro dello scheduler aggiorna `latest.json`: un `vercel crons run`
+  // o un dry-run non deve far sembrare passato il giro delle 03:00 (o
+  // viceversa). Ogni esecuzione resta comunque in `runs/<timestamp>.json`.
+  if (trace.source !== 'cron') return { path, error: null };
 
   const latest = await bucket.upload('latest.json', body, {
     contentType: 'application/json',

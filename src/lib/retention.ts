@@ -106,6 +106,35 @@ async function purgeOlderThan(
   return { count: count ?? ids.length, error: null, ids };
 }
 
+/** Pagina massima restituita dall'API: il corpo della risposta è troncato qui. */
+const API_PAGE_SIZE = 1000;
+
+/**
+ * Slot con appuntamento più vecchio della soglia, tutti. PostgREST tronca il
+ * corpo della risposta al limite dell'API: una sola select lascerebbe fuori gli
+ * slot successivi, e le loro prenotazioni non verrebbero mai cancellate.
+ */
+async function expiredSlotIds(
+  client: SupabaseClient,
+  cutoff: string,
+): Promise<{ ids: string[]; error: string | null }> {
+  const ids: string[] = [];
+  for (;;) {
+    const { data, count, error } = await client
+      .from('booking_slots')
+      .select('id', { count: 'exact' })
+      .lt('date', cutoff)
+      .order('id')
+      .range(ids.length, ids.length + API_PAGE_SIZE - 1);
+    if (error) return { ids, error: `booking_slots: ${error.message}` };
+    const page = idList(data, 'id');
+    ids.push(...page);
+    if (page.length === 0 || (count !== null && ids.length >= count)) {
+      return { ids, error: null };
+    }
+  }
+}
+
 /**
  * Prenotazioni: la data che conta è quella dello slot, non `created_at`.
  * PostgREST non filtra una risorsa incorporata durante la DELETE, quindi prima
@@ -119,14 +148,8 @@ async function purgeBookings(
   now: Date,
 ): Promise<StepResult> {
   const cutoff = dateDaysAgo(now, BOOKING_RETENTION_DAYS);
-  const { data: slots, error } = await client
-    .from('booking_slots')
-    .select('id')
-    .lt('date', cutoff);
-
-  if (error) return { count: 0, error: `booking_slots: ${error.message}`, ids: [] };
-
-  const slotIds = idList(slots, 'id');
+  const { ids: slotIds, error } = await expiredSlotIds(client, cutoff);
+  if (error) return { count: 0, error, ids: [] };
   if (slotIds.length === 0) return { count: 0, error: null, ids: [] };
 
   if (!enabled) {
@@ -158,9 +181,6 @@ async function purgeBookings(
 
 type RegistrationRow = { id: string; files?: { path?: string }[] | null };
 
-/** Pagina massima restituita dall'API: il corpo della risposta è troncato qui. */
-const REGISTRATION_PAGE_SIZE = 1000;
-
 function expiredRegistrationsQuery(client: SupabaseClient, cutoff: string) {
   return client
     .from('activity_registrations')
@@ -185,7 +205,7 @@ async function expiredRegistrations(
   for (;;) {
     const { data, count, error } = await expiredRegistrationsQuery(client, cutoff).range(
       rows.length,
-      rows.length + REGISTRATION_PAGE_SIZE - 1,
+      rows.length + API_PAGE_SIZE - 1,
     );
     if (error) return { rows, error: error.message };
     const page = (data ?? []) as RegistrationRow[];

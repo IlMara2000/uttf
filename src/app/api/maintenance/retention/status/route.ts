@@ -7,8 +7,9 @@ import { RETENTION_TRACE_BUCKET } from '@/lib/retention-trace';
  *
  * Legge `latest.json` dal bucket privato con la service role e restituisce
  * solo i campi che servono al banner: così un guasto notturno si vede anche
- * senza Sentry o webhook configurati. L'endpoint è riservato allo staff e non
- * è mai cacheabile.
+ * senza Sentry o webhook configurati. `latest.json` contiene solo i giri dello
+ * scheduler, quindi un test manuale non può mascherare un giro mancato.
+ * L'endpoint è riservato allo staff e non è mai cacheabile.
  */
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
