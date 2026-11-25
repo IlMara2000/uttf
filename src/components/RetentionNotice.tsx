@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 type Status = {
@@ -10,6 +10,7 @@ type Status = {
   mode: string | null;
   errors: string[];
   stale: boolean;
+  deferred: boolean;
 };
 
 /**
@@ -49,7 +50,6 @@ export default function RetentionNotice() {
   if (!status) return null;
   const isStale = status.stale === true;
   const isError = status.outcome === 'error';
-  if (!isError && !isStale) return null;
 
   const when = status.executedAt
     ? new Date(status.executedAt).toLocaleString('it-IT', {
@@ -57,6 +57,27 @@ export default function RetentionNotice() {
         timeStyle: 'short',
       })
     : 'mai registrato';
+
+  // Giro fermato dal limite di lavoro: non è un errore, ma il lavoro non è
+  // finito e lo staff deve saperlo.
+  if (!isError && !isStale) {
+    if (status.deferred !== true) return null;
+    return (
+      <div
+        role="status"
+        className="border-b-2 border-amber-500 bg-amber-950 px-4 py-3 text-sm text-amber-50"
+      >
+        <p className="flex items-center gap-2 font-bold">
+          <Clock size={16} aria-hidden />
+          Conservazione dati in più giri
+        </p>
+        <p className="mt-1 text-amber-200">
+          Ultimo giro: {when}. Si è fermato al limite di lavoro per esecuzione: il
+          resto verrà elaborato al prossimo giro.
+        </p>
+      </div>
+    );
+  }
 
   const title = isError
     ? 'Conservazione dati non riuscita'

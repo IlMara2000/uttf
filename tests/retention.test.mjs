@@ -1193,10 +1193,20 @@ test('Retention status marks a run older than 36 hours as stale', async () => {
 test('Retention status is not stale within 36 hours', async () => {
   const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const api = statusRoute({
-    latest: JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete' }),
+    latest: JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete', deferred: true }),
   });
   const res = await api.GET(new Request('https://local/x'));
   const body = await res.json();
   assert.equal(res.status, 200);
   assert.equal(body.stale, false);
+  assert.equal(body.deferred, true, 'lo staff vede il giro fermato dal limite');
+});
+
+test('Retention status leaves deferred false when the run was complete', async () => {
+  const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const api = statusRoute({
+    latest: JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete', deferred: false }),
+  });
+  const body = await (await api.GET(new Request('https://local/x'))).json();
+  assert.equal(body.deferred, false);
 });

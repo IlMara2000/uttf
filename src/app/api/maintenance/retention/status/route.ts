@@ -28,6 +28,7 @@ type Trace = {
   errors?: unknown;
   pruned?: unknown;
   alerts?: unknown;
+  deferred?: unknown;
 };
 
 function strings(value: unknown, max: number) {
@@ -79,6 +80,9 @@ export async function GET(request: Request) {
       errors: strings(trace.errors, 10),
       pruned: typeof trace.pruned === 'number' ? trace.pruned : 0,
       alerts: strings(trace.alerts, 5),
+      // Il giro si è fermato al limite di lavoro: non è un guasto, ma senza
+      // questo campo uno smaltimento lungo sembrerebbe un giro completo.
+      deferred: trace.deferred === true,
       stale,
     },
     { headers },
