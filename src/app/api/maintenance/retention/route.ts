@@ -21,6 +21,11 @@ export const maxDuration = 60;
  * cancellazione finché non lo si abilita esplicitamente. `?dry=1` forza lo
  * stesso giro in sola lettura anche a job abilitato, elencando gli ID idonei.
  *
+ * La traccia registra l'origine: `cron` se la chiamata porta l'header
+ * `x-vercel-cron` dello scheduler, altrimenti `manual`. `?source=manual` marca
+ * come manuale anche un `vercel crons run`, che passa dallo stesso scheduler:
+ * così `latest.json` non scambia un test per il giro delle 03:00.
+ *
  * Ogni esecuzione lascia una traccia durevole nel bucket `retention-runs`
  * (vedi `@/lib/retention-trace`): i log di Vercel durano troppo poco perché il
  * job notturno sia verificabile a posteriori. Se una fase o la scrittura della
@@ -43,6 +48,17 @@ function isAuthorized(request: Request) {
   const prefix = 'Bearer ';
   if (!header.startsWith(prefix)) return false;
   return tokensMatch(header.slice(prefix.length), expected);
+}
+
+/**
+ * Origine dell'esecuzione da annotare nella traccia. Lo scheduler di Vercel
+ * aggiunge sempre `x-vercel-cron`: senza quell'header la chiamata è manuale.
+ * Accettiamo solo `?source=manual`, così nessuno può etichettare come `cron`
+ * un'esecuzione che non viene dallo scheduler.
+ */
+function executionSource(request: Request, url: URL) {
+  if (url.searchParams.get('source') === 'manual') return 'manual';
+  return request.headers.get('x-vercel-cron') ? 'cron' : 'manual';
 }
 
 async function handle(request: Request) {
@@ -73,7 +89,9 @@ async function handle(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const forceDry = new URL(request.url).searchParams.get('dry') === '1';
+  const url = new URL(request.url);
+  const forceDry = url.searchParams.get('dry') === '1';
+  const source = executionSource(request, url);
   const report = await runRetention(client, {
     enabled: !forceDry && process.env.RETENTION_ENABLED === 'true',
   });
@@ -97,7 +115,7 @@ async function handle(request: Request) {
   const trace = await saveRetentionTrace(
     client,
     { ...report, errors: failures },
-    { pruned: pruned.removed, alerts },
+    { pruned: pruned.removed, alerts, source },
   );
   if (trace.error) failures.push(trace.error);
 
@@ -116,6 +134,7 @@ async function handle(request: Request) {
       ...report,
       errors: failures,
       outcome,
+      source,
       trace: trace.path,
       pruned: pruned.removed,
       alerts,

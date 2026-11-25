@@ -16,6 +16,7 @@ export const RETENTION_TRACE_BUCKET = 'retention-runs';
 export type RetentionTrace = RetentionReport & {
   /** `error` se una qualsiasi fase ha segnalato un problema (o la traccia non è stata scritta). */
   outcome: 'ok' | 'error';
+  /** `cron` se ha invocato lo scheduler, `manual` per un test o una chiamata diretta. */
   source: string;
   recordedAt: string;
   /** Tracce più vecchie di 90 giorni rimosse in questo giro. */
@@ -98,7 +99,7 @@ export async function saveRetentionTrace(
   const trace: RetentionTrace = {
     ...report,
     outcome: report.errors.length > 0 ? 'error' : 'ok',
-    source: options.source ?? 'cron',
+    source: options.source ?? 'manual',
     recordedAt: (options.recordedAt ?? new Date()).toISOString(),
     pruned: options.pruned ?? 0,
     alerts: options.alerts ?? [],

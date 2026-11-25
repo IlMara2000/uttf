@@ -478,7 +478,7 @@ test('Retention trace writes one immutable object per run plus latest.json', asy
   assert.equal(client.uploads[0].options.contentType, 'application/json');
   const snapshot = JSON.parse(client.uploads[0].body);
   assert.equal(snapshot.outcome, 'ok');
-  assert.equal(snapshot.source, 'cron');
+  assert.equal(snapshot.source, 'manual', 'senza origine esplicita non è un giro dello scheduler');
   assert.equal(snapshot.mode, 'delete');
   assert.equal(snapshot.executedAt, report.executedAt);
   assert.deepEqual(snapshot.deleted, report.deleted);
@@ -619,6 +619,30 @@ test('Retention endpoint stores the run trace and answers 200 on success', async
     assert.equal(snapshot.pruned, 0);
     assert.equal(snapshot.alerts.length, 0);
     assert.deepEqual(snapshot.errors, []);
+  });
+});
+
+test('Retention trace records whether the scheduler or a manual call ran the job', async () => {
+  await withEnv(jobEnv, async () => {
+    const { api, client } = retentionRoute();
+    const scheduled = await api.GET(
+      new Request('https://local/api/maintenance/retention', {
+        headers: { authorization: 'Bearer cron-token', 'x-vercel-cron': '1' },
+      }),
+    );
+    assert.equal((await scheduled.json()).source, 'cron');
+    assert.equal(JSON.parse(client.uploads[0].body).source, 'cron');
+
+    await api.GET(cronCall());
+    assert.equal(JSON.parse(client.uploads[2].body).source, 'manual');
+
+    // `vercel crons run` passa dallo scheduler: ?source=manual lo marca come test.
+    await api.GET(
+      new Request('https://local/api/maintenance/retention?source=manual', {
+        headers: { authorization: 'Bearer cron-token', 'x-vercel-cron': '1' },
+      }),
+    );
+    assert.equal(JSON.parse(client.uploads[4].body).source, 'manual');
   });
 });
 
