@@ -156,7 +156,16 @@ function auditRoute({ audit = null, bucketError = null, uploadError = null } = {
         auditRegistrationFiles: async () => audit,
         FILES_AUDIT_TRACE_KEY: 'files-audit.json',
       },
-      '@/lib/maintenance-auth': load('src/lib/maintenance-auth.ts', {}, { process, Buffer }),
+      '@/lib/maintenance-auth': load(
+        'src/lib/maintenance-auth.ts',
+        {
+          'next/server': {
+            NextResponse: { json: (body, init) => Response.json(body, init) },
+          },
+          '@supabase/supabase-js': { createClient: () => client },
+        },
+        { process, Buffer, Response },
+      ),
       '@/lib/retention-trace': { RETENTION_TRACE_BUCKET: 'retention-runs' },
     },
     { process, Buffer, Response },
@@ -200,6 +209,44 @@ const jobEnv = {
   NEXT_PUBLIC_SUPABASE_URL: 'https://prova.supabase.co',
   SUPABASE_SERVICE_ROLE_KEY: 'service-role',
 };
+
+const { maintenanceClient } = load(
+  'src/lib/maintenance-auth.ts',
+  {
+    'next/server': { NextResponse: { json: (body, init) => Response.json(body, init) } },
+    '@supabase/supabase-js': { createClient: () => ({ finto: true }) },
+  },
+  { process, Buffer, Response },
+);
+
+test('Maintenance helper keeps the status codes and messages shared by both endpoints', async () => {
+  const authorized = (token = 'cron-token') =>
+    new Request('https://local/x', { headers: { authorization: `Bearer ${token}` } });
+
+  await withEnv({ CRON_SECRET: undefined, RETENTION_TOKEN: undefined }, async () => {
+    const setup = maintenanceClient(authorized());
+    assert.equal(setup.error.status, 503);
+    assert.match((await setup.error.json()).error, /CRON_SECRET o RETENTION_TOKEN/);
+  });
+
+  await withEnv({ CRON_SECRET: 'cron-token' }, async () => {
+    const denied = maintenanceClient(authorized('sbagliato'));
+    assert.equal(denied.error.status, 401);
+    assert.equal((await denied.error.json()).error, 'Non autorizzato.');
+    assert.equal(denied.error.headers.get('www-authenticate'), 'Bearer');
+  });
+
+  await withEnv({ CRON_SECRET: 'cron-token', NEXT_PUBLIC_SUPABASE_URL: undefined }, async () => {
+    const setup = maintenanceClient(authorized());
+    assert.equal(setup.error.status, 503);
+    assert.match((await setup.error.json()).error, /Configurazione Supabase server mancante/);
+  });
+
+  await withEnv(jobEnv, async () => {
+    const setup = maintenanceClient(authorized());
+    assert.equal('client' in setup, true, 'con token e configurazione restituisce il client');
+  });
+});
 
 const cronCall = (token = 'cron-token') =>
   new Request('https://local/api/maintenance/files-audit', {

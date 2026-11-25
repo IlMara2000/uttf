@@ -744,7 +744,16 @@ function retentionRoute({
         },
       },
       '@/lib/retention-trace': load('src/lib/retention-trace.ts'),
-      '@/lib/maintenance-auth': load('src/lib/maintenance-auth.ts', {}, { process, Buffer }),
+      '@/lib/maintenance-auth': load(
+        'src/lib/maintenance-auth.ts',
+        {
+          'next/server': {
+            NextResponse: { json: (body, init) => Response.json(body, init) },
+          },
+          '@supabase/supabase-js': { createClient: () => client },
+        },
+        { process, Buffer, Response },
+      ),
       '@/lib/retention-alert': {
         alertRetentionFailure: async (failedReport, failures) => {
           sentAlerts.push({ report: failedReport, failures: [...failures] });

@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { runRetention } from '@/lib/retention';
 import { saveRetentionTrace, pruneRetentionTraces, cappedIds } from '@/lib/retention-trace';
 import { alertRetentionFailure } from '@/lib/retention-alert';
-import { isMaintenanceAuthorized, maintenanceToken } from '@/lib/maintenance-auth';
+import { maintenanceClient } from '@/lib/maintenance-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,33 +45,9 @@ function executionSource(request: Request, url: URL) {
 }
 
 async function handle(request: Request) {
-  const expected = maintenanceToken();
-  if (!expected) {
-    return NextResponse.json(
-      { error: 'Job non configurato: imposta CRON_SECRET o RETENTION_TOKEN.' },
-      { status: 503, headers: { 'Cache-Control': 'no-store' } },
-    );
-  }
-
-  if (!isMaintenanceAuthorized(request, expected)) {
-    return NextResponse.json(
-      { error: 'Non autorizzato.' },
-      { status: 401, headers: { 'Cache-Control': 'no-store', 'WWW-Authenticate': 'Bearer' } },
-    );
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
-    return NextResponse.json(
-      { error: 'Configurazione Supabase server mancante.' },
-      { status: 503, headers: { 'Cache-Control': 'no-store' } },
-    );
-  }
-
-  const client = createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const setup = maintenanceClient(request);
+  if ('error' in setup) return setup.error;
+  const client = setup.client;
 
   const url = new URL(request.url);
   const forceDry = url.searchParams.get('dry') === '1';
