@@ -340,6 +340,35 @@ test('Retention dry-run counts registrations and attachments beyond the API page
   assert.equal(client.calls.filter(call => call.op === 'delete' || call.op === 'remove').length, 0);
 });
 
+test('Retention deletes every eligible registration beyond the API page limit and its files', async () => {
+  const total = 1200;
+  const client = fakeClient({
+    activity_registrations: Array.from({ length: total }, (_, index) => ({
+      id: `reg-${String(index).padStart(4, '0')}`,
+      status: index % 2 === 0 ? 'declined' : 'pending',
+      created_at: timestampDaysAgo(400),
+      files: [
+        { path: `activity-registrations/${index}-a.pdf` },
+        { path: `activity-registrations/${index}-b.pdf` },
+      ],
+    })),
+  });
+
+  const report = await runRetention(client, { enabled: true, now: NOW });
+
+  assert.equal(report.mode, 'delete');
+  assert.deepEqual(plain(report.errors), []);
+  assert.equal(report.deleted.activityRegistrations, total);
+  assert.equal(report.deleted.registrationFiles, total * 2);
+  assert.equal(report.ids.activityRegistrations.length, total);
+  assert.equal(client.removed.length, total * 2);
+  assert.equal(client.tables.activity_registrations.length, 0, 'nessuna riga idonea resta');
+  const selects = client.calls.filter(
+    call => call.op === 'select' && call.table === 'activity_registrations',
+  );
+  assert.equal(selects.length, 2, 'la lettura pagina finché il count non è raggiunto');
+});
+
 test('Retention removes registration attachments before deleting their rows', async () => {
   const client = fakeClient(seed());
   await runRetention(client, { enabled: true, now: NOW });

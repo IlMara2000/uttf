@@ -166,14 +166,16 @@ function expiredRegistrationsQuery(client: SupabaseClient, cutoff: string) {
     .from('activity_registrations')
     .select('id, files', { count: 'exact' })
     .in('status', ['pending', 'declined'])
-    .lt('created_at', cutoff);
+    .lt('created_at', cutoff)
+    .order('id');
 }
 
 /**
  * Tutte le righe idonee, non solo la prima pagina. PostgREST tronca il corpo
- * della risposta al limite dell'API (1000 righe di default): in dry-run una
- * sola select su più di 1000 richieste conterebbe righe e allegati in meno,
- * quindi si pagina finché non si raggiunge il `count` dichiarato.
+ * della risposta al limite dell'API (1000 righe di default): una sola select
+ * lascerebbe fuori le richieste successive (mai cancellate, con gli allegati
+ * orfani nel bucket) e in dry-run conterebbe righe e allegati in meno. Si
+ * pagina finché non si raggiunge il `count` dichiarato.
  */
 async function expiredRegistrations(
   client: SupabaseClient,
@@ -217,26 +219,21 @@ async function purgeRegistrations(
   now: Date,
 ): Promise<{ records: number; files: number; error: string | null; ids: string[]; filePaths: string[] }> {
   const cutoff = isoDaysAgo(now, REGISTRATION_RETENTION_DAYS);
-  const failed = (message: string) => ({
-    records: 0,
-    files: 0,
-    error: `activity_registrations: ${message}`,
-    ids: [] as string[],
-    filePaths: [] as string[],
-  });
 
-  // In cancellazione basta la prima pagina: le righe si eliminano a blocchi di
-  // 100 id. In dry-run serve il totale esatto, quindi si pagina.
-  let rows: RegistrationRow[];
-  if (enabled) {
-    const { data, error } = await expiredRegistrationsQuery(client, cutoff);
-    if (error) return failed(error.message);
-    rows = (data ?? []) as RegistrationRow[];
-  } else {
-    const all = await expiredRegistrations(client, cutoff);
-    if (all.error) return failed(all.error);
-    rows = all.rows;
+  // Si leggono tutte le righe idonee, in dry-run per contarle e in
+  // cancellazione per non lasciare fuori quelle oltre la prima pagina con i
+  // loro allegati. Righe e file si eliminano poi a blocchi di 100.
+  const { rows, error } = await expiredRegistrations(client, cutoff);
+  if (error) {
+    return {
+      records: 0,
+      files: 0,
+      error: `activity_registrations: ${error}`,
+      ids: [],
+      filePaths: [],
+    };
   }
+
   if (rows.length === 0) return { records: 0, files: 0, error: null, ids: [], filePaths: [] };
 
   const filePaths = rows
