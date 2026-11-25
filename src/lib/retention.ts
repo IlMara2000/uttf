@@ -48,16 +48,29 @@ export type RetentionReport = {
     bookingRateLimits: string[];
     registrationRateLimits: string[];
   };
+  /**
+   * `true` se il limite di blocchi per esecuzione ha fermato il giro: i
+   * conteggi sono parziali e il resto viene elaborato al giro successivo.
+   */
+  deferred: boolean;
   errors: string[];
 };
 
-type StepResult = { count: number; error: string | null; ids: string[] };
+type StepResult = {
+  count: number;
+  error: string | null;
+  ids: string[];
+  /** true se il limite di blocchi ha fermato il passo: il resto al prossimo giro. */
+  deferred?: boolean;
+};
 
 export type RetentionOptions = {
   /** true = cancella davvero; false/assente = solo conteggio. */
   enabled?: boolean;
   /** Iniettabile nei test. */
   now?: Date;
+  /** Blocchi di lavoro per esecuzione (default `MAX_BLOCKS_PER_RUN`). */
+  maxBlocks?: number;
 };
 
 function isoDaysAgo(now: Date, days: number) {
@@ -109,98 +122,97 @@ async function purgeOlderThan(
 /** Pagina massima restituita dall'API: il corpo della risposta è troncato qui. */
 const API_PAGE_SIZE = 1000;
 
-/**
- * Tutte le righe di una query, non solo la prima pagina. PostgREST tronca il
- * corpo della risposta al limite dell'API (1000 righe di default): senza
- * paginare, le righe successive resterebbero fuori — mai cancellate, con gli
- * allegati orfani nel bucket, e in dry-run contate in meno. Si pagina finché
- * non si raggiunge il `count` dichiarato dalla risposta.
- */
-async function allRows<T>(
-  page: (
-    from: number,
-    to: number,
-  ) => PromiseLike<{
-    data: unknown;
-    count: number | null;
-    error: { message: string } | null;
-  }>,
-): Promise<{ rows: T[]; error: string | null }> {
-  const rows: T[] = [];
-  for (;;) {
-    const { data, count, error } = await page(rows.length, rows.length + API_PAGE_SIZE - 1);
-    if (error) return { rows, error: error.message };
-    const batch = (data ?? []) as T[];
-    rows.push(...batch);
-    if (batch.length === 0 || (count !== null && rows.length >= count)) {
-      return { rows, error: null };
-    }
-  }
-}
+/** Una delete o una rimozione dallo storage copre al massimo 100 righe o percorsi. */
+const BLOCK_SIZE = 100;
 
-/** Slot con appuntamento più vecchio della soglia, tutti. */
-async function expiredSlotIds(
-  client: SupabaseClient,
-  cutoff: string,
-): Promise<{ ids: string[]; error: string | null }> {
-  const { rows, error } = await allRows<{ id: string }>((from, to) =>
-    client
-      .from('booking_slots')
-      .select('id', { count: 'exact' })
-      .lt('date', cutoff)
-      .order('id')
-      .range(from, to),
-  );
-  return { ids: idList(rows, 'id'), error: error ? `booking_slots: ${error}` : null };
-}
+/**
+ * Blocchi di lavoro per esecuzione. La route ha `maxDuration = 60`: con un
+ * arretrato grande la sola paginazione non basta, il giro verrebbe ucciso a
+ * metà (allegati rimossi, righe no) e senza traccia. Quando i blocchi
+ * finiscono il giro si ferma pulito, marca `deferred` e riprende la volta dopo
+ * dalla prima riga rimasta: quelle già cancellate non ci sono più.
+ */
+const MAX_BLOCKS_PER_RUN = 50;
+
+/** Blocchi ancora disponibili in questa esecuzione. */
+type Budget = { left: number };
 
 /**
  * Prenotazioni: la data che conta è quella dello slot, non `created_at`.
- * PostgREST non filtra una risorsa incorporata durante la DELETE, quindi prima
- * raccogliamo gli slot scaduti e poi cancelliamo le prenotazioni collegate.
- * Gli slot restano: sono pianificazione dello staff e non contengono dati
- * personali.
+ * PostgREST non filtra una risorsa incorporata durante la DELETE, quindi si
+ * leggono le prenotazioni con un join interno sullo slot (`!inner`) e poi le
+ * si cancella per id. Gli slot restano: sono pianificazione dello staff e non
+ * contengono dati personali.
+ *
+ * Leggere le prenotazioni invece degli slot evita di riscorrere ogni volta gli
+ * slot ormai senza prenotazioni, che restano in tabella per sempre: a ogni
+ * giro esaurirebbero il budget senza cancellare nulla. Il cursore sull'id
+ * tiene ferma la paginazione mentre le righe spariscono.
  */
 async function purgeBookings(
   client: SupabaseClient,
   enabled: boolean,
   now: Date,
+  budget: Budget,
 ): Promise<StepResult> {
   const cutoff = dateDaysAgo(now, BOOKING_RETENTION_DAYS);
-  const { ids: slotIds, error } = await expiredSlotIds(client, cutoff);
-  if (error) return { count: 0, error, ids: [] };
-  if (slotIds.length === 0) return { count: 0, error: null, ids: [] };
-
-  // Stessi blocchi della cancellazione: una sola `.in()` con tutti gli slot
-  // scaduti supererebbe la lunghezza massima dell'URL accettata da PostgREST.
-  let deleted = 0;
+  let count = 0;
+  let deferred = false;
   const ids: string[] = [];
-  for (const group of chunks(slotIds, 100)) {
+  let after: string | null = null;
+
+  for (;;) {
+    if (budget.left <= 0) {
+      deferred = true;
+      break;
+    }
+    budget.left -= 1;
+
+    const page = client
+      .from('booking_reservations')
+      .select('id, booking_slots!inner(date)')
+      .lt('booking_slots.date', cutoff);
+    const { data, error } = await (after ? page.gt('id', after) : page)
+      .order('id')
+      .limit(API_PAGE_SIZE);
+    if (error) return { count, error: `booking_reservations: ${error.message}`, ids, deferred };
+
+    const rows = idList(data, 'id');
+    if (rows.length === 0) break;
+    after = rows[rows.length - 1];
+
     if (!enabled) {
-      const { data, count, error: countError } = await client
-        .from('booking_reservations')
-        .select('id', { count: 'exact' })
-        .in('slot_id', group);
-      if (countError)
-        return { count: deleted, error: `booking_reservations: ${countError.message}`, ids };
-      const chunkIds = idList(data, 'id');
-      ids.push(...chunkIds);
-      deleted += count ?? chunkIds.length;
-      continue;
+      ids.push(...rows);
+      count += rows.length;
+    } else {
+      let handled = 0;
+      while (handled < rows.length && budget.left > 0) {
+        const group = rows.slice(handled, handled + BLOCK_SIZE);
+        handled += group.length;
+        budget.left -= 1;
+
+        const { data: deleted, count: total, error: deleteError } = await client
+          .from('booking_reservations')
+          .delete({ count: 'exact' })
+          .in('id', group)
+          .select('id');
+        if (deleteError)
+          return { count, error: `booking_reservations: ${deleteError.message}`, ids, deferred };
+        const chunkIds = idList(deleted, 'id');
+        ids.push(...chunkIds);
+        count += total ?? chunkIds.length;
+      }
+
+      if (handled < rows.length) {
+        deferred = true;
+        break;
+      }
     }
 
-    const { data, count, error: deleteError } = await client
-      .from('booking_reservations')
-      .delete({ count: 'exact' })
-      .in('slot_id', group)
-      .select('id');
-    if (deleteError) return { count: deleted, error: `booking_reservations: ${deleteError.message}`, ids };
-    const chunkIds = idList(data, 'id');
-    ids.push(...chunkIds);
-    deleted += count ?? chunkIds.length;
+    if (rows.length < API_PAGE_SIZE) break;
   }
 
-  return { count: deleted, error: null, ids };
+  return { count, error: null, ids, deferred };
 }
 
 type RegistrationRow = { id: string; files?: { path?: string }[] | null };
@@ -214,10 +226,11 @@ function expiredRegistrationsQuery(client: SupabaseClient, cutoff: string) {
     .order('id');
 }
 
-function expiredRegistrations(client: SupabaseClient, cutoff: string) {
-  return allRows<RegistrationRow>((from, to) =>
-    expiredRegistrationsQuery(client, cutoff).range(from, to),
-  );
+/** Percorsi degli allegati di una richiesta, saltando valori vuoti. */
+function rowFilePaths(row: RegistrationRow): string[] {
+  return (Array.isArray(row.files) ? row.files : [])
+    .map((file) => file.path)
+    .filter((path): path is string => typeof path === 'string' && path.length > 0);
 }
 
 /**
@@ -241,72 +254,92 @@ async function purgeRegistrations(
   client: SupabaseClient,
   enabled: boolean,
   now: Date,
-): Promise<{ records: number; files: number; error: string | null; ids: string[]; filePaths: string[] }> {
+  budget: Budget,
+): Promise<{
+  records: number;
+  files: number;
+  error: string | null;
+  ids: string[];
+  filePaths: string[];
+  deferred: boolean;
+}> {
   const cutoff = isoDaysAgo(now, REGISTRATION_RETENTION_DAYS);
-
-  // Si leggono tutte le righe idonee, in dry-run per contarle e in
-  // cancellazione per non lasciare fuori quelle oltre la prima pagina con i
-  // loro allegati. Righe e file si eliminano poi a blocchi di 100.
-  const { rows, error } = await expiredRegistrations(client, cutoff);
-  if (error) {
-    return {
-      records: 0,
-      files: 0,
-      error: `activity_registrations: ${error}`,
-      ids: [],
-      filePaths: [],
-    };
-  }
-
-  if (rows.length === 0) return { records: 0, files: 0, error: null, ids: [], filePaths: [] };
-
-  const filePaths = rows
-    .flatMap((row) => (Array.isArray(row.files) ? row.files : []))
-    .map((file) => file.path)
-    .filter((path): path is string => typeof path === 'string' && path.length > 0);
-
-  const ids = rows.map((row) => row.id);
-
-  if (!enabled) return { records: rows.length, files: filePaths.length, error: null, ids, filePaths };
-
-  let removedFiles = 0;
-  for (const group of chunks(filePaths, 100)) {
-    const { data: removed, error: removeError } = await client.storage
-      .from('registration-files')
-      .remove(group);
-    if (removeError) return { records: 0, files: removedFiles, error: `storage: ${removeError.message}`, ids: [], filePaths };
-    removedFiles += removed?.length ?? 0;
-  }
-
-  // Come per slot e storage: una sola `.in()` con molti id supererebbe la
-  // lunghezza massima dell'URL accettata da PostgREST.
+  const ids: string[] = [];
+  const filePaths: string[] = [];
   let records = 0;
-  const deletedIds: string[] = [];
-  for (const group of chunks(
-    rows.map((row) => row.id),
-    100,
-  )) {
-    const { data: deletedRows, count, error: deleteError } = await client
-      .from('activity_registrations')
-      .delete({ count: 'exact' })
-      .in('id', group)
-      .select('id');
+  let files = 0;
+  let deferred = false;
+  let after: string | null = null;
 
-    if (deleteError) {
-      return {
-        records,
-        files: removedFiles,
-        error: `activity_registrations: ${deleteError.message}`,
-        ids: deletedIds,
-        filePaths,
-      };
+  const failed = (message: string) => ({ records, files, error: message, ids, filePaths, deferred });
+
+  for (;;) {
+    if (budget.left <= 0) {
+      deferred = true;
+      break;
     }
-    const chunkIds = idList(deletedRows, 'id');
-    deletedIds.push(...chunkIds);
-    records += count ?? chunkIds.length;
+    budget.left -= 1;
+
+    // Cursore sull'id invece dell'offset: le righe appena cancellate
+    // sposterebbero le pagine e ne farebbero saltare alcune.
+    const { data, error } = await (after
+      ? expiredRegistrationsQuery(client, cutoff).gt('id', after)
+      : expiredRegistrationsQuery(client, cutoff)
+    ).limit(API_PAGE_SIZE);
+    if (error) return failed(`activity_registrations: ${error.message}`);
+
+    const rows = (data ?? []) as RegistrationRow[];
+    if (rows.length === 0) break;
+    after = rows[rows.length - 1].id;
+
+    if (!enabled) {
+      for (const row of rows) {
+        ids.push(row.id);
+        filePaths.push(...rowFilePaths(row));
+      }
+      records = ids.length;
+      files = filePaths.length;
+    } else {
+      let handled = 0;
+      while (handled < rows.length && budget.left > 0) {
+        const group = rows.slice(handled, handled + BLOCK_SIZE);
+        handled += group.length;
+        budget.left -= 1;
+
+        // Allegati prima delle righe, dentro lo stesso blocco: se il giro si
+        // ferma non resta una riga che punta a file già spariti.
+        for (const paths of chunks(group.flatMap(rowFilePaths), BLOCK_SIZE)) {
+          const { data: removed, error: removeError } = await client.storage
+            .from('registration-files')
+            .remove(paths);
+          if (removeError) return failed(`storage: ${removeError.message}`);
+          const removedPaths = (removed ?? []).map((entry) => entry.name);
+          files += removedPaths.length;
+          filePaths.push(...removedPaths);
+        }
+
+        const { data: deletedRows, count, error: deleteError } = await client
+          .from('activity_registrations')
+          .delete({ count: 'exact' })
+          .in('id', group.map((row) => row.id))
+          .select('id');
+        if (deleteError) return failed(`activity_registrations: ${deleteError.message}`);
+
+        const deletedIds = idList(deletedRows, 'id');
+        ids.push(...deletedIds);
+        records += count ?? deletedIds.length;
+      }
+
+      if (handled < rows.length) {
+        deferred = true;
+        break;
+      }
+    }
+
+    if (rows.length < API_PAGE_SIZE) break;
   }
 
-  return { records, files: removedFiles, error: null, ids: deletedIds, filePaths };
+  return { records, files, error: null, ids, filePaths, deferred };
 }
 
 export async function runRetention(
@@ -316,6 +349,10 @@ export async function runRetention(
   const enabled = options.enabled === true;
   const now = options.now ?? new Date();
   const errors: string[] = [];
+  // Budget condiviso da tutti i passi: il limite vale per il giro intero, non
+  // per singola tabella.
+  const budget: Budget = { left: options.maxBlocks ?? MAX_BLOCKS_PER_RUN };
+  let deferred = false;
 
   const deleted: RetentionReport['deleted'] = {
     newsletterSubscribers: 0,
@@ -350,7 +387,7 @@ export async function runRetention(
           enabled,
         ),
     },
-    { key: 'bookingReservations', run: () => purgeBookings(client, enabled, now) },
+    { key: 'bookingReservations', run: () => purgeBookings(client, enabled, now, budget) },
     {
       key: 'reviews',
       run: () =>
@@ -386,6 +423,7 @@ export async function runRetention(
       const result = await step.run();
       deleted[step.key] = result.count;
       ids[step.key] = result.ids;
+      if (result.deferred) deferred = true;
       if (result.error) errors.push(`${step.key}: ${result.error}`);
     } catch (error) {
       errors.push(`${step.key}: ${error instanceof Error ? error.message : 'errore sconosciuto'}`);
@@ -393,7 +431,8 @@ export async function runRetention(
   }
 
   try {
-    const registrations = await purgeRegistrations(client, enabled, now);
+    const registrations = await purgeRegistrations(client, enabled, now, budget);
+    if (registrations.deferred) deferred = true;
     deleted.activityRegistrations = registrations.records;
     deleted.registrationFiles = registrations.files;
     ids.activityRegistrations = registrations.ids;
@@ -410,6 +449,7 @@ export async function runRetention(
     executedAt: now.toISOString(),
     deleted,
     ids,
+    deferred,
     errors,
   };
 }

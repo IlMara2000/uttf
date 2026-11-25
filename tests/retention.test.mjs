@@ -44,8 +44,9 @@ function fakeClient(seed = {}) {
     const filters = [];
     const state = { op: 'select', returning: false, range: null };
     const chain = {
-      select() {
+      select(columns) {
         if (state.op === 'delete') state.returning = true;
+        state.columns = columns;
         return chain;
       },
       delete() {
@@ -64,7 +65,14 @@ function fakeClient(seed = {}) {
         filters.push({ column, value, match: row => row[column] < value });
         return chain;
       },
+      gt(column, value) {
+        filters.push({ column, value, match: row => row[column] > value });
+        return chain;
+      },
       order() {
+        return chain;
+      },
+      limit() {
         return chain;
       },
       range(from, to) {
@@ -81,7 +89,15 @@ function fakeClient(seed = {}) {
     };
 
     function execute() {
-      const rows = tables[table] ?? [];
+      // Join interno `booking_slots!inner(date)` come PostgREST: le prenotazioni
+      // portano la data dello slot per poter filtrare su di essa.
+      const slotsById = new Map((tables.booking_slots ?? []).map(slot => [slot.id, slot]));
+      const embedded = state.op === 'select' && String(state.columns).includes('booking_slots!inner');
+      const rows = (tables[table] ?? []).map(row =>
+        embedded && row.slot_id
+          ? { ...row, 'booking_slots.date': slotsById.get(row.slot_id)?.date }
+          : row,
+      );
       const matched = rows.filter(row => filters.every(filter => filter.match(row)));
       calls.push({
         table,
@@ -236,13 +252,13 @@ test('Retention windows use 24 months for newsletter, 12 for bookings and 5 year
   await runRetention(client, { enabled: true, now: NOW });
 
   assert.equal(cutoff(client, 'newsletter_subscribers', 'created_at'), timestampDaysAgo(730));
-  assert.equal(cutoff(client, 'booking_slots', 'date'), dateDaysAgo(365));
+  assert.equal(cutoff(client, 'booking_reservations', 'booking_slots.date'), dateDaysAgo(365));
   assert.equal(cutoff(client, 'reviews', 'created_at'), timestampDaysAgo(1826));
   assert.equal(cutoff(client, 'activity_registrations', 'created_at'), timestampDaysAgo(365));
   const bookingDelete = client.calls.find(
     call => call.op === 'delete' && call.table === 'booking_reservations',
   );
-  assert.equal(bookingDelete.filters[0].column, 'slot_id');
+  assert.equal(bookingDelete.filters[0].column, 'id');
 });
 
 test('Retention deletes only rows past the thresholds and keeps booking slots', async () => {
@@ -299,7 +315,7 @@ test('Retention dry-run counts bookings of every expired slot beyond the API pag
       date: dateDaysAgo(400),
     })),
     booking_reservations: Array.from({ length: total }, (_, index) => ({
-      id: `res-${index}`,
+      id: `res-${String(index).padStart(4, '0')}`,
       slot_id: slot(index),
     })),
   });
@@ -321,7 +337,7 @@ test('Retention deletes bookings of every expired slot beyond the API page limit
       date: dateDaysAgo(400),
     })),
     booking_reservations: Array.from({ length: total }, (_, index) => ({
-      id: `res-${index}`,
+      id: `res-${String(index).padStart(4, '0')}`,
       slot_id: slot(index),
     })),
   });
@@ -333,9 +349,9 @@ test('Retention deletes bookings of every expired slot beyond the API page limit
   assert.equal(client.tables.booking_reservations.length, 0, 'nessuna prenotazione resta');
   assert.equal(client.tables.booking_slots.length, total, 'gli slot restano');
   const selects = client.calls.filter(
-    call => call.op === 'select' && call.table === 'booking_slots',
+    call => call.op === 'select' && call.table === 'booking_reservations',
   );
-  assert.equal(selects.length, 2, 'la lettura degli slot pagina finché il count non è raggiunto');
+  assert.equal(selects.length, 2, 'la lettura pagina finché non finiscono le prenotazioni');
 });
 
 test('Retention deletes activity registrations in chunks of 100 ids', async () => {
@@ -417,6 +433,56 @@ test('Retention deletes every eligible registration beyond the API page limit an
   assert.equal(selects.length, 2, 'la lettura pagina finché il count non è raggiunto');
 });
 
+test('Retention stops at the block limit and resumes on the next run', async () => {
+  const total = 250;
+  const client = fakeClient({
+    activity_registrations: Array.from({ length: total }, (_, index) => ({
+      id: `reg-${String(index).padStart(4, '0')}`,
+      status: 'declined',
+      created_at: timestampDaysAgo(400),
+      files: [{ path: `activity-registrations/${index}.pdf` }],
+    })),
+  });
+
+  const first = await runRetention(client, { enabled: true, now: NOW, maxBlocks: 4 });
+  assert.equal(first.deferred, true);
+  assert.equal(first.deleted.activityRegistrations, 200);
+  assert.equal(first.deleted.registrationFiles, 200);
+  assert.deepEqual(plain(first.errors), []);
+  assert.equal(client.tables.activity_registrations.length, total - 200);
+
+  const second = await runRetention(client, { enabled: true, now: NOW, maxBlocks: 4 });
+  assert.equal(second.deferred, false);
+  assert.equal(second.deleted.activityRegistrations, total - 200);
+  assert.equal(client.tables.activity_registrations.length, 0);
+  assert.equal(client.removed.length, total, 'nessun allegato resta orfano');
+});
+
+test('Retention stops deleting bookings at the block limit and resumes later', async () => {
+  const total = 250;
+  const slot = index => `slot-${String(index).padStart(4, '0')}`;
+  const client = fakeClient({
+    booking_slots: Array.from({ length: total }, (_, index) => ({
+      id: slot(index),
+      date: dateDaysAgo(400),
+    })),
+    booking_reservations: Array.from({ length: total }, (_, index) => ({
+      id: `res-${index}`,
+      slot_id: slot(index),
+    })),
+  });
+
+  const first = await runRetention(client, { enabled: true, now: NOW, maxBlocks: 3 });
+  assert.equal(first.deferred, true);
+  assert.equal(first.deleted.bookingReservations, 200);
+  assert.equal(client.tables.booking_reservations.length, total - 200);
+
+  const second = await runRetention(client, { enabled: true, now: NOW, maxBlocks: 3 });
+  assert.equal(second.deferred, false);
+  assert.equal(second.deleted.bookingReservations, total - 200);
+  assert.equal(client.tables.booking_reservations.length, 0);
+});
+
 test('Retention removes registration attachments before deleting their rows', async () => {
   const client = fakeClient(seed());
   await runRetention(client, { enabled: true, now: NOW });
@@ -451,6 +517,7 @@ function emptyReport(overrides = {}) {
       bookingRateLimits: 0,
       registrationRateLimits: 0,
     },
+    deferred: false,
     errors: [],
     ids: {
       newsletterSubscribers: [],
