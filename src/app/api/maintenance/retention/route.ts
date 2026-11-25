@@ -1,9 +1,9 @@
-import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { runRetention } from '@/lib/retention';
 import { saveRetentionTrace, pruneRetentionTraces, cappedIds } from '@/lib/retention-trace';
 import { alertRetentionFailure } from '@/lib/retention-alert';
+import { isMaintenanceAuthorized, maintenanceToken } from '@/lib/maintenance-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,22 +33,6 @@ export const maxDuration = 60;
  * a chi guarda solo lo stato dei cron.
  */
 
-function tokensMatch(provided: string, expected: string) {
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
-
-function isAuthorized(request: Request) {
-  const expected = process.env.RETENTION_TOKEN ?? process.env.CRON_SECRET;
-  if (!expected) return false;
-
-  const header = request.headers.get('authorization') ?? '';
-  const prefix = 'Bearer ';
-  if (!header.startsWith(prefix)) return false;
-  return tokensMatch(header.slice(prefix.length), expected);
-}
 
 /**
  * Origine dell'esecuzione da annotare nella traccia. Lo scheduler di Vercel
@@ -62,14 +46,15 @@ function executionSource(request: Request, url: URL) {
 }
 
 async function handle(request: Request) {
-  if (!process.env.RETENTION_TOKEN && !process.env.CRON_SECRET) {
+  const expected = maintenanceToken();
+  if (!expected) {
     return NextResponse.json(
       { error: 'Job non configurato: imposta CRON_SECRET o RETENTION_TOKEN.' },
       { status: 503, headers: { 'Cache-Control': 'no-store' } },
     );
   }
 
-  if (!isAuthorized(request)) {
+  if (!isMaintenanceAuthorized(request, expected)) {
     return NextResponse.json(
       { error: 'Non autorizzato.' },
       { status: 401, headers: { 'Cache-Control': 'no-store', 'WWW-Authenticate': 'Bearer' } },

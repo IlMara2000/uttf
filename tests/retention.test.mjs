@@ -744,6 +744,7 @@ function retentionRoute({
         },
       },
       '@/lib/retention-trace': load('src/lib/retention-trace.ts'),
+      '@/lib/maintenance-auth': load('src/lib/maintenance-auth.ts', {}, { process, Buffer }),
       '@/lib/retention-alert': {
         alertRetentionFailure: async (failedReport, failures) => {
           sentAlerts.push({ report: failedReport, failures: [...failures] });
@@ -1100,7 +1101,25 @@ test('A failing run writes pruned rows and alert channels into the trace', async
   });
 });
 
-function statusRoute({ latest = null, downloadError = null, denied = false } = {}) {
+function statusRoute({
+  latest = null,
+  downloadError = null,
+  denied = false,
+  files = null,
+  filesError = null,
+} = {}) {
+  const downloads = {
+    'latest.json': () =>
+      downloadError
+        ? { data: null, error: downloadError }
+        : { data: { text: async () => latest }, error: null },
+    'files-audit.json': () =>
+      filesError
+        ? { data: null, error: filesError }
+        : files === null
+          ? { data: null, error: { message: 'not found' } }
+          : { data: { text: async () => files }, error: null },
+  };
   return load(
     'src/app/api/maintenance/retention/status/route.ts',
     {
@@ -1113,16 +1132,15 @@ function statusRoute({ latest = null, downloadError = null, denied = false } = {
           return {
             storage: {
               from: () => ({
-                download: async () =>
-                  downloadError
-                    ? { data: null, error: downloadError }
-                    : { data: { text: async () => latest }, error: null },
+                download: async path =>
+                  downloads[path]?.() ?? { data: null, error: { message: 'not found' } },
               }),
             },
           };
         },
       },
       '@/lib/retention-trace': { RETENTION_TRACE_BUCKET: 'retention-runs' },
+      '@/lib/files-audit': load('src/lib/files-audit.ts'),
     },
     { process, Buffer, Response },
   );
@@ -1170,6 +1188,44 @@ test('Retention status hides the banner when there is no usable trace', async ()
   const corrupt = statusRoute({ latest: '{non json' });
   const corruptRes = await corrupt.GET(new Request('https://local/x'));
   assert.equal(corruptRes.status, 500);
+});
+
+test('Retention status surfaces the weekly files audit to the staff banner', async () => {
+  const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const audit = {
+    executedAt: recent,
+    bucketObjects: 4,
+    registrations: 2,
+    citedPaths: 3,
+    orphans: { count: 2, sample: ['row-1/orfano-a.pdf', 'row-1/orfano-b.pdf'] },
+    missing: { count: 1, sample: [{ path: 'row-2/sparito.pdf', registrations: ['row-2'] }] },
+    unreadable: { count: 0, sample: [] },
+    error: null,
+  };
+  const api = statusRoute({
+    latest: JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete' }),
+    files: JSON.stringify(audit),
+  });
+
+  const body = await (await api.GET(new Request('https://local/x'))).json();
+
+  assert.equal(body.files.orphans, 2);
+  assert.equal(body.files.missing, 1);
+  assert.equal(body.files.unreadable, 0);
+  assert.equal(body.files.error, null);
+  assert.equal(body.files.stale, false);
+  assert.deepEqual(body.files.samples.join(','), 'row-1/orfano-a.pdf,row-1/orfano-b.pdf,row-2/sparito.pdf');
+});
+
+test('Retention status tolerates a missing or unreadable files audit', async () => {
+  const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const latest = JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete' });
+
+  const missing = statusRoute({ latest });
+  assert.equal((await (await missing.GET(new Request('https://local/x'))).json()).files, null);
+
+  const corrupt = statusRoute({ latest, files: '{non json' });
+  assert.equal((await (await corrupt.GET(new Request('https://local/x'))).json()).files, null);
 });
 
 test('Retention status is reserved to staff', async () => {

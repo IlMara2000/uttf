@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
+type FilesStatus = {
+  executedAt: string | null;
+  orphans: number;
+  missing: number;
+  unreadable: number;
+  samples: string[];
+  error: string | null;
+  stale: boolean;
+};
+
 type Status = {
   outcome: 'ok' | 'error' | null;
   executedAt: string | null;
@@ -11,16 +21,23 @@ type Status = {
   errors: string[];
   stale: boolean;
   deferred: boolean;
+  files: FilesStatus | null;
 };
 
+function when(value: string | null) {
+  return value
+    ? new Date(value).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })
+    : 'mai registrato';
+}
+
 /**
- * Avviso nell'area staff quando l'ultimo giro di conservazione dati è fallito
- * oppure non è partito da più di 36 ore.
+ * Avviso nell'area staff quando l'ultimo giro di conservazione dati è fallito,
+ * non è partito da più di 36 ore o si è fermato al limite di lavoro, e quando
+ * il controllo settimanale degli allegati trova orfani o mancanti.
  *
- * Non dipende da Sentry né da webhook: legge `latest.json`, che contiene solo i
- * giri dello scheduler, tramite una route riservata allo staff. Errori di rete
- * o traccia
- * illeggibile non mostrano nulla: meglio nessun banner di un falso allarme.
+ * Non dipende da Sentry né da webhook: legge `latest.json` e `files-audit.json`
+ * tramite una route riservata allo staff. Errori di rete o traccia illeggibile
+ * non mostrano nulla: meglio nessun banner di un falso allarme.
  */
 export default function RetentionNotice() {
   const [status, setStatus] = useState<Status | null>(null);
@@ -48,15 +65,17 @@ export default function RetentionNotice() {
   }, []);
 
   if (!status) return null;
+  return (
+    <>
+      <RetentionBanner status={status} />
+      <FilesBanner files={status.files} />
+    </>
+  );
+}
+
+function RetentionBanner({ status }: { status: Status }) {
   const isStale = status.stale === true;
   const isError = status.outcome === 'error';
-
-  const when = status.executedAt
-    ? new Date(status.executedAt).toLocaleString('it-IT', {
-        dateStyle: 'short',
-        timeStyle: 'short',
-      })
-    : 'mai registrato';
 
   // Giro fermato dal limite di lavoro: non è un errore, ma il lavoro non è
   // finito e lo staff deve saperlo.
@@ -72,8 +91,8 @@ export default function RetentionNotice() {
           Conservazione dati in più giri
         </p>
         <p className="mt-1 text-amber-200">
-          Ultimo giro: {when}. Si è fermato al limite di lavoro per esecuzione: il
-          resto verrà elaborato al prossimo giro.
+          Ultimo giro: {when(status.executedAt)}. Si è fermato al limite di lavoro per
+          esecuzione: il resto verrà elaborato al prossimo giro.
         </p>
       </div>
     );
@@ -83,8 +102,8 @@ export default function RetentionNotice() {
     ? 'Conservazione dati non riuscita'
     : 'Nessun giro recente di conservazione dati';
   const detail = isStale
-    ? `Ultimo giro: ${when}${status.mode ? ` (${status.mode})` : ''}. Il giro automatico delle 03:00 UTC potrebbe non essere partito.`
-    : `Ultimo giro: ${when}${status.mode ? ` (${status.mode})` : ''}. I dati scaduti potrebbero non essere stati cancellati.`;
+    ? `Ultimo giro: ${when(status.executedAt)}${status.mode ? ` (${status.mode})` : ''}. Il giro automatico delle 03:00 UTC potrebbe non essere partito.`
+    : `Ultimo giro: ${when(status.executedAt)}${status.mode ? ` (${status.mode})` : ''}. I dati scaduti potrebbero non essere stati cancellati.`;
 
   return (
     <div
@@ -98,6 +117,35 @@ export default function RetentionNotice() {
       <p className="mt-1 text-red-200">{detail}</p>
       {status.errors.length > 0 && (
         <p className="mt-1 text-red-200">Errori: {status.errors.join(' · ')}</p>
+      )}
+    </div>
+  );
+}
+
+function FilesBanner({ files }: { files: FilesStatus | null }) {
+  if (!files) return null;
+  const problems = files.orphans + files.missing + files.unreadable;
+  if (problems === 0 && !files.error) return null;
+
+  return (
+    <div
+      role="status"
+      className="border-b-2 border-amber-500 bg-amber-950 px-4 py-3 text-sm text-amber-50"
+    >
+      <p className="flex items-center gap-2 font-bold">
+        <AlertTriangle size={16} aria-hidden />
+        Allegati dell&apos;archivio da verificare
+      </p>
+      <p className="mt-1 text-amber-200">
+        Controllo del {when(files.executedAt)}: {files.orphans} orfani, {files.missing}{' '}
+        mancanti{files.unreadable > 0 ? `, ${files.unreadable} righe illeggibili` : ''}. Nessun
+        dato è stato modificato.
+      </p>
+      {files.samples.length > 0 && (
+        <p className="mt-1 text-amber-200">Esempi: {files.samples.join(' · ')}</p>
+      )}
+      {files.error && (
+        <p className="mt-1 text-amber-200">Controllo non riuscito: {files.error}</p>
       )}
     </div>
   );
