@@ -125,6 +125,13 @@ export async function saveRetentionTrace(
     recordedAt?: Date;
     pruned?: number;
     alerts?: string[];
+    /**
+     * Aggiorna `latest.json`. Default: solo per la traccia dello scheduler.
+     * La route che cancella lo forza a `true`, quella di sola lettura a
+     * `false`: l'evidenza del giro notturno non deve poter venire da un
+     * dry-run, nemmeno se invocato dallo scheduler.
+     */
+    latest?: boolean;
   } = {},
 ): Promise<RetentionTraceResult> {
   const { ids, truncated } = cappedIds(report.ids);
@@ -160,10 +167,13 @@ export async function saveRetentionTrace(
   });
   if (written.error) return { path: null, error: `trace: ${written.error.message}` };
 
-  // Solo il giro dello scheduler aggiorna `latest.json`: un `vercel crons run`
-  // o un dry-run non deve far sembrare passato il giro delle 03:00 (o
-  // viceversa). Ogni esecuzione resta comunque in `runs/<timestamp>.json`.
-  if (trace.source !== 'cron') return { path, error: null };
+  // Di default solo il giro dello scheduler aggiorna `latest.json`: un test
+  // manuale non deve far sembrare passato il giro delle 03:00 (o viceversa).
+  // La route che cancella decide esplicitamente (`latest`), così nemmeno un
+  // dry-run invocato dallo scheduler può sovrascrivere quell'evidenza. Ogni
+  // esecuzione resta comunque in `runs/<timestamp>.json`.
+  const updateLatest = options.latest ?? trace.source === 'cron';
+  if (!updateLatest) return { path, error: null };
 
   const latest = await bucket.upload('latest.json', body, {
     contentType: 'application/json',

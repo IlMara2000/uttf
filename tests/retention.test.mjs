@@ -730,21 +730,21 @@ function retentionRoute({
   const client = traceClient({ bucketError, uploadError, runs, listError, removeError });
   const sentAlerts = [];
   const runOptions = [];
-  const api = load(
-    'src/app/api/maintenance/retention/route.ts',
+  const endpoint = load(
+    'src/lib/retention-endpoint.ts',
     {
       'next/server': {
         NextResponse: { json: (body, init) => Response.json(body, init) },
       },
       '@supabase/supabase-js': { createClient: () => client },
-      '@/lib/retention': {
+      './retention': {
         runRetention: async (_client, options) => {
           runOptions.push(options);
           return report;
         },
       },
-      '@/lib/retention-trace': load('src/lib/retention-trace.ts'),
-      '@/lib/maintenance-auth': load(
+      './retention-trace': load('src/lib/retention-trace.ts'),
+      './maintenance-auth': load(
         'src/lib/maintenance-auth.ts',
         {
           'next/server': {
@@ -754,7 +754,7 @@ function retentionRoute({
         },
         { process, Buffer, Response },
       ),
-      '@/lib/retention-alert': {
+      './retention-alert': {
         alertRetentionFailure: async (failedReport, failures) => {
           sentAlerts.push({ report: failedReport, failures: [...failures] });
           return alert;
@@ -763,12 +763,33 @@ function retentionRoute({
     },
     { process, Buffer, URL },
   );
-  return { api, client, sentAlerts, runOptions };
+  // Il path normale è sempre in sola lettura: `api.GET`/`api.POST` coprono i
+  // casi esistenti, `applyGET`/`applyPOST` quelli della cancellazione.
+  const handler = mode => request => endpoint.handleRetention(request, mode);
+  return {
+    api: {
+      GET: handler('dry'),
+      POST: handler('dry'),
+      applyGET: handler('apply'),
+      applyPOST: handler('apply'),
+    },
+    client,
+    sentAlerts,
+    runOptions,
+  };
 }
 
 const cronCall = (token = 'cron-token') =>
   new Request('https://local/api/maintenance/retention', {
     headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+
+/** L'unica forma che può cancellare: token più header dello scheduler. */
+const applyCall = (token = 'cron-token') =>
+  new Request('https://local/api/maintenance/retention/apply', {
+    headers: token
+      ? { authorization: `Bearer ${token}`, 'x-vercel-cron': '1' }
+      : {},
   });
 
 test('Retention endpoint stores the run trace and answers 200 on success', async () => {
@@ -822,9 +843,14 @@ test('Retention trace records whether the scheduler or a manual call ran the job
     );
     assert.equal((await scheduled.json()).source, 'cron');
     assert.equal(JSON.parse(client.uploads[0].body).source, 'cron');
+    assert.deepEqual(
+      client.uploads.map(entry => entry.path),
+      ['runs/2026-11-25T03-04-05-678Z.json'],
+      'il dry-run non aggiorna latest.json nemmeno dallo scheduler',
+    );
 
     await api.GET(cronCall());
-    assert.equal(JSON.parse(client.uploads[2].body).source, 'manual');
+    assert.equal(JSON.parse(client.uploads[1].body).source, 'manual');
 
     // `vercel crons run` passa dallo scheduler: ?source=manual lo marca come test.
     await api.GET(
@@ -832,11 +858,11 @@ test('Retention trace records whether the scheduler or a manual call ran the job
         headers: { authorization: 'Bearer cron-token', 'x-vercel-cron': '1' },
       }),
     );
-    assert.equal(JSON.parse(client.uploads[3].body).source, 'manual');
+    assert.equal(JSON.parse(client.uploads[2].body).source, 'manual');
   });
 });
 
-test('Retention endpoint honours RETENTION_ENABLED and forces a dry run with ?dry=1', async () => {
+test('Retention endpoint never deletes, even with RETENTION_ENABLED=true', async () => {
   await withEnv({ ...jobEnv, RETENTION_ENABLED: 'true' }, async () => {
     const { api, runOptions } = retentionRoute();
 
@@ -847,9 +873,89 @@ test('Retention endpoint honours RETENTION_ENABLED and forces a dry run with ?dr
       }),
     );
 
-    assert.equal(runOptions[0].enabled, true);
-    assert.equal(runOptions[1].enabled, false);
+    assert.deepEqual(
+      runOptions.map(options => options.enabled),
+      [false, false],
+      'il path di verifica non deve mai cancellare',
+    );
   });
+});
+
+test('The apply route is the only deletion point and answers only to the scheduler', async () => {
+  await withEnv({ ...jobEnv, RETENTION_ENABLED: 'true' }, async () => {
+    const { api, runOptions, client } = retentionRoute();
+
+    // Stesso token, path di verifica: nessuna cancellazione.
+    const manualOnDry = await api.GET(cronCall());
+    assert.equal(manualOnDry.status, 200);
+    assert.equal(runOptions[0].enabled, false);
+    assert.equal(client.uploads.length, 1, 'solo la traccia, nessun latest.json');
+
+    // Il path che cancella rifiuta una chiamata manuale.
+    const manualOnApply = await api.applyPOST(cronCall());
+    assert.equal(manualOnApply.status, 403);
+    assert.match((await manualOnApply.json()).error, /riservata allo scheduler/);
+
+    // Un dry-run chiesto sul path di cancellazione viene rimandato altrove.
+    const dryOnApply = await api.applyGET(
+      new Request('https://local/api/maintenance/retention/apply?dry=1', {
+        headers: { authorization: 'Bearer cron-token', 'x-vercel-cron': '1' },
+      }),
+    );
+    assert.equal(dryOnApply.status, 400);
+
+    // Solo lo scheduler cancella, e solo lui aggiorna latest.json.
+    const scheduled = await api.applyGET(applyCall());
+    assert.equal(scheduled.status, 200);
+    assert.equal(runOptions[1].enabled, true);
+    const latest = client.uploads.at(-1);
+    assert.equal(latest.path, 'latest.json');
+    assert.equal(JSON.parse(latest.body).mode, 'delete');
+  });
+});
+
+test('The apply route falls back to a dry run when deletion is disabled', async () => {
+  await withEnv({ ...jobEnv, RETENTION_ENABLED: 'false' }, async () => {
+    const { api, runOptions, client } = retentionRoute({
+      report: emptyReport({ mode: 'dry-run' }),
+    });
+
+    const res = await api.applyGET(applyCall());
+    assert.equal(res.status, 200);
+    assert.equal(runOptions[0].enabled, false);
+    assert.deepEqual(
+      client.uploads.map(entry => entry.path),
+      ['runs/2026-11-25T03-04-05-678Z.json'],
+      'senza cancellazione latest.json resta quello dell ultimo giro vero',
+    );
+  });
+});
+
+test('The two route files keep the verification path and the deletion path separate', async () => {
+  const calls = [];
+  const endpoint = {
+    handleRetention: async (request, mode) => {
+      calls.push(mode);
+      return Response.json({ mode });
+    },
+  };
+  const dry = load(
+    'src/app/api/maintenance/retention/route.ts',
+    { '@/lib/retention-endpoint': endpoint },
+    { process, Buffer, Response, URL },
+  );
+  const apply = load(
+    'src/app/api/maintenance/retention/apply/route.ts',
+    { '@/lib/retention-endpoint': endpoint },
+    { process, Buffer, Response, URL },
+  );
+
+  await dry.GET(new Request('https://local/api/maintenance/retention'));
+  await apply.POST(new Request('https://local/api/maintenance/retention/apply'));
+
+  assert.deepEqual(calls, ['dry', 'apply']);
+  assert.equal(dry.runtime, 'nodejs');
+  assert.equal(apply.runtime, 'nodejs');
 });
 
 test('Retention endpoint answers 500 when a step fails and still leaves the trace', async () => {

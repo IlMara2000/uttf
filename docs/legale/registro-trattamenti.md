@@ -11,7 +11,8 @@ quella fonte. Ultima revisione: 23 novembre 2026.
 Il registro è interno: non va pubblicato. Va aggiornato quando cambia una
 finalità, un fornitore o un termine di conservazione. I termini qui indicati
 sono gli stessi pubblicati in `/privacy` (§07) e applicati dal job
-`/api/maintenance/retention` (`src/lib/retention.ts`).
+`/api/maintenance/retention/apply` (`src/lib/retention.ts`); il path senza
+`/apply` è la verifica in sola lettura.
 
 ## Attività
 

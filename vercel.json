@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/maintenance/retention",
+      "path": "/api/maintenance/retention/apply",
       "schedule": "0 3 * * *"
     },
     {
