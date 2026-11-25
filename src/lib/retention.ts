@@ -156,6 +156,44 @@ async function purgeBookings(
   return { count: deleted, error: null, ids };
 }
 
+type RegistrationRow = { id: string; files?: { path?: string }[] | null };
+
+/** Pagina massima restituita dall'API: il corpo della risposta è troncato qui. */
+const REGISTRATION_PAGE_SIZE = 1000;
+
+function expiredRegistrationsQuery(client: SupabaseClient, cutoff: string) {
+  return client
+    .from('activity_registrations')
+    .select('id, files', { count: 'exact' })
+    .in('status', ['pending', 'declined'])
+    .lt('created_at', cutoff);
+}
+
+/**
+ * Tutte le righe idonee, non solo la prima pagina. PostgREST tronca il corpo
+ * della risposta al limite dell'API (1000 righe di default): in dry-run una
+ * sola select su più di 1000 richieste conterebbe righe e allegati in meno,
+ * quindi si pagina finché non si raggiunge il `count` dichiarato.
+ */
+async function expiredRegistrations(
+  client: SupabaseClient,
+  cutoff: string,
+): Promise<{ rows: RegistrationRow[]; error: string | null }> {
+  const rows: RegistrationRow[] = [];
+  for (;;) {
+    const { data, count, error } = await expiredRegistrationsQuery(client, cutoff).range(
+      rows.length,
+      rows.length + REGISTRATION_PAGE_SIZE - 1,
+    );
+    if (error) return { rows, error: error.message };
+    const page = (data ?? []) as RegistrationRow[];
+    rows.push(...page);
+    if (page.length === 0 || (count !== null && rows.length >= count)) {
+      return { rows, error: null };
+    }
+  }
+}
+
 /**
  * Richieste di iscrizione alle attività: oltre i 12 mesi si cancellano riga e
  * allegati nel bucket privato, ma solo per le richieste chiuse come non accolte.
@@ -179,15 +217,26 @@ async function purgeRegistrations(
   now: Date,
 ): Promise<{ records: number; files: number; error: string | null; ids: string[]; filePaths: string[] }> {
   const cutoff = isoDaysAgo(now, REGISTRATION_RETENTION_DAYS);
-  const { data, error } = await client
-    .from('activity_registrations')
-    .select('id, files')
-    .in('status', ['pending', 'declined'])
-    .lt('created_at', cutoff);
+  const failed = (message: string) => ({
+    records: 0,
+    files: 0,
+    error: `activity_registrations: ${message}`,
+    ids: [] as string[],
+    filePaths: [] as string[],
+  });
 
-  if (error) return { records: 0, files: 0, error: `activity_registrations: ${error.message}`, ids: [], filePaths: [] };
-
-  const rows = (data ?? []) as { id: string; files?: { path?: string }[] | null }[];
+  // In cancellazione basta la prima pagina: le righe si eliminano a blocchi di
+  // 100 id. In dry-run serve il totale esatto, quindi si pagina.
+  let rows: RegistrationRow[];
+  if (enabled) {
+    const { data, error } = await expiredRegistrationsQuery(client, cutoff);
+    if (error) return failed(error.message);
+    rows = (data ?? []) as RegistrationRow[];
+  } else {
+    const all = await expiredRegistrations(client, cutoff);
+    if (all.error) return failed(all.error);
+    rows = all.rows;
+  }
   if (rows.length === 0) return { records: 0, files: 0, error: null, ids: [], filePaths: [] };
 
   const filePaths = rows

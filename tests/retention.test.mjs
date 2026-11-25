@@ -31,6 +31,9 @@ function dateDaysAgo(days) {
   return timestampDaysAgo(days).slice(0, 10);
 }
 
+/** Tetto del corpo di risposta PostgREST, che il client finto riproduce. */
+const API_PAGE_ROWS = 1000;
+
 /** Client Supabase minimo: filtra e cancella in memoria e registra le chiamate. */
 function fakeClient(seed = {}) {
   const tables = structuredClone(seed);
@@ -39,7 +42,7 @@ function fakeClient(seed = {}) {
 
   function from(table) {
     const filters = [];
-    const state = { op: 'select', returning: false };
+    const state = { op: 'select', returning: false, range: null };
     const chain = {
       select() {
         if (state.op === 'delete') state.returning = true;
@@ -59,6 +62,13 @@ function fakeClient(seed = {}) {
       },
       lt(column, value) {
         filters.push({ column, value, match: row => row[column] < value });
+        return chain;
+      },
+      order() {
+        return chain;
+      },
+      range(from, to) {
+        state.range = [from, to];
         return chain;
       },
       then(resolve, reject) {
@@ -88,7 +98,13 @@ function fakeClient(seed = {}) {
           error: null,
         };
       }
-      return { data: matched, count: matched.length, error: null };
+      // Come l'API vera: il corpo non supera mai il tetto di righe.
+      const [from, to] = state.range ?? [0, API_PAGE_ROWS - 1];
+      return {
+        data: matched.slice(from, to + 1).slice(0, API_PAGE_ROWS),
+        count: matched.length,
+        error: null,
+      };
     }
 
     return chain;
@@ -294,6 +310,34 @@ test('Retention deletes activity registrations in chunks of 100 ids', async () =
   );
   assert.equal(report.deleted.activityRegistrations, 250);
   assert.equal(client.tables.activity_registrations.length, 0);
+});
+
+test('Retention dry-run counts registrations and attachments beyond the API page limit', async () => {
+  const total = 1200;
+  const client = fakeClient({
+    activity_registrations: Array.from({ length: total }, (_, index) => ({
+      id: `reg-${String(index).padStart(4, '0')}`,
+      status: index % 2 === 0 ? 'declined' : 'pending',
+      created_at: timestampDaysAgo(400),
+      files: [
+        { path: `activity-registrations/${index}-a.pdf` },
+        { path: `activity-registrations/${index}-b.pdf` },
+      ],
+    })),
+  });
+
+  const report = await runRetention(client, { now: NOW });
+
+  assert.equal(report.mode, 'dry-run');
+  assert.equal(report.deleted.activityRegistrations, total);
+  assert.equal(report.deleted.registrationFiles, total * 2);
+  assert.equal(report.ids.activityRegistrations.length, total);
+  assert.equal(report.ids.registrationFiles.length, total * 2);
+  const selects = client.calls.filter(
+    call => call.op === 'select' && call.table === 'activity_registrations',
+  );
+  assert.equal(selects.length, 2, 'il dry-run pagina finché il count non è raggiunto');
+  assert.equal(client.calls.filter(call => call.op === 'delete' || call.op === 'remove').length, 0);
 });
 
 test('Retention removes registration attachments before deleting their rows', async () => {
