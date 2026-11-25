@@ -1217,6 +1217,26 @@ test('Retention status surfaces the weekly files audit to the staff banner', asy
   assert.deepEqual(body.files.samples.join(','), 'row-1/orfano-a.pdf,row-1/orfano-b.pdf,row-2/sparito.pdf');
 });
 
+test('Retention status marks an old files audit as stale', async () => {
+  const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const old = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+  const api = statusRoute({
+    latest: JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete' }),
+    files: JSON.stringify({
+      executedAt: old,
+      orphans: { count: 0, sample: [] },
+      missing: { count: 0, sample: [] },
+      unreadable: { count: 0, sample: [] },
+      error: null,
+    }),
+  });
+
+  const body = await (await api.GET(new Request('https://local/x'))).json();
+
+  assert.equal(body.files.stale, true, 'oltre 8 giorni il banner deve segnalarlo');
+  assert.equal(body.files.orphans, 0);
+});
+
 test('Retention status tolerates a missing or unreadable files audit', async () => {
   const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const latest = JSON.stringify({ outcome: 'ok', executedAt: recent, mode: 'delete' });

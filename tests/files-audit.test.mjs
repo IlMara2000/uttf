@@ -234,6 +234,23 @@ test('Files audit endpoint rejects a missing or wrong token', async () => {
   });
 });
 
+test('Files audit endpoint still records the failure in the trace', async () => {
+  await withEnv(jobEnv, async () => {
+    const { api, uploads } = auditRoute({
+      audit: sampleAudit({ error: 'activity_registrations: timeout' }),
+    });
+
+    const res = await api.GET(cronCall());
+    const body = await res.json();
+
+    assert.equal(res.status, 500);
+    assert.equal(body.outcome, 'error');
+    assert.equal(body.trace, 'files-audit.json');
+    assert.equal(uploads.length, 1, 'lo staff deve vedere il controllo fallito, non l\'esito vecchio');
+    assert.equal(JSON.parse(uploads[0].body).error, 'activity_registrations: timeout');
+  });
+});
+
 test('Files audit endpoint answers 500 when the trace cannot be written', async () => {
   await withEnv(jobEnv, async () => {
     const { api } = auditRoute({

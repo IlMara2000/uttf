@@ -125,7 +125,20 @@ function RetentionBanner({ status }: { status: Status }) {
 function FilesBanner({ files }: { files: FilesStatus | null }) {
   if (!files) return null;
   const problems = files.orphans + files.missing + files.unreadable;
-  if (problems === 0 && !files.error) return null;
+  // Un controllo vecchio vale come un controllo mancato: senza questo caso il
+  // banner mostrerebbe per sempre l'ultimo esito "pulito" e tacerebbe se il
+  // cron settimanale smettesse di partire.
+  if (problems === 0 && !files.error && !files.stale) return null;
+
+  const hasFindings = problems > 0 || files.error !== null;
+  const title = hasFindings
+    ? "Allegati dell'archivio da verificare"
+    : 'Nessun controllo recente degli allegati';
+  const detail = hasFindings
+    ? `Controllo del ${when(files.executedAt)}: ${files.orphans} orfani, ${files.missing} mancanti${
+        files.unreadable > 0 ? `, ${files.unreadable} righe illeggibili` : ''
+      }. Nessun dato è stato modificato.`
+    : `Ultimo controllo: ${when(files.executedAt)}, più di 8 giorni fa. Il controllo settimanale potrebbe non essere partito.`;
 
   return (
     <div
@@ -134,14 +147,10 @@ function FilesBanner({ files }: { files: FilesStatus | null }) {
     >
       <p className="flex items-center gap-2 font-bold">
         <AlertTriangle size={16} aria-hidden />
-        Allegati dell&apos;archivio da verificare
+        {title}
       </p>
-      <p className="mt-1 text-amber-200">
-        Controllo del {when(files.executedAt)}: {files.orphans} orfani, {files.missing}{' '}
-        mancanti{files.unreadable > 0 ? `, ${files.unreadable} righe illeggibili` : ''}. Nessun
-        dato è stato modificato.
-      </p>
-      {files.samples.length > 0 && (
+      <p className="mt-1 text-amber-200">{detail}</p>
+      {hasFindings && files.samples.length > 0 && (
         <p className="mt-1 text-amber-200">Esempi: {files.samples.join(' · ')}</p>
       )}
       {files.error && (

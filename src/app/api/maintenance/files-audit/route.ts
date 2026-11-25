@@ -59,12 +59,16 @@ async function handle(request: Request) {
   const created = await client.storage.createBucket(RETENTION_TRACE_BUCKET, {
     public: false,
   });
-  if (created.error && !/exist/i.test(created.error.message)) {
-    errors.push(`bucket ${RETENTION_TRACE_BUCKET}: ${created.error.message}`);
-  }
+  const bucketError =
+    created.error && !/exist/i.test(created.error.message)
+      ? `bucket ${RETENTION_TRACE_BUCKET}: ${created.error.message}`
+      : null;
+  if (bucketError) errors.push(bucketError);
 
   let trace: string | null = null;
-  if (errors.length === 0) {
+  // La traccia si scrive anche quando l'audit fallisce: l'errore deve arrivare
+  // allo staff, non lasciare in piedi l'esito vecchio che sembrerebbe pulito.
+  if (!bucketError) {
     const written = await client.storage
       .from(RETENTION_TRACE_BUCKET)
       .upload(FILES_AUDIT_TRACE_KEY, JSON.stringify(audit, null, 2), {
