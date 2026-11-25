@@ -16,8 +16,9 @@ type Status = {
  * Avviso nell'area staff quando l'ultimo giro di conservazione dati è fallito
  * oppure non è partito da più di 36 ore.
  *
- * Non dipende da Sentry né da webhook: legge `latest.json` dal bucket delle
- * tracce tramite una route riservata allo staff. Errori di rete o traccia
+ * Non dipende da Sentry né da webhook: legge `latest.json`, che contiene solo i
+ * giri dello scheduler, tramite una route riservata allo staff. Errori di rete
+ * o traccia
  * illeggibile non mostrano nulla: meglio nessun banner di un falso allarme.
  */
 export default function RetentionNotice() {

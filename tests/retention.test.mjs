@@ -290,6 +290,28 @@ test('Retention dry-run lists the eligible record ids without deleting anything'
   assert.equal(client.calls.filter(call => call.op === 'delete' || call.op === 'remove').length, 0);
 });
 
+test('Retention dry-run counts bookings of every expired slot beyond the API page limit', async () => {
+  const total = 1100;
+  const slot = index => `slot-${String(index).padStart(4, '0')}`;
+  const client = fakeClient({
+    booking_slots: Array.from({ length: total }, (_, index) => ({
+      id: slot(index),
+      date: dateDaysAgo(400),
+    })),
+    booking_reservations: Array.from({ length: total }, (_, index) => ({
+      id: `res-${index}`,
+      slot_id: slot(index),
+    })),
+  });
+
+  const report = await runRetention(client, { now: NOW });
+
+  assert.equal(report.mode, 'dry-run');
+  assert.equal(report.deleted.bookingReservations, total);
+  assert.equal(report.ids.bookingReservations.length, total);
+  assert.equal(client.calls.filter(call => call.op === 'delete' || call.op === 'remove').length, 0);
+});
+
 test('Retention deletes bookings of every expired slot beyond the API page limit', async () => {
   const total = 1100;
   const slot = index => `slot-${String(index).padStart(4, '0')}`;

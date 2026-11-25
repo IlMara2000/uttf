@@ -110,29 +110,48 @@ async function purgeOlderThan(
 const API_PAGE_SIZE = 1000;
 
 /**
- * Slot con appuntamento più vecchio della soglia, tutti. PostgREST tronca il
- * corpo della risposta al limite dell'API: una sola select lascerebbe fuori gli
- * slot successivi, e le loro prenotazioni non verrebbero mai cancellate.
+ * Tutte le righe di una query, non solo la prima pagina. PostgREST tronca il
+ * corpo della risposta al limite dell'API (1000 righe di default): senza
+ * paginare, le righe successive resterebbero fuori — mai cancellate, con gli
+ * allegati orfani nel bucket, e in dry-run contate in meno. Si pagina finché
+ * non si raggiunge il `count` dichiarato dalla risposta.
  */
+async function allRows<T>(
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{
+    data: unknown;
+    count: number | null;
+    error: { message: string } | null;
+  }>,
+): Promise<{ rows: T[]; error: string | null }> {
+  const rows: T[] = [];
+  for (;;) {
+    const { data, count, error } = await page(rows.length, rows.length + API_PAGE_SIZE - 1);
+    if (error) return { rows, error: error.message };
+    const batch = (data ?? []) as T[];
+    rows.push(...batch);
+    if (batch.length === 0 || (count !== null && rows.length >= count)) {
+      return { rows, error: null };
+    }
+  }
+}
+
+/** Slot con appuntamento più vecchio della soglia, tutti. */
 async function expiredSlotIds(
   client: SupabaseClient,
   cutoff: string,
 ): Promise<{ ids: string[]; error: string | null }> {
-  const ids: string[] = [];
-  for (;;) {
-    const { data, count, error } = await client
+  const { rows, error } = await allRows<{ id: string }>((from, to) =>
+    client
       .from('booking_slots')
       .select('id', { count: 'exact' })
       .lt('date', cutoff)
       .order('id')
-      .range(ids.length, ids.length + API_PAGE_SIZE - 1);
-    if (error) return { ids, error: `booking_slots: ${error.message}` };
-    const page = idList(data, 'id');
-    ids.push(...page);
-    if (page.length === 0 || (count !== null && ids.length >= count)) {
-      return { ids, error: null };
-    }
-  }
+      .range(from, to),
+  );
+  return { ids: idList(rows, 'id'), error: error ? `booking_slots: ${error}` : null };
 }
 
 /**
@@ -152,19 +171,24 @@ async function purgeBookings(
   if (error) return { count: 0, error, ids: [] };
   if (slotIds.length === 0) return { count: 0, error: null, ids: [] };
 
-  if (!enabled) {
-    const { data, count, error: countError } = await client
-      .from('booking_reservations')
-      .select('id', { count: 'exact' })
-      .in('slot_id', slotIds);
-    if (countError) return { count: 0, error: `booking_reservations: ${countError.message}`, ids: [] };
-    const ids = idList(data, 'id');
-    return { count: count ?? ids.length, error: null, ids };
-  }
-
+  // Stessi blocchi della cancellazione: una sola `.in()` con tutti gli slot
+  // scaduti supererebbe la lunghezza massima dell'URL accettata da PostgREST.
   let deleted = 0;
   const ids: string[] = [];
   for (const group of chunks(slotIds, 100)) {
+    if (!enabled) {
+      const { data, count, error: countError } = await client
+        .from('booking_reservations')
+        .select('id', { count: 'exact' })
+        .in('slot_id', group);
+      if (countError)
+        return { count: deleted, error: `booking_reservations: ${countError.message}`, ids };
+      const chunkIds = idList(data, 'id');
+      ids.push(...chunkIds);
+      deleted += count ?? chunkIds.length;
+      continue;
+    }
+
     const { data, count, error: deleteError } = await client
       .from('booking_reservations')
       .delete({ count: 'exact' })
@@ -190,30 +214,10 @@ function expiredRegistrationsQuery(client: SupabaseClient, cutoff: string) {
     .order('id');
 }
 
-/**
- * Tutte le righe idonee, non solo la prima pagina. PostgREST tronca il corpo
- * della risposta al limite dell'API (1000 righe di default): una sola select
- * lascerebbe fuori le richieste successive (mai cancellate, con gli allegati
- * orfani nel bucket) e in dry-run conterebbe righe e allegati in meno. Si
- * pagina finché non si raggiunge il `count` dichiarato.
- */
-async function expiredRegistrations(
-  client: SupabaseClient,
-  cutoff: string,
-): Promise<{ rows: RegistrationRow[]; error: string | null }> {
-  const rows: RegistrationRow[] = [];
-  for (;;) {
-    const { data, count, error } = await expiredRegistrationsQuery(client, cutoff).range(
-      rows.length,
-      rows.length + API_PAGE_SIZE - 1,
-    );
-    if (error) return { rows, error: error.message };
-    const page = (data ?? []) as RegistrationRow[];
-    rows.push(...page);
-    if (page.length === 0 || (count !== null && rows.length >= count)) {
-      return { rows, error: null };
-    }
-  }
+function expiredRegistrations(client: SupabaseClient, cutoff: string) {
+  return allRows<RegistrationRow>((from, to) =>
+    expiredRegistrationsQuery(client, cutoff).range(from, to),
+  );
 }
 
 /**
