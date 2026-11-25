@@ -24,6 +24,15 @@ type Status = {
   files: FilesStatus | null;
 };
 
+/** Esito di `/api/maintenance/retention/dry-run`: sola lettura, nessuna traccia. */
+type DryRun = {
+  mode: string;
+  executedAt: string;
+  deleted: Record<string, number>;
+  deferred: boolean;
+  errors: string[];
+};
+
 function when(value: string | null) {
   return value
     ? new Date(value).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })
@@ -41,6 +50,7 @@ function when(value: string | null) {
  */
 export default function RetentionNotice() {
   const [status, setStatus] = useState<Status | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -50,6 +60,7 @@ export default function RetentionNotice() {
           data: { session },
         } = await supabase.auth.getSession();
         if (!session) return;
+        if (alive) setToken(session.access_token);
         const response = await fetch('/api/maintenance/retention/status', {
           headers: { Authorization: `Bearer ${session.access_token}` },
           cache: 'no-store',
@@ -64,12 +75,97 @@ export default function RetentionNotice() {
     };
   }, []);
 
-  if (!status) return null;
+  if (!token) return null;
   return (
     <>
-      <RetentionBanner status={status} />
-      <FilesBanner files={status.files} />
+      {status && (
+        <>
+          <RetentionBanner status={status} />
+          <FilesBanner files={status.files} />
+        </>
+      )}
+      <DryRunCheck token={token} />
     </>
+  );
+}
+
+/** Etichette delle categorie: le chiavi sono quelle del report di retention. */
+const labels: Record<string, string> = {
+  newsletterSubscribers: 'newsletter',
+  bookingReservations: 'prenotazioni',
+  reviews: 'recensioni',
+  activityRegistrations: 'iscrizioni',
+  registrationFiles: 'allegati',
+  bookingRateLimits: 'rate limit prenotazioni',
+  registrationRateLimits: 'rate limit iscrizioni',
+};
+
+/**
+ * Verifica su richiesta della retention, senza segreti: usa la sessione staff
+ * già presente. Mostra conteggi, `deferred` ed errori senza modificare nulla e
+ * senza toccare la traccia del giro notturno.
+ */
+function DryRunCheck({ token }: { token: string }) {
+  const [state, setState] = useState<'idle' | 'running' | 'done' | 'failed'>('idle');
+  const [result, setResult] = useState<DryRun | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+
+  async function verify() {
+    setState('running');
+    setFailure(null);
+    try {
+      const response = await fetch('/api/maintenance/retention/dry-run', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        setState('failed');
+        setFailure(`Verifica non riuscita (HTTP ${response.status}).`);
+        return;
+      }
+      setResult((await response.json()) as DryRun);
+      setState('done');
+    } catch {
+      setState('failed');
+      setFailure('Verifica non riuscita: rete non disponibile.');
+    }
+  }
+
+  const total = result
+    ? Object.values(result.deleted).reduce((sum, value) => sum + value, 0)
+    : 0;
+  const detail = result
+    ? Object.entries(result.deleted)
+        .filter(([, value]) => value > 0)
+        .map(([key, value]) => `${labels[key] ?? key} ${value}`)
+        .join(', ')
+    : '';
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-neutral-800 bg-neutral-950 px-4 py-2 text-xs text-neutral-400">
+      <span>Conservazione dati: verifica in sola lettura.</span>
+      <button
+        type="button"
+        onClick={() => void verify()}
+        disabled={state === 'running'}
+        className="rounded border border-neutral-700 px-2 py-1 font-semibold text-neutral-200 hover:border-neutral-500 disabled:opacity-50"
+      >
+        {state === 'running' ? 'Verifica in corso…' : result ? 'Ripeti verifica' : 'Verifica ora'}
+      </button>
+      {failure && (
+        <span role="status" className="text-amber-300">
+          {failure}
+        </span>
+      )}
+      {result && (
+        <span role="status" data-testid="retention-dry-run">
+          {total === 0 ? 'Nessuna riga idonea' : `${total} righe idonee${detail ? ` (${detail})` : ''}`}
+          {result.deferred ? ' · giro parziale: limite di blocchi raggiunto' : ''}
+          {result.errors.length > 0 ? ` · errori: ${result.errors.join(' · ')}` : ''}
+        </span>
+      )}
+    </div>
   );
 }
 

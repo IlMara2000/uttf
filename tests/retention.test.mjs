@@ -1381,6 +1381,105 @@ test('Retention status marks a run older than 36 hours as stale', async () => {
   assert.equal(body.stale, true);
 });
 
+function dryRunRoute({ report = emptyReport(), denied = null, thrown = null } = {}) {
+  const runOptions = [];
+  const api = load(
+    'src/app/api/maintenance/retention/dry-run/route.ts',
+    {
+      'next/server': {
+        NextResponse: { json: (body, init) => Response.json(body, init) },
+      },
+      '@/lib/registrations/server': {
+        requireRegistrationStaff: async () => {
+          if (denied) throw denied;
+          if (thrown) throw thrown;
+          return {};
+        },
+      },
+      '@/lib/retention': {
+        runRetention: async (_client, options) => {
+          runOptions.push(options);
+          return report;
+        },
+      },
+    },
+    { process, Buffer, Response, URL },
+  );
+  return { api, runOptions };
+}
+
+test('Staff dry-run counts the eligible rows without ever deleting', async () => {
+  await withEnv({ ...jobEnv, RETENTION_ENABLED: 'true' }, async () => {
+    const report = emptyReport({
+      mode: 'dry-run',
+      deleted: {
+        ...emptyReport().deleted,
+        activityRegistrations: 4,
+        registrationFiles: 6,
+      },
+      deferred: true,
+      errors: ['reviews: timeout'],
+    });
+    const { api, runOptions } = dryRunRoute({ report });
+
+    const res = await api.POST(
+      new Request('https://local/api/maintenance/retention/dry-run', {
+        method: 'POST',
+        headers: { authorization: 'Bearer staff-session' },
+      }),
+    );
+    const body = await res.json();
+
+    assert.equal(res.status, 200, 'una diagnosi con errori di fase resta una risposta valida');
+    assert.equal(res.headers.get('cache-control'), 'private, no-store');
+    assert.equal(body.mode, 'dry-run');
+    assert.equal(body.deleted.activityRegistrations, 4);
+    assert.equal(body.deleted.registrationFiles, 6);
+    assert.equal(body.deferred, true);
+    assert.deepEqual(body.errors, ['reviews: timeout']);
+    assert.equal(runOptions.length, 1);
+    assert.equal(
+      runOptions[0].enabled,
+      false,
+      'nemmeno con RETENTION_ENABLED=true la verifica staff può cancellare',
+    );
+  });
+});
+
+test('Staff dry-run is reserved to the staff session', async () => {
+  await withEnv(jobEnv, async () => {
+    const anonymous = dryRunRoute({
+      denied: new Response('Accesso staff richiesto.', { status: 401 }),
+    });
+    const anonymousRes = await anonymous.api.GET(
+      new Request('https://local/api/maintenance/retention/dry-run'),
+    );
+    assert.equal(anonymousRes.status, 401);
+    assert.equal(anonymous.runOptions.length, 0, 'nessun conteggio senza sessione');
+
+    const outsider = dryRunRoute({
+      denied: new Response('Accesso staff richiesto.', { status: 403 }),
+    });
+    const outsiderRes = await outsider.api.GET(
+      new Request('https://local/api/maintenance/retention/dry-run', {
+        headers: { authorization: 'Bearer non-staff' },
+      }),
+    );
+    assert.equal(outsiderRes.status, 403);
+    assert.equal(outsider.runOptions.length, 0);
+  });
+});
+
+test('Staff dry-run answers 503 when access cannot be verified', async () => {
+  await withEnv(jobEnv, async () => {
+    const { api, runOptions } = dryRunRoute({ thrown: new Error('database giu') });
+    const res = await api.POST(new Request('https://local/api/maintenance/retention/dry-run'));
+    assert.equal(res.status, 503);
+    assert.match((await res.json()).error, /Accesso non verificabile/);
+    assert.equal(runOptions.length, 0);
+  });
+});
+
 test('Retention status is not stale within 36 hours', async () => {
   const recent = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const api = statusRoute({
